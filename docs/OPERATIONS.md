@@ -124,6 +124,14 @@ O script usa o PostgreSQL 18 local na porta 55432 por padrão. Ajuste `PostgresB
 
 O cliente de cleanup tem limite externo de 15 segundos (`CleanupTimeoutSeconds`). Se exceder esse limite, o script encerra apenas seu cliente `dropdb` e informa o banco pendente; isso não confirma cancelamento do `DROP` no servidor. Inspecione `pg_stat_activity` antes de repetir a remoção. Na sessão Windows de 2026-10-04, o restore foi verificado, mas seu cleanup ficou em `IPC/ProcSignalBarrier`; nenhum walwriter ou processo do servidor foi encerrado. Uma advertência de cleanup precisa ser resolvida operacionalmente mesmo que a validação do dump tenha passado.
 
+## Réplicas e carga SSE
+
+`backend/tests/test_api_replicas.py` sobe três Uvicorn próprios em portas loopback efêmeras, usando um schema PG17 UUID e Redis reais. Exercita login/commits REST alternados, 51 streams HTTP de seis owners, 600 sinais cadenciados com 5.100 entregas, rajada de mil sinais, whitelist/isolamento, 429 por owner/processo, reutilização do slot e revogação compartilhada com cadência real de 30s. Fecha clientes antes de parar somente seus próprios filhos e remover o schema. `verify.ps1 -RequireIntegration` exige o módulo sem skips; métricas locais ficam nas properties do JUnit.
+
+Três assinaturas lentas instrumentadas confirmam fila de 32 e indicação de reconciliação, sem simular pressão física da janela TCP. Sinais de carga não alteram o estado persistido; GET REST continua sendo a autoridade. O limite SSE é local a cada processo: três réplicas podem admitir nove streams da mesma conta. Essas medidas locais não são SLA, capacidade sustentada ou prova de balanceador/múltiplos hosts.
+
+Disconnect durante a revalidação podia interromper a devolução da conexão PostgreSQL sob cancelamento repetido do AnyIO. A leitura e fechamento usam shield com o prazo asyncio existente de cinco segundos, sem estender atividade da sessão. Testes determinísticos e o ensaio HTTP real preservam cancelamento e conferem ausência de stderr/avisos de conexões não devolvidas. Baseado na orientação de [finalização protegida do AnyIO](https://anyio.readthedocs.io/en/stable/cancellation.html#shielding).
+
 ## Controle de egress do worker
 
 O perfil opt-in `compose.worker.yaml` adiciona um worker Linux separado com firewall de OUTPUT IPv4/IPv6. A API normal não recebe NET_ADMIN. O inicializador instala as regras, então executa Taskiq como UID/GID 10001, sem grupos suplementares, capabilities herdadas/efetivas/bounding/ambient e com no-new-privileges. Falha de resolução, configuração, iptables ou ip6tables impede iniciar o comando.

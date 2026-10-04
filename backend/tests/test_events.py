@@ -1,10 +1,12 @@
 import asyncio
 import json
+from contextlib import asynccontextmanager
 from datetime import timedelta
 from uuid import UUID, uuid4
 
 import httpx
 import pytest
+from anyio import CancelScope, sleep
 from conftest import authenticate
 from sqlalchemy import event as sqlalchemy_event
 from sqlalchemy import select
@@ -22,6 +24,61 @@ class ConnectedRequest:
 
     async def is_disconnected(self):
         return self.disconnected
+
+
+@pytest.mark.parametrize("cancel_at", ["read", "close"])
+async def test_session_revalidation_returns_resource_under_level_cancellation(cancel_at):
+    closed, finished = [], []
+    with CancelScope() as scope:
+
+        class Result:
+            def first(self):
+                return None
+
+        class Database:
+            async def execute(self, statement):
+                if cancel_at == "read":
+                    scope.cancel()
+                await sleep(0)  # level cancellation strikes at every resource await
+                return Result()
+
+        @asynccontextmanager
+        async def factory():
+            try:
+                yield Database()
+            finally:
+                if cancel_at == "close":
+                    scope.cancel()
+                await sleep(0)
+                closed.append(True)
+
+        assert not await session_valid(factory, uuid4(), uuid4(), None)
+        finished.append(True)
+    assert closed == [True] and finished == [True]
+
+
+async def test_session_revalidation_propagates_explicit_asyncio_cancellation():
+    started, closed = asyncio.Event(), []
+
+    class Database:
+        async def execute(self, statement):
+            started.set()
+            await asyncio.Event().wait()
+
+    @asynccontextmanager
+    async def factory():
+        try:
+            yield Database()
+        finally:
+            await asyncio.sleep(0)
+            closed.append(True)
+
+    task = asyncio.create_task(session_valid(factory, uuid4(), uuid4(), None))
+    await asyncio.wait_for(started.wait(), 1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert closed == [True]
 
 
 async def valid():

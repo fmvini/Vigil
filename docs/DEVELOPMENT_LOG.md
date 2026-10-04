@@ -1,5 +1,34 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Réplicas SSE reais e conexão devolvida após disconnect
+
+### Implementado
+- Três APIs Uvicorn próprias com PostgreSQL17/Redis reais, seis contas, 51 streams HTTP e commits REST alternados entre réplicas.
+- Carga cadenciada de 600 sinais/5.100 entregas, rajada de mil sinais com filas lentas de até 32, whitelist/owner, 429 local, slot reutilizado e revogação nas três APIs.
+- Correção de vazamento de conexão PostgreSQL na revalidação SSE interrompida por disconnect; shield AnyIO preserva o prazo de cinco segundos e a finalização de recursos.
+- Regressões determinísticas de cancelamento na leitura/close, propagação do cancelamento asyncio direto e módulo real exigido pela verificação central.
+
+### Arquivos principais alterados
+- `backend/app/services/events.py`, `backend/tests/test_events.py`
+- `backend/tests/test_api_replicas.py`, `backend/tests/helpers/api_replica_process.py`
+- `scripts/verify.ps1`, `backend/IMPLEMENTATION.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Uvicorn/HTTP/TCP/Redis/PG reais em portas/schemas próprios; telemetria do helper usa stdin, sem endpoint de produto. Gates false, nenhuma chamada de check externo.
+- Cancelamento de nível AnyIO podia atingir rollback/check-in repetidamente. Proteção cobre somente a revalidação delimitada; não envolve yield de generator em cancel scope nem altera sessão/cadência.
+- Filas lentas instrumentadas demonstram bounded Pub/Sub, sem alegar pressão física de socket. Sinais de carga são hints sintéticos; revisão autoritativa continua no REST.
+
+### Estado atual
+- Host passou em 35,72s, sem stderr/erro de pool após fix. Na carga local: p50 10,771ms/p95 15,839ms; 600 sinais/5.100 entregas em 3,126s; revogação nas três em 23,113s. Relatório `.cache/verification/api-replicas-host.xml`.
+- Antes do fix, dois ensaios passaram funcionalmente, mas teardown detectou conexões não devolvidas e CancelledError/SAWarning. Falha foi corrigida, sem silenciar logs. Três testes de recurso/cancelamento passaram.
+- Regressão central Linux passou: 386 backend/14 skips apenas SQLite em 211,15s, 64 tooling e 41 frontend; Ruff/TypeScript/build/Compose/firewall aprovados, zero skips obrigatórios. Módulo SSE final teve 59 passed no host, incluindo caso de cancelamento asyncio adicionado após coleta central. Linux mediu p50 4,863ms/p95 7,753ms, carga em 2,142s e revogação em 25,454s, sem stderr de réplicas.
+- Cota é de três conexões por owner/processo, podendo somar nove em três réplicas. Limites: carga local curta/cadenciada, sem SLA, balanceador, múltiplos hosts ou backpressure TCP físico. PG18 e runtime externo preservados.
+
+### Próximos passos
+- Comprovar transporte com pinning/TLS dentro do firewall e Neighbor Discovery entre namespaces, mantendo gates externos false.
+- Exercitar backpressure físico de TCP e recuperação de réplica em ambiente exclusivo antes de implantação.
+
+
 ## 2026-10-04 — Firewall de worker com queda de privilégios
 
 ### Implementado

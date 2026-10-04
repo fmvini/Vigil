@@ -1,5 +1,15 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Réplicas HTTP reais e cleanup SSE sob cancelamento
+
+- `test_api_replicas.py` inicia três Uvicorn independentes com esquema PostgreSQL17 UUID e Redis reais, portas loopback efêmeras e gates false. Seis contas/projetos sintéticos mantêm 51 streams HTTP e três assinaturas lentas instrumentadas.
+- Commits REST alternam pelas réplicas e chegam aos streams sem eco duplicado. Seiscentos sinais Redis cadenciados geraram 5.100 entregas ordenadas, com whitelist e isolamento por owner; mil sinais em rajada preservaram `snapshot.required` e filas de até 32.
+- Limite de três conexões é por conta/processo, confirmado via 429 em cada API; não é cota distribuída. Liberar uma assinatura permite reutilizar o slot HTTP. Logout em uma API fecha streams da sessão nas três pela cadência real de 30s, preservando outros owners.
+- O disconnect imediatamente após headers reproduziu vazamento de conexão na revalidação SSE sob cancelamento AnyIO. `session_valid` agora protege leitura/devolução de recursos com CancelScope shield, preservando prazo asyncio de 5s; testes cobrem cancelamento na leitura/close e propagação de cancelamento asyncio direto.
+- Ensaio final no host: passed em 35,72s, sem stderr/erro de pool, p50 10,771ms/p95 15,839ms nas 5.100 entregas e revogação em 23,113s. Relatório `.cache/verification/api-replicas-host.xml`. Linux: p50 4,863ms/p95 7,753ms, carga em 2,142s e revogação em 25,454s.
+- Regressão central: 386 backend passed/14 skips apenas SQLite em 211,15s, 64 tooling e 41 frontend passed; Ruff/TypeScript/build/Compose e firewall físico aprovados. Módulo SSE final teve 59 passed no host, incluindo o caso adicional de cancelamento asyncio validado após coleta central.
+- Limites: carga local cadenciada, sem SLA produtivo, load balancer ou múltiplos hosts; assinaturas lentas exercitam fila Pub/Sub, não backpressure físico do socket. REST conserva revisão persistida mesmo diante de sinais sintéticos de carga. Nenhum HTTP externo/job de check executado.
+
 ## 2026-10-04 — Crash abrupto de workers e recuperação durável
 
 - `tests/test_worker_process_recovery.py` inicia interpretadores independentes com Receiver Taskiq, PostgreSQL17 e Redis reais; interrompe somente seus próprios filhos após entrega, após claim confirmado, durante finalização não commitada e após commit antes do ACK.

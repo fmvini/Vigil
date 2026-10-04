@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import Literal
 from uuid import UUID, uuid4
 
+from anyio import CancelScope
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import select
 
@@ -178,14 +179,18 @@ class EventHub:
 
 async def session_valid(factory, session_id, user_id, settings) -> bool:
     try:
-        async with asyncio.timeout(5), factory() as db:
-            row = (
-                await db.execute(
-                    select(Session, User)
-                    .join(User, User.id == Session.user_id)
-                    .where(Session.id == session_id, Session.user_id == user_id)
-                )
-            ).first()
+        # StreamingResponse/HTTP middleware use AnyIO level cancellation. A
+        # disconnect must not repeatedly cancel SQLAlchemy's rollback/check-in.
+        # Keep the DB read and close bounded by the existing asyncio deadline.
+        with CancelScope(shield=True):
+            async with asyncio.timeout(5), factory() as db:
+                row = (
+                    await db.execute(
+                        select(Session, User)
+                        .join(User, User.id == Session.user_id)
+                        .where(Session.id == session_id, Session.user_id == user_id)
+                    )
+                ).first()
         if row is None:
             return False
         session, user = row
