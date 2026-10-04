@@ -24,10 +24,82 @@ HEADERS = {"Origin": "http://vigil-qa.test", "X-Vigil-Request": "browser"}
 
 
 class Replica:
-    def __init__(self, process, port):
+    def __init__(self, process, port, schema, socket_buffer_bytes=0):
         self.process, self.base = process, f"http://127.0.0.1:{port}"
         self.lock = asyncio.Lock()
         self.expected_send_timeouts = 0
+        self.schema, self.socket_buffer_bytes = schema, socket_buffer_bytes
+        self.crashed = False
+
+    @classmethod
+    async def start(cls, schema, *, socket_buffer_bytes=0):
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-u",
+            str(Path(__file__).parent / "helpers" / "api_replica_process.py"),
+            "--schema",
+            schema,
+            "--socket-buffer-bytes",
+            str(socket_buffer_bytes),
+            env={
+                **os.environ,
+                "VIGIL_PIPELINE_ENABLED": "false",
+                "VIGIL_MONITORING_NETWORK_ENABLED": "false",
+            },
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        replica = cls(process, 0, schema, socket_buffer_bytes)
+        try:
+            line = await asyncio.wait_for(process.stdout.readline(), 20)
+            assert line, "Own replica exited before startup"
+            ready = json.loads(line)
+            assert ready["ready"] is True
+            replica.base = f"http://127.0.0.1:{ready['port']}"
+            return replica
+        except BaseException:
+            if process.returncode is None:
+                process.kill()
+                await process.wait()
+            await replica.stderr()
+            await replica.close_stdin()
+            raise
+
+    async def stderr(self):
+        stderr = await self.process.stderr.read()
+        if stderr:
+            report = Path(
+                os.environ.get(
+                    "VIGIL_TEST_ARTIFACTS_DIR",
+                    str(Path(__file__).resolve().parents[2] / ".cache" / "verification"),
+                )
+            )
+            report.mkdir(parents=True, exist_ok=True)
+            (report / f"replica-stderr-{self.process.pid}.log").write_bytes(stderr)
+        return stderr
+
+    async def close_stdin(self):
+        self.process.stdin.close()
+        try:
+            await self.process.stdin.wait_closed()
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # own pipe can already be closed after deliberately killing its child
+
+    async def crash(self):
+        assert self.process.returncode is None
+        self.process.kill()  # only this fixture's process object, never runtime/server PID
+        await asyncio.wait_for(self.process.wait(), 5)
+        self.crashed = True
+        await self.close_stdin()
+        assert self.process.returncode != 0 and not await self.stderr()
+
+    async def restart(self):
+        assert self.crashed and self.process.returncode is not None
+        replacement = await type(self).start(
+            self.schema, socket_buffer_bytes=self.socket_buffer_bytes
+        )
+        self.process, self.base, self.crashed = replacement.process, replacement.base, False
 
     async def command(self, command, **data):
         async with self.lock:
@@ -38,21 +110,18 @@ class Replica:
             return json.loads(line)
 
     async def close(self):
+        if self.process.returncode is not None:
+            if not self.crashed:
+                await self.stderr()
+            await self.close_stdin()
+            assert self.crashed, "Owned API exited unexpectedly"
+            return
         if self.process.returncode is None:
             try:
                 diagnostics = (await self.command("stats"))["errors"]
                 assert await self.command("stop") == {"closed": True, "subscriptions": 0}
                 assert await asyncio.wait_for(self.process.wait(), 10) == 0
-                stderr = await self.process.stderr.read()
-                if stderr:
-                    report = Path(
-                        os.environ.get(
-                            "VIGIL_TEST_ARTIFACTS_DIR",
-                            str(Path(__file__).resolve().parents[2] / ".cache" / "verification"),
-                        )
-                    )
-                    report.mkdir(parents=True, exist_ok=True)
-                    (report / f"replica-stderr-{self.process.pid}.log").write_bytes(stderr)
+                stderr = await self.stderr()
                 assert diagnostics == {
                     "send_timeouts": self.expected_send_timeouts,
                     "unexpected": 0,
@@ -76,8 +145,7 @@ class Replica:
                 if self.process.returncode is None:
                     self.process.kill()  # only this fixture's child; never runtime API/server
                     await self.process.wait()
-                self.process.stdin.close()
-                await self.process.stdin.wait_closed()
+                await self.close_stdin()
 
 
 @pytest_asyncio.fixture
@@ -89,42 +157,20 @@ async def replicas(pg_engine, request):
         assert await redis.ping()
     async with create_session_factory(pg_engine)() as db:
         schema = await db.scalar(select(func.current_schema()))
-    processes, result = [], []
+    result = []
     options = getattr(request, "param", {})
     try:
         for _ in range(options.get("count", 3)):
-            process = await asyncio.create_subprocess_exec(
-                sys.executable,
-                "-u",
-                str(Path(__file__).parent / "helpers" / "api_replica_process.py"),
-                "--schema",
-                schema,
-                "--socket-buffer-bytes",
-                str(options.get("socket_buffer_bytes", 0)),
-                env={
-                    **os.environ,
-                    "VIGIL_PIPELINE_ENABLED": "false",
-                    "VIGIL_MONITORING_NETWORK_ENABLED": "false",
-                },
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            result.append(
+                await Replica.start(
+                    schema, socket_buffer_bytes=options.get("socket_buffer_bytes", 0)
+                )
             )
-            processes.append(process)
-            line = await asyncio.wait_for(process.stdout.readline(), 20)
-            assert line, "Own replica exited before startup"
-            ready = json.loads(line)
-            assert ready["ready"] is True
-            result.append(Replica(process, ready["port"]))
         yield result
     finally:
         cleanup_results = await asyncio.gather(
             *(replica.close() for replica in result), return_exceptions=True
         )
-        for process in processes:
-            if process.returncode is None:
-                process.kill()
-                await process.wait()
         for cleanup_result in cleanup_results:
             if isinstance(cleanup_result, BaseException):
                 raise cleanup_result
@@ -157,10 +203,15 @@ class Frames:
     def revisions(self):
         return [data["revision"] for kind, data, _ in self.frames if kind == "project.updated"]
 
-    async def close(self):
+    async def close(self, *, expected_disconnect=False):
         self.task.cancel()
         result = await asyncio.gather(self.task, return_exceptions=True)
-        assert result[0] is None or isinstance(result[0], asyncio.CancelledError), result
+        allowed = (
+            (asyncio.CancelledError, httpx.ReadError, httpx.RemoteProtocolError)
+            if expected_disconnect
+            else (asyncio.CancelledError,)
+        )
+        assert result[0] is None or isinstance(result[0], allowed), result
 
 
 async def wait_for(predicate, readers=(), *, timeout=15):
@@ -171,6 +222,111 @@ async def wait_for(predicate, readers=(), *, timeout=15):
                     await reader.task  # report parser/isolation error instead of hiding timeout
                     raise AssertionError("Unexpected SSE EOF")
             await asyncio.sleep(0.01)
+
+
+@pytest.mark.parametrize("replicas", [{"count": 2}], indirect=True)
+async def test_real_api_crash_reconnect_snapshot_and_replacement_rejoins_fanout(replicas, request):
+    failed, survivor = replicas
+    readers, created, original = [], [], None
+    crashed = False
+    async with AsyncExitStack() as stack:
+        client = await stack.enter_async_context(httpx.AsyncClient(headers=HEADERS, timeout=5))
+        credentials = {
+            "email": f"recovery-{uuid4().hex}@example.com",
+            "password": "isolated replica recovery password",
+        }
+        response = await client.post(failed.base + "/api/v1/auth/register", json=credentials)
+        assert response.status_code == 201
+        owner = response.json()["id"]
+        response = await client.post(failed.base + "/api/v1/auth/login", json=credentials)
+        assert response.status_code == 200
+        client.headers["X-CSRF-Token"] = response.json()["csrf_token"]
+        response = await client.post(
+            failed.base + "/api/v1/projects", json={"name": "Replica recovery fixture"}
+        )
+        assert response.status_code == 201
+        project = response.json()["id"]
+
+        async def stream(replica):
+            response = await stack.enter_async_context(
+                client.stream("GET", replica.base + "/api/v1/events", timeout=None)
+            )
+            assert response.status_code == 200
+            reader = Frames(response, project)
+            created.append(reader)
+            await wait_for(
+                lambda: any(
+                    kind == "snapshot.required" and data["reason"] == "connected"
+                    for kind, data, _ in reader.frames
+                ),
+                [reader],
+            )
+            return reader
+
+        try:
+            original = await stream(failed)
+            readers.append(await stream(survivor))
+            old_pid = failed.process.pid
+            started = time.perf_counter()
+            await failed.crash()
+            crashed = True
+            async with asyncio.timeout(5):
+                while not original.task.done():
+                    await asyncio.sleep(0.01)
+            result = (await asyncio.gather(original.task, return_exceptions=True))[0]
+            assert result is None or isinstance(
+                result, (httpx.ReadError, httpx.RemoteProtocolError)
+            )
+            assert not readers[0].task.done()
+            response = await client.patch(
+                survivor.base + "/api/v1/projects/" + project,
+                json={"name": "Commit during lost stream"},
+            )
+            assert response.status_code == 200 and response.json()["revision"] == 1
+            await wait_for(lambda: 1 in readers[0].revisions(), readers)
+            # The missed hint has no replay. A newly connected stream requests
+            # a REST snapshot, which recovers the durable commit made in the gap.
+            reconnected = await stream(survivor)
+            readers.append(reconnected)
+            assert reconnected.revisions() == []
+            response = await client.get(survivor.base + "/api/v1/projects/" + project)
+            assert response.status_code == 200 and response.json()["revision"] == 1
+            await failed.restart()
+            assert failed.process.pid != old_pid
+            replacement = await stream(failed)
+            readers.append(replacement)
+            response = await client.get(failed.base + "/api/v1/projects/" + project)
+            assert response.status_code == 200 and response.json()["revision"] == 1
+            async with asyncio.timeout(10):
+                while not (await failed.command("stats"))["connected"]:
+                    await asyncio.sleep(0.01)
+            response = await client.patch(
+                survivor.base + "/api/v1/projects/" + project,
+                json={"name": "Commit after replacement"},
+            )
+            assert response.status_code == 200 and response.json()["revision"] == 2
+            await wait_for(lambda: all(2 in reader.revisions() for reader in readers), readers)
+            assert reconnected.revisions() == replacement.revisions() == [2]
+            assert (await failed.command("stats"))["owners"] == {owner: 1}
+            assert (await survivor.command("stats"))["owners"] == {owner: 2}
+            request.node.user_properties.extend(
+                [
+                    ("reconnect_snapshot_revision", 1),
+                    ("replacement_fanout_revision", 2),
+                    ("recovery_seconds", round(time.perf_counter() - started, 3)),
+                ]
+            )
+        finally:
+            results = await asyncio.gather(
+                *(
+                    reader.close(expected_disconnect=reader is original and crashed)
+                    for reader in created
+                ),
+                return_exceptions=True,
+            )
+            for result in results:
+                if isinstance(result, BaseException):
+                    raise result
 
 
 async def test_real_three_api_replicas_owner_fanout_bounded_queues_and_local_quota(

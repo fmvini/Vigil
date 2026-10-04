@@ -1,6 +1,7 @@
 """Build/probe worker firewall in an exclusively owned internal Docker network."""
 
 import argparse
+import ipaddress
 import json
 import subprocess
 import time
@@ -249,9 +250,9 @@ def ndp_probe(docker, *, image="vigil-worker-egress:qa"):
     # no external forwarding; this is a fixture, not an assertion of IP ownership
     # or Internet availability. Public aliases outside an internal prefix cannot
     # cross that bridge's isolation filter.
-    prefix = (
-        "3000:" + ":".join(f"{int(token[start : start + 4], 16):x}" for start in (0, 4, 8)) + "::"
-    )
+    prefix = ipaddress.IPv6Address(
+        "3000:" + ":".join(token[start : start + 4] for start in (0, 4, 8)) + "::"
+    ).compressed
     subnet, target = prefix + "/124", prefix + "1"
     report = {"token": token, "network": network, "target": target, "success": False}
     created = False

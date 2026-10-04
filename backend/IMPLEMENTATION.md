@@ -1,5 +1,13 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Queda, reconexão e substituição de réplica API
+
+- Novo caso em `tests/test_api_replicas.py` encerra abruptamente somente uma API filha própria. A réplica sobrevivente mantém SSE/REST e confirma um commit enquanto o stream antigo está perdido.
+- Cliente reconecta explicitamente, recebe `snapshot.required/connected` e recupera revisão 1 pelo REST; não há replay de hints antigos. Outra API filha, com PID/porta novos e mesmo schema/sessão, retorna ao Pub/Sub e entrega revisão 2 junto com a sobrevivente.
+- Fixture encapsula startup, crash e reposição, fecha pipes em ambos os sistemas e limpa todos os readers/filhos mesmo se um teardown falhar. Saída inesperada passa a ser falha e tem stderr privado preservado.
+- Recuperação/carga/TCP passaram juntos: três testes reais em 58,08s no Windows e 58,66s no Linux, com recovery 1,702s/1,947s. Relatórios `.cache/verification/replica-recovery-host.xml` e `.cache/verification/events-tcp-linux.xml`. Aplicação não mudou; central anterior conserva 388 passed/14 skips SQLite, 41 frontend.
+- Limites: reconexão HTTP explícita para réplica/porta conhecida; não prova retry automático do EventSource, balanceador, recuperação de host/infra ou SLA. Gates false, schemas UUID, APIs/Redis/PG compartilhados preservados.
+
 ## 2026-10-04 — Pressão TCP física de SSE e prazo de envio
 
 - `test_events_tcp.py` usa uma API Uvicorn filha, PG17/schema UUID e Redis reais. Socket raw recebe headers e deixa de ler; buffers reais reduzidos somente no helper tornam a pressão física reproduzível, sem adapter ASGI de send.

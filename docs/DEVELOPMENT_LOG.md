@@ -1,5 +1,52 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Recuperação de stream após crash e substituição de API
+
+### Implementado
+- Ensaio real com duas APIs filhas: crash de uma, continuidade da sobrevivente e commit persistido durante a perda do stream.
+- Reconexão explícita recebe snapshot inicial e recupera revisão perdida pelo REST sem replay; nova API retorna ao fanout Redis usando o mesmo schema/sessão.
+- Fixture centraliza startup/crash/reposição e cleanup de pipes/readers/filhos; saída inesperada é falha e mantém stderr privado.
+
+### Arquivos principais alterados
+- `backend/tests/test_api_replicas.py`, `backend/IMPLEMENTATION.md`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Kill usa somente o objeto de subprocesso criado pelo próprio teste, sem PID de runtime/servidores. API substituta recebe porta efêmera nova, evitando rebinding ou interferência em listeners alheios.
+- SSE é efêmero: revisão 1 commitada no gap vem do REST, e revisão 2 posterior chega ao stream reaberto e à nova réplica. Sessão persiste no PostgreSQL, sem novo login.
+- ReadError/RemoteProtocolError são aceitos somente para reader cuja API foi deliberadamente encerrada; assertions de owner/DTO e erros de outros readers continuam falhando.
+
+### Estado atual
+- Três testes reais de recuperação, carga e TCP passaram juntos: host 58,08s/Linux 58,66s. Recuperação manual medida em 1,702s/1,947s, sem stderr inesperado; quotas locais voltaram a um stream na substituta/dois na sobrevivente.
+- Relatórios `.cache/verification/replica-recovery-host.xml` e `.cache/verification/events-tcp-linux.xml`; Ruff aprovado. Aplicação/infra não foram alteradas: central anterior permanece 388 backend/14 skips apenas SQLite e 41 frontend; tooling atual tem 76 passed.
+- Gates false; PG18 e serviços compartilhados preservados. Limites: reconexão HTTP explícita para porta conhecida, sem retry automático do navegador, balanceador ou recuperação de host/infra.
+
+### Próximos passos
+- Provar EventSource nativo reconectando automaticamente e reconciliando o produto por REST, com UI/proxy/API QA exclusivos e nenhum restart compartilhado.
+- Incluir evidência reproduzível de navegador na verificação operacional, preservando cookies/credenciais fora dos relatórios.
+
+
+## 2026-10-04 — Prefixo IPv6 canônico no verificador NDP
+
+### Implementado
+- Geração do prefixo QA usa IPv6Address.compressed, incluindo hextets zero adjacentes ao sufixo, para coincidir com a representação retornada pelo Docker.
+- Guard parametrizado cobre zeros à esquerda, hextet final zero e prefixo com os três hextets zero.
+
+### Arquivos principais alterados
+- `scripts/egress_check.py`, `scripts/tests/test_worker_egress.py`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Remover zeros à esquerda de cada hextet isoladamente não comprimia a sequência completa; endereços válidos eram recusados antes do peer. Normalização usa parser IPv6 padrão, sem relaxar ownership/isolation guards.
+
+### Estado atual
+- Dois novos casos falharam antes da correção. Após fix: 76 testes operacionais passaram com PG17 e Ruff aprovou.
+- Prova física com prefixo `3000::/124`, peer `3000::1` e token de recurso aleatório passou: timeout com NDP bloqueado, TLS padrão após restauração e cleanup confirmado. Relatório `.cache/egress-qa/00000000000042dbba8096840331b83f/report.json`.
+- Aplicações não foram alteradas; última central continua 388 backend/14 skips apenas SQLite e 41 frontend. Gates false e serviços compartilhados preservados.
+
+### Próximos passos
+- Provar reconexão/snapshot REST após queda e retorno de réplica própria, sem parar servidores compartilhados.
+
+
 ## 2026-10-04 — Ensaio de pressão TCP física de SSE
 
 ### Implementado

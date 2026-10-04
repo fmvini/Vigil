@@ -305,12 +305,20 @@ class NdpDocker:
         }
 
 
-def test_ndp_proof_handles_advertisement_and_canonical_ipv6_prefix(monkeypatch):
-    monkeypatch.setattr(checker, "uuid4", lambda: SimpleNamespace(hex="000100020003" + "a" * 20))
+@pytest.mark.parametrize(
+    "hextets,target",
+    [
+        ("000100020003", "3000:1:2:3::1"),
+        ("000100020000", "3000:1:2::1"),
+        ("000000000000", "3000::1"),
+    ],
+)
+def test_ndp_proof_handles_advertisement_and_canonical_ipv6_prefix(monkeypatch, hextets, target):
+    monkeypatch.setattr(checker, "uuid4", lambda: SimpleNamespace(hex=hextets + "a" * 20))
     docker = NdpDocker()
     report = checker.ndp_probe(docker)
     assert report["success"] and report["cleanup"] == "confirmed"
-    assert report["target"] == "3000:1:2:3::1"
+    assert report["target"] == target
     assert report["probe"]["accepted_solicitations"] == 0
     assert ("network", "rm", report["network"]) in docker.calls
     runs = [args for args in docker.calls if args[0] == "run"]
