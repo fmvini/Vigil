@@ -27,6 +27,7 @@ class Replica:
     def __init__(self, process, port):
         self.process, self.base = process, f"http://127.0.0.1:{port}"
         self.lock = asyncio.Lock()
+        self.expected_send_timeouts = 0
 
     async def command(self, command, **data):
         async with self.lock:
@@ -39,14 +40,38 @@ class Replica:
     async def close(self):
         if self.process.returncode is None:
             try:
+                diagnostics = (await self.command("stats"))["errors"]
                 assert await self.command("stop") == {"closed": True, "subscriptions": 0}
                 assert await asyncio.wait_for(self.process.wait(), 10) == 0
                 stderr = await self.process.stderr.read()
                 if stderr:
-                    report = Path(__file__).resolve().parents[2] / ".cache" / "verification"
+                    report = Path(
+                        os.environ.get(
+                            "VIGIL_TEST_ARTIFACTS_DIR",
+                            str(Path(__file__).resolve().parents[2] / ".cache" / "verification"),
+                        )
+                    )
                     report.mkdir(parents=True, exist_ok=True)
                     (report / f"replica-stderr-{self.process.pid}.log").write_bytes(stderr)
-                assert not stderr
+                assert diagnostics == {
+                    "send_timeouts": self.expected_send_timeouts,
+                    "unexpected": 0,
+                }
+                if self.expected_send_timeouts:
+                    # Keep the complete original stderr as evidence. Only an
+                    # EventResponse deadline observed on its actual traceback is
+                    # expected; pool warnings or another server error still fail.
+                    assert (
+                        stderr.count(b"Exception in ASGI application")
+                        == self.expected_send_timeouts
+                    )
+                    assert stderr.rstrip().endswith(b"TimeoutError")
+                    assert not any(
+                        word in stderr
+                        for word in (b"SAWarning", b"sqlalchemy", b"WARNING:", b"Exception ignored")
+                    )
+                else:
+                    assert not stderr
             finally:
                 if self.process.returncode is None:
                     self.process.kill()  # only this fixture's child; never runtime API/server
@@ -56,7 +81,7 @@ class Replica:
 
 
 @pytest_asyncio.fixture
-async def replicas(pg_engine):
+async def replicas(pg_engine, request):
     url = os.getenv("VIGIL_TEST_REDIS_URL")
     if not url:
         pytest.skip("Set VIGIL_TEST_REDIS_URL for actual API replicas")
@@ -65,14 +90,17 @@ async def replicas(pg_engine):
     async with create_session_factory(pg_engine)() as db:
         schema = await db.scalar(select(func.current_schema()))
     processes, result = [], []
+    options = getattr(request, "param", {})
     try:
-        for _ in range(3):
+        for _ in range(options.get("count", 3)):
             process = await asyncio.create_subprocess_exec(
                 sys.executable,
                 "-u",
                 str(Path(__file__).parent / "helpers" / "api_replica_process.py"),
                 "--schema",
                 schema,
+                "--socket-buffer-bytes",
+                str(options.get("socket_buffer_bytes", 0)),
                 env={
                     **os.environ,
                     "VIGIL_PIPELINE_ENABLED": "false",

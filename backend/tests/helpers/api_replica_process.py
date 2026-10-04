@@ -3,10 +3,12 @@
 import argparse
 import asyncio
 import json
+import logging
 import os
 import re
 import socket
 import sys
+import traceback
 from pathlib import Path
 from uuid import UUID
 
@@ -23,8 +25,29 @@ def output(value):
     print(json.dumps(value), flush=True)
 
 
-async def run(schema):
+class ErrorProbe(logging.Handler):
+    """Observe expected send deadlines without suppressing the real error log."""
+
+    def __init__(self):
+        super().__init__(logging.ERROR)
+        self.send_timeouts = self.unexpected = 0
+
+    def emit(self, record):
+        error = record.exc_info[1] if record.exc_info else None
+        known = isinstance(error, TimeoutError) and any(
+            frame.name == "bounded_send"
+            and frame.filename.replace("\\", "/").endswith("/app/api/events.py")
+            for frame in traceback.extract_tb(error.__traceback__)
+        )
+        if known:
+            self.send_timeouts += 1
+        else:
+            self.unexpected += 1
+
+
+async def run(schema, socket_buffer_bytes=0):
     assert re.fullmatch(r"vigil_test_[a-f0-9]{32}", schema)
+    assert socket_buffer_bytes == 0 or 1024 <= socket_buffer_bytes <= 65536
     settings = Settings(
         database_url=os.environ["VIGIL_TEST_DATABASE_URL"],
         redis_url=os.environ["VIGIL_TEST_REDIS_URL"],
@@ -42,8 +65,12 @@ async def run(schema):
     server = uvicorn.Server(
         uvicorn.Config(app, log_level="error", access_log=False, timeout_graceful_shutdown=2)
     )
+    errors = ErrorProbe()
+    logging.getLogger("uvicorn.error").addHandler(errors)
     slow = {}
     with socket.socket() as listener:
+        if socket_buffer_bytes:
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, socket_buffer_bytes)
         listener.bind(("127.0.0.1", 0))
         port = listener.getsockname()[1]
         task = asyncio.create_task(server.serve(sockets=[listener]))
@@ -67,6 +94,10 @@ async def run(schema):
                     output(
                         {
                             "connected": hub.connected,
+                            "errors": {
+                                "send_timeouts": errors.send_timeouts,
+                                "unexpected": errors.unexpected,
+                            },
                             "owners": {
                                 str(owner): len(entries)
                                 for owner, entries in hub.subscriptions.items()
@@ -77,6 +108,14 @@ async def run(schema):
                                     "maxsize": entry.queue.maxsize,
                                 }
                                 for owner, entry in slow.items()
+                            },
+                            "transports": {
+                                str(connection.client[1]): {
+                                    "write_paused": connection.flow.write_paused,
+                                    "buffered_bytes": connection.transport.get_write_buffer_size(),
+                                }
+                                for connection in server.server_state.connections
+                                if connection.client is not None and connection.flow is not None
                             },
                         }
                     )
@@ -103,5 +142,6 @@ async def run(schema):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--schema", required=True)
+    parser.add_argument("--socket-buffer-bytes", type=int, default=0)
     args = parser.parse_args()
-    asyncio.run(run(args.schema))
+    asyncio.run(run(args.schema, args.socket_buffer_bytes))

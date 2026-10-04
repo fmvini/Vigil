@@ -122,6 +122,8 @@ def test_readonly_source_and_ca_used_only_during_dev_dependency_downloads(monkey
     args = runner.arguments("", "", ca_file=ca)
     assert any("target=/verification,readonly" in value for value in args)
     assert any("target=/tmp/public-ca.pem,readonly" in value for value in args)
+    assert any("target=/reports" in value for value in args)
+    assert "VIGIL_TEST_ARTIFACTS_DIR=/reports" in args
     assert args[-3:-1] == ["sh", "-ec"]
     assert args[-1].index("unset SSL_CERT_FILE") < args[-1].index("python -m pytest")
     assert "uv sync --frozen" in args[-1]

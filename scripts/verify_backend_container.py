@@ -97,6 +97,8 @@ def arguments(database_url, redis_url, *, network=None, ca_file=None, image="vig
         "VIGIL_TEST_DATABASE_URL=" + database,
         "-e",
         "VIGIL_TEST_REDIS_URL=" + redis,
+        "-e",
+        "VIGIL_TEST_ARTIFACTS_DIR=/reports",
     ]
     if network:
         result += ["--network", network]

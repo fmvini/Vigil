@@ -1,5 +1,89 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Ensaio de pressão TCP física de SSE
+
+### Implementado
+- Cliente TCP real deixa de ler após headers; API Uvicorn filha e buffers de fixture pequenos permitem observar pausa de escrita e backlog físico.
+- Prazo de envio real de dez segundos libera slot/gerador e encerra o transporte; outra conta mantém SSE/commit REST e o slot é reutilizado.
+- Helper observa diagnóstico exato de timeout de EventResponse sem suprimir stderr; outros erros/avisos de pool continuam falhando. Runner conserva logs Linux no mount privado `/reports`.
+- Módulo TCP integrado às provas obrigatórias, recusando skips em verificação completa.
+
+### Arquivos principais alterados
+- `backend/tests/test_events_tcp.py`, `backend/tests/test_api_replicas.py`, `backend/tests/helpers/api_replica_process.py`
+- `scripts/verify.ps1`, `scripts/verify_backend_container.py`, `scripts/tests/test_verify_backend_container.py`
+- `backend/IMPLEMENTATION.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Nenhum send double, mudança de prazo do produto ou alteração de buffers/gates da API compartilhada; dados ficam em schema/owners UUID de PG17 e processos próprios.
+- Escrita que cruza high-water mark pode concluir. Após detectar pausa, 16 sinais adicionais garantem envio pendente; isso corrigiu uma sincronização insuficiente do ensaio exposta na primeira regressão central.
+- Uvicorn registra TimeoutError deliberado como erro ASGI e fecha o TCP. Teste valida tipo/traceback e count esperados, preservando o diagnóstico original em vez de mascarar exceções.
+
+### Estado atual
+- Host final: passed em 15,73s. Linux: TCP e três réplicas passed em 53,26s, buffer pausado em 65.541 bytes, 688 sinais +16 pendentes, liberação em 9,994s e 71.192 bytes drenados até EOF. Relatórios `.cache/verification/events-tcp-{host,linux}.xml`.
+- Primeira central teve 387 passed/14 skips SQLite e falhou somente no ensaio TCP ainda sem envio pendente garantido. Segunda central final passou: 388 backend/14 skips apenas SQLite em 250,59s, 74 tooling e 41 frontend, zero skips obrigatórios; Ruff/TypeScript/build/Compose/whitespace aprovados.
+- Prova física firewall/TLS/NDP aprovada e cleanup confirmado: `.cache/egress-qa/1d06aae65a5e4776957a2e8a8abe94b8/report.json`. Diagnóstico de timeout esperado preservado também no mount de relatórios Linux.
+- Gates false e PG18 preservado. Limites: loopback local, buffers artificiais de fixture e um cliente travado; não mede SLA/capacidade sustentada de produção.
+
+### Próximos passos
+- Provar reconexão/snapshot REST após queda e retorno de réplica própria, preservando API/Redis/PG compartilhados.
+- Normalizar integralmente prefixos IPv6 de QA quando hextets do UUID forem zero; expandir o guard de endereço canônico antes do próximo ensaio NDP.
+
+
+## 2026-10-04 — Neighbor Discovery e TLS entre namespaces exclusivos
+
+### Implementado
+- Prova física obrigatória entre servidor e cliente em dois containers QA, com IPv6 na eth0, política real de OUTPUT e executor/transporte padrão.
+- Controle negativo bloqueia NS/NA somente no cliente descartável: TCP expira e solicitações descartadas são contadas. Política restaurada resolve o vizinho e permite TLS verificado/headers-only.
+- Guards de prefixo canônico, endereço/namespace do peer, evidência incompleta, erro/timeout de servidor e cleanup de ambos os endpoints com labels UUID.
+
+### Arquivos principais alterados
+- `infra/worker/qa_ndp_probe.py`, `infra/worker/qa_tls_probe.py`, `infra/worker/.dockerignore`
+- `scripts/egress_check.py`, `scripts/tests/test_worker_egress.py`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Prefixo global-unicast QA aleatório /124 fica somente em bridge internal descartável, sem forwarding externo ou portas publicadas; não representa propriedade/conectividade pública do endereço.
+- Prefixos externos à bridge internal impediram o primeiro protótipo de alcançar aliases do peer. O novo desenho usa endereços atribuídos à própria interface, preservando isolamento Docker.
+- Kernel pode aprender o vizinho de uma solicitação recebida e responder com anúncio. Medição conta ambos os tipos após restaurar a política, sem exigir ordem de timers; cache precisa estar resolvido na eth0.
+- Helpers/CA de fixture são mounts readonly de QA, fora da imagem de worker; nenhum ajuste de SSRF, gates, firewall do host ou servidores compartilhados.
+
+### Estado atual
+- Prova completa build/firewall/TLS/NDP passou: timeout com NDP negado, duas solicitações descartadas, um anúncio aceito, vizinho resolvido e GET TLS padrão. Ambos os cleanups confirmados; nenhuma rede QA remanescente. Relatório `.cache/egress-qa/a1af1fd82e0e4361a5f0f9afdd5981ff/report.json`.
+- 74 testes operacionais passaram com PG17; Ruff passou. Backend/frontend não foram alterados nesta etapa: regressão central anterior permanece 387 backend/14 skips apenas SQLite, 41 frontend e zero skips obrigatórios.
+- Gates false; PG18 preservado. Limites: dois namespaces na mesma bridge Docker Desktop, sem NDP entre hosts, conectividade externa ou implantação produtiva.
+
+### Próximos passos
+- Exercitar pressão física do socket SSE com cliente sem leitura, confirmando prazo de envio, liberação de slot/recursos e continuidade para cliente saudável.
+- Provar reconexão e reconciliação REST após queda de uma réplica própria; não reiniciar API/Redis/PG compartilhados.
+
+
+## 2026-10-04 — Transporte TLS padrão sob o firewall do worker
+
+### Implementado
+- Prova obrigatória com CheckExecutor/SafeTransport/backend físico padrão, sockets TLS IPv4/IPv6 próprios e filtro de OUTPUT ativo, após queda para UID10001.
+- Peer pinning, SNI/Host, encerramento após headers e negativos de CA desconhecida, hostname incorreto e respostas DNS privadas/mistas.
+- Verificador recusa evidência TLS incompleta mesmo quando o cleanup foi bem-sucedido; helpers/fixtures não entram na imagem de worker.
+
+### Arquivos principais alterados
+- `infra/worker/qa_tls_probe.py`, `infra/worker/.dockerignore`
+- `scripts/egress_check.py`, `scripts/tests/test_worker_egress.py`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Somente respostas DNS e CA de fixture são injetadas. Não há adapter de roteamento físico nem desativação de CERT_REQUIRED/hostname; proxy e CA do ambiente não substituem o transporte.
+- Servidor anuncia corpo extenso sem enviar bytes: executor precisa fechar após headers. Negativos TLS não fazem HTTP nem retry; DNS inseguro é bloqueado antes do socket.
+- Rede internal e containers UUID exclusivos, sem portas publicadas ou checks externos; cleanup verifica labels e endpoints antes de remover recursos próprios.
+
+### Estado atual
+- Regressão central final passou: 387 backend/14 skips apenas SQLite em 215,90s, 65 tooling, 41 frontend; Ruff/TypeScript/build/Compose/whitespace aprovados, zero skips obrigatórios.
+- Prova física: seis sockets permitidos/18 bloqueados, entrypoint sem privilégios e seis casos TLS aprovados, dois GETs de headers, cleanup confirmado. Relatório `.cache/egress-qa/640f13b7725540ed85ff49ef665567dc/report.json`.
+- Gates false e PG18 preservado. Limites: endereços públicos de fixture têm rotas locais ao namespace; não comprova NDP entre namespaces, disponibilidade pública, HTTP externo ou implantação produtiva.
+
+### Próximos passos
+- Provar NDP/TLS entre dois namespaces exclusivos em rede internal com prefixo QA próprio; destinos fora do prefixo são bloqueados pelo isolamento Docker antes de alcançar o peer.
+- Exercitar backpressure TCP físico e recuperação de réplica, mantendo controles compartilhados intactos.
+
+
 ## 2026-10-04 — Réplicas SSE reais e conexão devolvida após disconnect
 
 ### Implementado
@@ -22,6 +106,7 @@
 - Host passou em 35,72s, sem stderr/erro de pool após fix. Na carga local: p50 10,771ms/p95 15,839ms; 600 sinais/5.100 entregas em 3,126s; revogação nas três em 23,113s. Relatório `.cache/verification/api-replicas-host.xml`.
 - Antes do fix, dois ensaios passaram funcionalmente, mas teardown detectou conexões não devolvidas e CancelledError/SAWarning. Falha foi corrigida, sem silenciar logs. Três testes de recurso/cancelamento passaram.
 - Regressão central Linux passou: 386 backend/14 skips apenas SQLite em 211,15s, 64 tooling e 41 frontend; Ruff/TypeScript/build/Compose/firewall aprovados, zero skips obrigatórios. Módulo SSE final teve 59 passed no host, incluindo caso de cancelamento asyncio adicionado após coleta central. Linux mediu p50 4,863ms/p95 7,753ms, carga em 2,142s e revogação em 25,454s, sem stderr de réplicas.
+- API Compose atualizada somente via build/api up --no-deps, sem recriar PG/Redis/web. Runtime confirmou shield carregado, gates false, CA de build ausente e readiness via Nginx8080. Smoke Edge real `VIGIL_UI_URL=http://127.0.0.1:8080 npm run test:live` passou: EventSource nativo, connected/project.updated/periodic, reconciliação REST e revogação voltando ao login, errors=[]. Relatório privado `frontend/.impeccable/review/live-smoke.json`; criada somente conta/projeto QA próprio no PG17, sem monitores/checks.
 - Cota é de três conexões por owner/processo, podendo somar nove em três réplicas. Limites: carga local curta/cadenciada, sem SLA, balanceador, múltiplos hosts ou backpressure TCP físico. PG18 e runtime externo preservados.
 
 ### Próximos passos

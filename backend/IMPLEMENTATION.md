@@ -1,5 +1,15 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Pressão TCP física de SSE e prazo de envio
+
+- `test_events_tcp.py` usa uma API Uvicorn filha, PG17/schema UUID e Redis reais. Socket raw recebe headers e deixa de ler; buffers reais reduzidos somente no helper tornam a pressão física reproduzível, sem adapter ASGI de send.
+- Telemetria por stdin observa `write_paused` e bytes na fila do transporte. Prazo de envio de produção continua dez segundos; slot/gerador são liberados, TCP chega a EOF e a conta reutiliza o endpoint. Outra conta recebe sinal SSE e faz commit REST enquanto a primeira está bloqueada.
+- Sinais sintéticos não alteram revisões persistidas. Logger do helper observa tipo/traceback exatos do timeout de `EventResponse`, sem suprimir o stderr original; avisos de pool ou outros erros continuam falhando no teardown.
+- Host final passou em 15,73s: 688 sinais +16 após pausa, buffer de 65.587 bytes, pausa em 1,337s e liberação em 10,007s; 72.347 bytes drenados até EOF. Linux direcionado: TCP e regressão de três réplicas passaram em 53,26s; buffer pausado em 65.541 bytes, pausa em 0,932s, liberação em 9,994s, 71.192 bytes drenados.
+- A primeira regressão central expôs sincronização insuficiente do ensaio: última escrita podia cruzar high-water mark e concluir, deixando o prazo ocioso até heartbeat. Teste agora publica 16 sinais adicionais após observar pausa real, garantindo envio pendente; nenhum limite de produto foi relaxado. Segunda central final passou: 388 backend/14 skips apenas SQLite em 250,59s, 74 tooling, 41 frontend; Ruff/TypeScript/build/Compose/firewall/TLS/NDP aprovados, zero skips obrigatórios.
+- Relatórios privados `.cache/verification/events-tcp-{host,linux}.xml`. Módulo TCP obrigatório na verificação central. Gates false e APIs/PG/Redis compartilhados preservados.
+- Limites: pressão induzida por buffers de fixture, loopback local e um cliente travado; não mede capacidade/SLA produtivo. Uvicorn registra o timeout deliberado como erro ASGI e fecha a conexão; diagnóstico é preservado, não mascarado.
+
 ## 2026-10-04 — Réplicas HTTP reais e cleanup SSE sob cancelamento
 
 - `test_api_replicas.py` inicia três Uvicorn independentes com esquema PostgreSQL17 UUID e Redis reais, portas loopback efêmeras e gates false. Seis contas/projetos sintéticos mantêm 51 streams HTTP e três assinaturas lentas instrumentadas.
@@ -8,6 +18,7 @@
 - O disconnect imediatamente após headers reproduziu vazamento de conexão na revalidação SSE sob cancelamento AnyIO. `session_valid` agora protege leitura/devolução de recursos com CancelScope shield, preservando prazo asyncio de 5s; testes cobrem cancelamento na leitura/close e propagação de cancelamento asyncio direto.
 - Ensaio final no host: passed em 35,72s, sem stderr/erro de pool, p50 10,771ms/p95 15,839ms nas 5.100 entregas e revogação em 23,113s. Relatório `.cache/verification/api-replicas-host.xml`. Linux: p50 4,863ms/p95 7,753ms, carga em 2,142s e revogação em 25,454s.
 - Regressão central: 386 backend passed/14 skips apenas SQLite em 211,15s, 64 tooling e 41 frontend passed; Ruff/TypeScript/build/Compose e firewall físico aprovados. Módulo SSE final teve 59 passed no host, incluindo o caso adicional de cancelamento asyncio validado após coleta central.
+- API Compose foi reconstruída/atualizada isoladamente; shield carregado, gates false, CA de build ausente e readiness8080 confirmados. Smoke EventSource nativo no Edge8080 passou com REST/periodic/revogação e errors=[], sem mudanças no frontend ou checks externos.
 - Limites: carga local cadenciada, sem SLA produtivo, load balancer ou múltiplos hosts; assinaturas lentas exercitam fila Pub/Sub, não backpressure físico do socket. REST conserva revisão persistida mesmo diante de sinais sintéticos de carga. Nenhum HTTP externo/job de check executado.
 
 ## 2026-10-04 — Crash abrupto de workers e recuperação durável
