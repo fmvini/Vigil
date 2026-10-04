@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T13:52:34.689100+00:00",
+  "title": "Design System: Vigil",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Verde de ação"
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Verde de ação em hover"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Texto auxiliar"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Divisória"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superfície branca"
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Fundo claro"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Texto principal"
+      },
+      "control-text": {
+        "role": "neutral",
+        "displayName": "Texto de botão"
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "Borda de botão"
+      },
+      "control-border-hover": {
+        "role": "neutral",
+        "displayName": "Borda de botão em hover"
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Borda de campo"
+      },
+      "placeholder": {
+        "role": "neutral",
+        "displayName": "Placeholder"
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Plano sutil"
+      },
+      "control-active": {
+        "role": "neutral",
+        "displayName": "Botão pressionado"
+      },
+      "disabled-field": {
+        "role": "neutral",
+        "displayName": "Campo desabilitado"
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Foco visível"
+      },
+      "nav-hover": {
+        "role": "neutral",
+        "displayName": "Projeto em hover"
+      },
+      "selected-bg": {
+        "role": "primary",
+        "displayName": "Fundo do projeto atual"
+      },
+      "selected-text": {
+        "role": "primary",
+        "displayName": "Texto do projeto atual"
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Ação destrutiva e saúde offline"
+      },
+      "danger-hover": {
+        "role": "semantic",
+        "displayName": "Ação destrutiva em hover"
+      },
+      "data-none-bg": {
+        "role": "semantic",
+        "displayName": "Sem dados: fundo"
+      },
+      "data-none-text": {
+        "role": "semantic",
+        "displayName": "Sem dados: texto"
+      },
+      "data-stale-bg": {
+        "role": "semantic",
+        "displayName": "Dados antigos: fundo"
+      },
+      "data-stale-text": {
+        "role": "semantic",
+        "displayName": "Dados antigos: texto"
+      },
+      "data-paused-bg": {
+        "role": "semantic",
+        "displayName": "Pausa: fundo"
+      },
+      "data-paused-text": {
+        "role": "semantic",
+        "displayName": "Pausa: texto"
+      },
+      "data-fresh-bg": {
+        "role": "semantic",
+        "displayName": "Dados atuais: fundo"
+      },
+      "data-fresh-text": {
+        "role": "semantic",
+        "displayName": "Dados atuais: texto"
+      },
+      "health-online": {
+        "role": "semantic",
+        "displayName": "Saúde online"
+      },
+      "health-degraded": {
+        "role": "semantic",
+        "displayName": "Saúde degradada"
+      },
+      "alert-bg": {
+        "role": "semantic",
+        "displayName": "Alerta: fundo"
+      },
+      "alert-text": {
+        "role": "semantic",
+        "displayName": "Alerta: texto"
+      },
+      "alert-border": {
+        "role": "semantic",
+        "displayName": "Alerta: borda"
+      },
+      "success-bg": {
+        "role": "semantic",
+        "displayName": "Sucesso: fundo"
+      },
+      "success-text": {
+        "role": "semantic",
+        "displayName": "Sucesso: texto"
+      },
+      "success-border": {
+        "role": "semantic",
+        "displayName": "Sucesso: borda"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Mensagem de autenticação",
+        "purpose": "Título da apresentação de login/cadastro."
+      },
+      "headline": {
+        "displayName": "Título principal",
+        "purpose": "Nome do projeto e títulos principais."
+      },
+      "title": {
+        "displayName": "Título de seção",
+        "purpose": "Monitores e editores inline."
+      },
+      "body": {
+        "displayName": "Texto corrente",
+        "purpose": "Conteúdo com entrelinha global, sem tamanho de fonte global explícito."
+      },
+      "label": {
+        "displayName": "Rótulo",
+        "purpose": "Rótulos de campos associados."
+      },
+      "caption": {
+        "displayName": "Texto auxiliar",
+        "purpose": "Ajuda de campos e contexto."
+      },
+      "button": {
+        "displayName": "Ação",
+        "purpose": "Tipografia e entrelinha próprias dos botões."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "button-state-transition",
+        "value": "background 160ms, border-color 160ms",
+        "purpose": "Transição observada em botões; removida por prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop",
+        "value": "1150px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Salvar monitor. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
+      "html": "<button type=\"button\" class=\"ds-button-primary\">Salvar monitor</button>",
+      "css": ".ds-button-primary{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--accent,#145c43);border-color:var(--accent,#145c43);color:#fff;}.ds-button-primary:hover{background:#edf2ef;border-color:#90a79a;background:var(--accent-hover,#0e4934);border-color:var(--accent-hover,#0e4934);}.ds-button-primary:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none!important;}}"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Cancelar. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
+      "html": "<button type=\"button\" class=\"ds-button-secondary\">Cancelar</button>",
+      "css": ".ds-button-secondary{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;}.ds-button-secondary:hover{background:#edf2ef;border-color:#90a79a;}.ds-button-secondary:active{background:#e3ece6;}.ds-button-secondary:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-secondary:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none!important;}}"
+    },
+    {
+      "name": "Confirmação destrutiva",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Confirmar arquivamento. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
+      "html": "<button type=\"button\" class=\"ds-button-danger\">Confirmar arquivamento</button>",
+      "css": ".ds-button-danger{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--danger,#a12828);border-color:var(--danger,#a12828);color:#fff;}.ds-button-danger:hover{background:#edf2ef;border-color:#90a79a;background:#842020;}.ds-button-danger:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-danger:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none!important;}}"
+    },
+    {
+      "name": "Ação destrutiva discreta",
+      "kind": "button",
+      "refersTo": "button-danger-text",
+      "description": "Arquivar projeto. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
+      "html": "<button type=\"button\" class=\"ds-button-danger-text\">Arquivar projeto</button>",
+      "css": ".ds-button-danger-text{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;color:var(--danger,#a12828);}.ds-button-danger-text:hover{background:#edf2ef;border-color:#90a79a;}.ds-button-danger-text:active{background:#e3ece6;}.ds-button-danger-text:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-danger-text:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-danger-text{transition:none!important;}}"
+    },
+    {
+      "name": "Botão de texto",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Sair da conta. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
+      "html": "<button type=\"button\" class=\"ds-button-link\">Sair da conta</button>",
+      "css": ".ds-button-link{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;padding:4px 0;border:0;border-radius:2px;background:none;color:var(--accent,#145c43);}.ds-button-link:hover{background:#edf2ef;border-color:#90a79a;background:none;text-decoration:underline;text-underline-offset:4px;}.ds-button-link:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-link:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-link{transition:none!important;}}"
+    },
+    {
+      "name": "Campo com rótulo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo com rótulo associado, borda e foco global; o exemplo não envia dados. Fonte: src/Forms.tsx e src/styles.css.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-monitor-name\">Nome do monitor</label><input class=\"ds-field\" id=\"ds-monitor-name\" type=\"text\" maxlength=\"100\" required>",
+      "css": ".ds-field-label{display:block;margin:18px 0 6px;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;color:#202d28;line-height:1.5;}.ds-field{width:100%;min-height:42px;padding:10px 12px;border:1px solid #aebfb4;border-radius:var(--radius,6px);background:#fff;color:#202d28;caret-color:var(--accent,#145c43);font-family:Public Sans,sans-serif;font-weight:400;line-height:1.5;}.ds-field::placeholder{color:#64746a;opacity:1;}.ds-field:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-field:disabled{background:#edf1ee;}"
+    },
+    {
+      "name": "Navegação de projetos",
+      "kind": "nav",
+      "refersTo": "nav-project",
+      "description": "Projeto atual indicado por aria-current e seleção tonal. Fonte: src/App.tsx; a interação de seleção pertence ao runtime React.",
+      "html": "<nav class=\"ds-project-nav\" aria-label=\"Projetos\"><ul class=\"ds-project-list\"><li><button type=\"button\" class=\"ds-project\" aria-current=\"page\">Projeto atual</button></li><li><button type=\"button\" class=\"ds-project\">Outro projeto</button></li></ul></nav>",
+      "css": ".ds-project-nav{background:#edf2ef;padding:20px;}.ds-project-list{list-style:none;margin:-12px 0 0;padding:0;}.ds-project{font-family:Public Sans,sans-serif;font-size:.875rem;line-height:1.4;border:none;border-radius:var(--radius,6px);padding:11px 12px;background:transparent;color:#283a30;width:100%;text-align:left;overflow-wrap:anywhere;font-weight:500;cursor:pointer;transition:background 160ms,border-color 160ms;}.ds-project:hover{background:#e0e9e3;}.ds-project:active{background:#e3ece6;}.ds-project[aria-current]{color:#124b36;background:#d7e7dd;font-weight:600;}.ds-project:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-project:disabled{opacity:.55;cursor:not-allowed;}@media(max-width:760px){.ds-project-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:0;}.ds-project-list li{max-width:100%;}.ds-project{padding:8px 12px;}}@media(prefers-reduced-motion:reduce){.ds-project{transition:none!important;}}"
+    },
+    {
+      "name": "Qualidade dos dados",
+      "kind": "chip",
+      "refersTo": "badge-no-data",
+      "description": "Quatro estados presentes no código; rótulos estáticos sem hover, foco ou ação. Não são medições do endpoint. Fonte: src/App.tsx e src/styles.css.",
+      "html": "<span class=\"ds-badge ds-no-data\">Sem dados</span> <span class=\"ds-badge ds-stale\">Desatualizados</span> <span class=\"ds-badge ds-paused\">Pausado</span> <span class=\"ds-badge ds-fresh\">Atualizados</span>",
+      "css": ".ds-badge{display:inline-block;padding:3px 8px;border-radius:4px;white-space:nowrap;font-family:Public Sans,sans-serif;font-size:.75rem;font-weight:500;line-height:1.5;}.ds-no-data{background:#e9eeeb;color:#485b4f;}.ds-stale{background:#fff0d2;color:#77520b;}.ds-paused{background:#e7edf8;color:#385276;}.ds-fresh{background:#dff0e5;color:#235b3a;}"
+    },
+    {
+      "name": "Editor inline",
+      "kind": "card",
+      "refersTo": "editor",
+      "description": "Superfície real de ProjectForm/MonitorForm. O snippet apresenta apenas o container, sem simular salvamento ou validação.",
+      "html": "<section class=\"ds-editor\" aria-labelledby=\"ds-editor-title\"><h2 id=\"ds-editor-title\">Novo monitor</h2><p>O método é GET. Alterar as regras de check reinicia a leitura de saúde.</p></section>",
+      "css": ".ds-editor{background:#fff;color:#202d28;border:1px solid var(--border,#dbe3de);border-radius:12px;padding:28px;margin-bottom:32px;font-family:Public Sans,sans-serif;line-height:1.5;}.ds-editor h2{margin:0 0 6px;font-size:1.25rem;line-height:1.4;letter-spacing:-.02em;font-weight:600;}.ds-editor p{margin-top:0;max-width:70ch;font-size:.875rem;color:var(--muted,#5c6b63);}@media(max-width:760px){.ds-editor{padding:20px;}}"
+    },
+    {
+      "name": "Linha de monitor responsiva",
+      "kind": "custom",
+      "refersTo": "monitor-row",
+      "description": "A estrutura de MonitorRow conserva tabela no desktop e campos rotulados no mobile. Exemplo sem medição; nomes e URL são placeholders.",
+      "html": "<table class=\"ds-monitor-table\"><caption class=\"ds-table-caption\">Estrutura de um monitor sem medição</caption><thead><tr><th scope=\"col\">Endpoint</th><th scope=\"col\">Dados</th><th scope=\"col\">Última saúde</th><th scope=\"col\">Último check</th></tr></thead><tbody><tr><td data-label=\"Endpoint\"><strong class=\"ds-monitor-name\">Nome do monitor</strong><span class=\"ds-endpoint\">https://api.seuservico.com/health</span></td><td data-label=\"Dados\"><span class=\"ds-row-badge\">Sem dados</span></td><td data-label=\"Última saúde\"><span class=\"ds-row-quiet\">Não avaliada</span></td><td data-label=\"Último check\"><span class=\"ds-row-quiet\">Nenhum check</span></td></tr></tbody></table>",
+      "css": ".ds-monitor-table{width:100%;border-collapse:collapse;text-align:left;font-family:Public Sans,sans-serif;font-size:.8125rem;line-height:1.5;color:#202d28;}.ds-table-caption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}.ds-monitor-table th{font-weight:500;color:var(--muted,#5c6b63);font-size:.75rem;padding:12px 16px;background:#edf2ef;white-space:nowrap;}.ds-monitor-table td{padding:20px 16px;border-bottom:1px solid var(--border,#dbe3de);vertical-align:top;font-variant-numeric:tabular-nums;}.ds-monitor-table td:first-child{min-width:190px;max-width:300px;}.ds-monitor-name{font-size:.875rem;font-weight:600;display:block;overflow-wrap:anywhere;}.ds-endpoint{display:block;color:var(--muted,#5c6b63);font-size:.75rem;overflow-wrap:anywhere;margin:4px 0;}.ds-row-quiet{color:var(--muted,#5c6b63);}.ds-row-badge{display:inline-block;padding:3px 8px;border-radius:4px;white-space:nowrap;font-size:.75rem;font-weight:500;background:#e9eeeb;color:#485b4f;}@media(max-width:760px){.ds-monitor-table,.ds-monitor-table tbody,.ds-monitor-table tr,.ds-monitor-table td{display:block;width:100%;}.ds-monitor-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}.ds-monitor-table tr{background:white;border:1px solid var(--border,#dbe3de);border-radius:12px;padding:18px;margin-bottom:12px;}.ds-monitor-table td{border-bottom:0;padding:8px 0;}.ds-monitor-table td:not(:first-child){display:grid;grid-template-columns:106px minmax(0,1fr);column-gap:12px;}.ds-monitor-table td:not(:first-child)::before{content:attr(data-label);color:var(--muted,#5c6b63);font-size:.75rem;}.ds-monitor-table td:first-child{min-width:0;max-width:none;padding:0 0 12px;margin-bottom:8px;border-bottom:1px solid var(--border,#dbe3de);}.ds-row-badge{justify-self:start;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Console de operações",
+    "overview": "O Vigil apresenta um console claro e sóbrio para administrar projetos e monitores HTTP. Texto, divisórias e uma única cor de ação organizam o trabalho; a densidade permite comparar endpoints sem esconder o contexto de cada leitura.\n\nEste documento registra decisões observadas neste incremento em `src/styles.css`, `src/App.tsx` e `src/Forms.tsx`. A direção deriva do brief e da autorização de implementação em `PRODUCT.md`; não representa uma preferência pessoal declarada pelo usuário. A separação entre saúde e qualidade dos dados orienta a apresentação de estados.",
+    "keyCharacteristics": [
+      "Superfícies claras, bordas discretas e nenhuma sombra.",
+      "Public Sans local com hierarquia compacta.",
+      "Verde profundo nas ações principais e seleção de projetos.",
+      "Saúde e atualização dos dados em campos distintos.",
+      "Formulários inline e lista adaptada à largura disponível."
+    ],
+    "rules": [
+      {
+        "name": "The Independent States Rule",
+        "body": "Mostre a saúde e a qualidade dos dados separadamente; ausência ou idade da leitura não comunica um serviço saudável.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Surfaces Rule",
+        "body": "Preserve a separação por tom e borda das superfícies existentes.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** preserve a hierarquia de texto, bordas e superfícies claras observada no código.",
+      "**Do** mantenha rótulos de saúde e qualidade dos dados independentes.",
+      "**Do** preserve foco visível, rótulos de formulário e estados de envio desabilitados.",
+      "**Do** adapte tabela, formulários e navegação nos breakpoints existentes."
+    ],
+    "donts": [
+      "**Don't** apresente dados ausentes ou desatualizados como confirmação de saúde.",
+      "**Don't** acrescente medições, uptime ou gráficos sem dados reais disponíveis.",
+      "**Don't** acrescente sombras ou decoração que substituam a organização por tom e borda deste incremento.",
+      "**Don't** trate o horário de consulta da configuração como o horário de um check."
+    ]
+  }
+}
