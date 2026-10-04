@@ -1,5 +1,14 @@
 # Implementação do frontend Vigil
 
+## 2026-10-04 — Smoke de observações preenchidas no Compose
+
+- `npm.cmd run test:observations` usa Playwright/Edge e manifesto privado produzido pelo seed PostgreSQL 17. O teste não cria dados, simula REST ou acessa URLs de monitores.
+- Aprovado em `http://127.0.0.1:8080` com API/Nginx/PG17 reais, desktop 1440 e mobile 390. Conferidos métricas 24h/7d/30d, contadores, valores de cada bucket UTC, apresentação no fuso America/Sao_Paulo, freshness/saúde histórica, paginação, tentativas e retries recuperados.
+- Incidentes por projeto/monitor/página pública, filtros abertos/encerrados e motivos administrativos conferidos. Página pública sem autenticação/SSE/cookies, URLs privadas, email ou sentinela privada. Quatorze verificações de viewport sem overflow; `errors=[]`.
+- Relatório/capturas em `.impeccable/review/observations-smoke.json` e arquivos PNG, ignorados no Git/Docker. Manifesto expira para este teste após 45 minutos para evitar deriva da janela móvel; repetir seed com novo caminho quando necessário.
+- Estes são dados sintéticos persistidos, sem checks HTTP reais nem prova de disponibilidade externa. Produto não precisou de alteração; seletores e esperas corrigidos somente no tooling.
+
+
 ## 2026-10-04 — Observações REST, SSE e status pública integrados
 
 ### Implementado

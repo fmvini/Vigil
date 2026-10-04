@@ -1,5 +1,145 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Crash de workers nos limites de persistência e ACK
+
+### Implementado
+- Ensaio com subprocessos independentes, Receiver Taskiq e tarefa reais, PostgreSQL17 e Redis: crash após entrega, após claim, dentro da transação final e após commit antes do ACK.
+- Reclaim de mensagem órfã, proteção da lease, retry pelo scheduler/publicador, replay sem duplicação e três crashes técnicos com esgotamento sem resultado de saúde/incidente.
+- Módulo incluído entre as integrações obrigatórias da verificação central.
+
+### Arquivos principais alterados
+- `backend/tests/helpers/worker_crash_process.py`, `backend/tests/test_worker_process_recovery.py`
+- `scripts/verify.ps1`, `backend/IMPLEMENTATION.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Somente filhos próprios recebem kill; schemas e streams UUID isolam dados. Não há sinais para servidores compartilhados, FLUSHDB, HTTP externo ou mudança de gates.
+- Executor sintético e leases de 12s/2s são adapters exclusivos do teste; claim/finalize, transações, broker/ACK e processos são reais. Lease padrão de produção permanece 90s.
+- Estado PostgreSQL é a autoridade: mensagem de job ocupado pode ser ACKada, e lease vencida volta pelo scheduler, sem exigir retenção eterna na PEL.
+
+### Estado atual
+- Cinco cenários passaram com PG17.11/Redis7.4.11 no host em 66,30s e no Linux, incluindo rollback após flush e commit antes do ACK. Regressão central final: 383 backend passed/14 skips apenas SQLite em 214,06s; 30 tooling e 41 frontend passed; Ruff/TypeScript/build/Compose/whitespace aprovados.
+- Primeira regressão teve timeout transitório na abertura de conexão pelo gateway Docker Desktop, antes de executar o teste de concorrência de incidentes. Segunda execução integral passou, sem alteração de código para esconder a falha.
+- Gates false e PG18/processos pendentes preservados. Especialistas Maestri continuam sem créditos; nenhuma disputa de arquivos.
+- Limites: não cobre HTTP real, reinício de host/servidores ou egress físico. Lease acelerada não mede a latência operacional de 90s.
+
+### Próximos passos
+- Implementar prova de egress em rede isolada e medir fanout/backpressure com múltiplas réplicas, mantendo checks externos desligados.
+
+
+## 2026-10-04 — Backup e restore PG17 com conteúdo equivalente
+
+### Implementado
+- Ensaio opt-in de backup PostgreSQL17 Compose, com snapshot readonly compartilhado entre manifesto da origem e pg_dump.
+- Restore em banco UUID exclusivo, comparação de todas as linhas por SHA256 ordenado, revisão Alembic, colunas/defaults, índices e constraints; remoção do banco confirmada no catálogo.
+- Testes de guards de alvo/cleanup, conteúdo diferente com mesma contagem, snapshot importado após commit concorrente, timeout e falha de cleanup sem falso sucesso.
+- Tooling operacional integrado à verificação central com relatório próprio e duas provas PostgreSQL obrigatórias.
+
+### Arquivos principais alterados
+- `scripts/backup_restore_check.py`, `scripts/test-compose-backup-restore.ps1`
+- `scripts/tests/test_backup_restore_check.py`, `scripts/verify.ps1`
+- `docs/OPERATIONS.md`, `README.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- URL explícita restrita a localhost/55433/vigil, PostgreSQL17, container Compose e system_identifier coincidentes. Origem não recebe gravações.
+- Exportador REPEATABLE READ permanece aberto até pg_dump --snapshot terminar. Restore usa transação única; clean atua somente no novo banco.
+- CHECKs comparados pela decompilação legível do próprio PG, eliminando diferença de agrupamento associativo introduzida pelo replay do dump.
+- Timeout encerra apenas o cliente próprio, preserva banco/dump pendentes para revisão e não repete DROP nem usa FORCE. Falhas não publicam stderr com possíveis dados privados.
+
+### Estado atual
+- Ensaio real final no PG17.11 passou com conteúdo/schema equivalentes, dump de 42.302 bytes e cleanup confirmado em 3,149s. Comparadas sete tabelas mais Alembic, incluindo 76 jobs, 76 resultados e 38 incidentes sintéticos existentes.
+- Trinta testes de tooling passaram sem skips, incluindo snapshots concorrentes PG17. Regressão central: 378 backend passed/14 skips apenas SQLite, 41 frontend passed; Ruff, TypeScript/build, Compose e whitespace aprovados. Nenhuma integração obrigatória ignorada.
+- Dumps/relatórios privados em `.cache/backup-restore/<UUID>/`; JUnit operacional em `.cache/verification/scripts.xml`. PG18/processos pendentes e gates false preservados. Especialistas Maestri permanecem indisponíveis por limite de uso; etapa concluída na área de infraestrutura.
+- Limites: somente public/dados, sem owners/ACLs, roles globais, WAL/PITR, recuperação de cluster inteiro ou RPO/RTO de produção. Este ensaio não habilita checks externos.
+
+### Próximos passos
+- Ensaiar crash/restart/reentrega de worker próprio em ambiente isolado, usando jobs exclusivos e sem HTTP externo.
+- Implementar e comprovar restrição física de egress/firewall no ambiente de monitoramento.
+- Medir fanout e limites com múltiplas réplicas antes de liberar gates externos; preservar pendências do PG18 para diagnóstico separado.
+
+
+## 2026-10-04 — Integrações reais e regressão obrigatória concluídas
+
+### Implementado
+- Testes Redis Streams com PEL, reclaim ocioso em múltiplos lotes, ACK idempotente, envelope inválido e commit PostgreSQL antes do ACK; rollback mantém entrega recuperável.
+- Pub/Sub com isolamento por owner, whitelist, eco/cleanup, processos independentes e recuperação após queda real de um proxy TCP exclusivo do teste.
+- Sockets TLS/SNI/Host IPv4/IPv6, certificados rejeitados, headers-only e bloqueio SSRF antes do socket. Verificação obrigatória exige os três módulos sem skips de integração.
+- Runner backend em container temporário com código readonly e dependências dev fixadas; frontend permanece verificado no host.
+
+### Arquivos principais alterados
+- `backend/tests/test_broker_integration.py`, `backend/tests/test_events_redis.py`, `backend/tests/helpers/redis_event_process.py`
+- `backend/tests/test_transport_sockets.py`, `backend/tests/fixtures/tls/`, `backend/IMPLEMENTATION.md`
+- `scripts/verify.ps1`, `scripts/verify-backend-container.ps1`, `docs/OPERATIONS.md`, `README.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Testes usam schemas/streams UUID isolados e conexões próprias; nenhum FLUSHDB, shutdown Redis ou mudança na proteção SSRF/TLS do runtime.
+- Avast substitui certificados até em loopback Windows; TLS positivo foi comprovado em container Linux mantendo CERT_REQUIRED/check_hostname. CA extra opcional serve apenas downloads no container descartável.
+- Teste original de queda dependia de disconnect com endpoint ainda acessível. Proxy corrigido prova recusa real e fecha clientes antes de aguardar encerramento do servidor.
+
+### Estado atual
+- Verificação central obrigatória passou: **378 backend passed, 14 skips somente SQLite**, em 158,29s; zero skips obrigatórios PostgreSQL/Redis/PubSub/TLS. Ruff passou.
+- **41 frontend passed**, TypeScript/build/Compose/whitespace aprovados. Smoke de observações já aprovado em Edge desktop/mobile e registrado no commit local `659a1b8`.
+- Compose PostgreSQL17.11/55433, Redis7.4.11 e UI/API8080 ativos. Gates false; PG18 e suas pendências preservados. Test fixtures TLS são públicos e não têm autorização produtiva.
+- Relatório JUnit em `.cache/verification/backend.xml`; credenciais de QA e capturas ignoradas. Nenhum push executado.
+
+### Próximos passos
+- Validar controles de egress/firewall em ambiente isolado antes de habilitar rede de monitoramento; comprovar bloqueios físicos além da validação runtime.
+- Ensaiar recuperação operacional com reinício/crash controlado de processos próprios e backup/restauração no PG17, preservando pendências PG18.
+- Definir e medir carga/limites de conexões e fanout com múltiplas réplicas; manter gates false até esses critérios serem atendidos.
+
+
+## 2026-10-04 — Observações preenchidas validadas no Compose
+
+### Implementado
+- Seed opt-in PostgreSQL 17 com conta exclusiva, seis monitores, 76 ciclos e 38 incidentes sintéticos, manifesto privado e confronto de expectativas com SQL persistido.
+- Smoke Playwright/Edge por rotas REST reais, cobrindo métricas/buckets, histórico/retries, paginação e incidentes privados/públicos em desktop/mobile.
+
+### Arquivos principais alterados
+- `backend/app/db/seed_observations_qa.py`, `backend/tests/test_db_qa_seed.py`, `backend/app/db/IMPLEMENTATION.md`
+- `frontend/scripts/observations-smoke.mjs`, `frontend/package.json`, `frontend/IMPLEMENTATION.md`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Seed restrito a PostgreSQL 17 local/55433/public, sem pipeline/network. Cada owner é novo, sem sobrescrever manifestos; nenhum HTTP executado.
+- Dados administrativos são exemplos sintéticos de DTO. Manifesto/credenciais/capturas permanecem ignorados pelo Git/Docker; smoke exige fixture com menos de 45 minutos.
+
+### Estado atual
+- Dez testes QA passaram no PG17.11 e Ruff passou. Smoke final aprovado no Compose8080 em Edge1440/390, 14 verificações sem overflow e `errors=[]`; buckets UTC e apresentação America/Sao_Paulo conferidos.
+- Se o manifesto não puder ser escrito após commit, pode restar owner QA isolado; sem cleanup automático. PG18/processos pendentes preservados.
+- Integração Redis/TLS está em regressão central; nenhuma alteração de produto foi necessária no frontend neste marco.
+
+### Próximos passos
+- Concluir verificação obrigatória Redis/PubSub/TLS/PostgreSQL e registrar seu commit separado.
+- Avançar controles de egress, recuperação operacional e carga antes de habilitar checks externos.
+
+
+## 2026-10-04 — Build Docker e stack local comprovados
+
+### Implementado
+- Build opcional com CA pública confiável via BuildKit secret para uv/npm, sem desabilitar TLS nem persistir a CA no runtime.
+- Removido segundo sync redundante do backend: projeto não empacotável já instala as dependências fixadas na camada inicial.
+- Construídas imagens API/UI/migrate e iniciado stack Compose com Nginx, PostgreSQL 17.11 e Redis 7.4.11.
+
+### Arquivos principais alterados
+- `backend/Dockerfile`, `frontend/Dockerfile`, `compose.build-ca.yaml`
+- `docs/OPERATIONS.md`, `README.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- CA extra é fornecida explicitamente por arquivo PEM confiável somente no build; bundle temporário removido na mesma camada, sem alterar trust do transporte de monitoramento.
+- PostgreSQL Compose publicado em 55433 nesta sessão para preservar o PostgreSQL nativo da porta 5432 e o cluster PG18 da porta 55432.
+- Pipeline/network continuam false. Stack local serve cadastros/consultas; workers externos não foram iniciados.
+
+### Estado atual
+- Base funcional commitada localmente em `ac658b7` após 352 testes backend e confirmação direta de 41 frontend/build. Sem push.
+- Build inicialmente falhou com UnknownIssuer; repetição com CA pública já validada pelo Windows passou nas três imagens. CA exportada em `.cache/build/`, fora do Git.
+- Migration container terminou exit0; PostgreSQL/Redis/API saudáveis e `/health/ready` via Nginx8080 retorna ok. Ausência de `/run/secrets/build_ca`, `/tmp/vigil-build-ca.pem` e `SSL_CERT_FILE` confirmada no runtime; gates false confirmados.
+- Broker existente executado pelo Maestro com Redis real: 3 passed em 0,53s, incluindo ACK/reclaim ocioso.
+- Especialistas validam PG17/pipeline/retention, novos testes Redis/PubSub/sockets TLS e smoke de observações com fixture sintética persistida exclusiva PG17. Essas provas ainda estão em andamento neste marco.
+
+### Próximos passos
+- Integrar entregas dos especialistas, confirmar smoke de observações preenchidas e executar verificação obrigatória PostgreSQL/Redis reais.
+- Registrar resultados e commitar separadamente cada unidade verificada.
+- Preservar gates externos até controles egress/recuperação/carga restantes serem comprovados.
+
 ## 2026-10-04 — Verificação central do frontend e base para commits
 
 ### Implementado

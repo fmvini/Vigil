@@ -2,6 +2,28 @@
 
 O PostgreSQL é a fonte de verdade. API, scheduler/publicador e worker são processos separados. A API pode servir cadastros e consultas com o pipeline desabilitado; isso não comprova execução de verificações externas.
 
+## Stack Compose e CA de build
+
+```powershell
+# Quando 5432 já pertence ao PostgreSQL nativo, preserve-o.
+$env:POSTGRES_PORT = '55433'
+docker compose up -d postgres redis
+docker compose --profile app build
+docker compose --profile app up -d --no-build
+```
+
+UI local em `http://127.0.0.1:8080`, com API sob o mesmo origin via Nginx. O PostgreSQL continua na porta interna 5432. Migração precisa terminar com sucesso antes da API; Redis/PostgreSQL possuem healthchecks. Os gates de checks externos permanecem desligados.
+
+Se o download de dependências falhar por uma CA de inspeção HTTPS já confiável no ambiente, forneça seu certificado público PEM aprovado apenas ao build:
+
+```powershell
+$env:VIGIL_BUILD_CA_FILE = (Resolve-Path '.cache/build/build-ca.pem').Path
+docker compose -f compose.yaml -f compose.build-ca.yaml --profile app build
+docker compose --profile app up -d --no-build
+```
+
+O override é opcional e restrito ao build. O backend combina a CA temporariamente com as raízes públicas para o uv; npm usa `NODE_EXTRA_CA_CERTS`. Não fornece chaves privadas, não desabilita TLS e não instala a CA no runtime. O certificado e o bundle temporário não integram o repositório/imagem final. Implementação baseada em [BuildKit secrets](https://docs.docker.com/build/building/secrets/), [certificados do uv](https://docs.astral.sh/uv/concepts/authentication/certificates/) e [configuração TLS do Node](https://nodejs.org/learn/http/enterprise-network-configuration).
+
 ## Verificação
 
 Após instalar dependências, execute na raiz:
@@ -22,9 +44,40 @@ Para exigir PostgreSQL e Redis reais:
 
 Esse modo recusa URLs ausentes e testes de integração ignorados. Skips das variantes SQLite que exigem recursos PostgreSQL são esperados. Use um ambiente local isolado: os testes criam schemas PostgreSQL e streams Redis de nomes aleatórios; não devem ser apontados para produção.
 
+Se o antivírus inspecionar também os certificados de loopback, use o backend em container temporário, com a imagem `vigil-api` já construída:
+
+```powershell
+./scripts/verify.ps1 -RequireIntegration -BackendContainer `
+  -TestDatabaseUrl 'postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55433/vigil' `
+  -TestRedisUrl 'redis://127.0.0.1:6379/0' `
+  -TestBuildCaFile .cache/build/build-ca.pem
+```
+
+`TestBuildCaFile` é opcional, necessário somente quando os downloads exigem a CA pública confiável do ambiente. O helper instala dependências dev fixadas em `uv.lock` no container descartável, monta código somente para leitura e grava o mesmo relatório JUnit. URLs loopback são traduzidas para o gateway do Docker Desktop; serviços existentes continuam ativos. O transporte de monitoramento mantém seu contexto TLS independente, sem essa CA. O modo obrigatório exige os módulos Redis Streams, Pub/Sub e sockets TLS, recusando skips nessas provas.
+
+Nesta sessão o Avast substituiu o certificado do socket local por uma cadeia emitida por `Avast Web/Mail Shield Untrusted Root`. Os testes positivos passaram em Linux/containers sem alterar validação TLS ou trust do produto. O proxy TCP do teste de Pub/Sub corta apenas suas conexões para provar fallback/reconexão; não há shutdown, FLUSHDB ou interrupção do Redis compartilhado.
+
 Na sessão Windows de 2026-10-04, uma consulta de catálogo do SQLAlchemy ficou em `IPC/MessageQueueInternal` com plano paralelo. O cluster local recebeu `ALTER ROLE vigil IN DATABASE vigil SET max_parallel_workers_per_gather=0`; novas conexões dessa combinação passaram a usar plano serial, e a consulta terminou em 0,105s. A configuração também vale para novos pools API dessa role/banco; outras bases e conexões já abertas não mudaram. É um ajuste do cluster local, não uma migration ou requisito de produção. Para reverter quando o ambiente suportar paralelismo, usar `ALTER ROLE vigil IN DATABASE vigil RESET max_parallel_workers_per_gather`. A causa exata do bloqueio de IPC não foi comprovada; a consulta anterior PID 1968 foi preservada sem sinais e continua pendente de diagnóstico operacional.
 
 Para reproduzir o smoke com API/Vite/PostgreSQL ativos e Edge instalado, executar em `frontend/`: `npm.cmd run test:browser` e `npm.cmd run test:live`. Criam contas/projetos locais de QA. O segundo valida SSE e consultas REST reais, reconciliação após mutação externa à aba, snapshot periódico e revogação. Relatórios/capturas ficam em `.impeccable/review/`, excluídos de Git/Docker.
+
+## Smoke de observações com dados sintéticos
+
+Com o Compose PostgreSQL 17 em 55433 e a UI/API em 8080, mantendo ambos os gates false:
+
+```powershell
+cd backend
+$env:VIGIL_QA_DATABASE_URL = 'postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55433/vigil'
+./.venv/Scripts/python.exe -m app.db.seed_observations_qa seed-synthetic-qa `
+  --manifest ../frontend/.impeccable/review/observations-fixture.json
+cd ../frontend
+$env:VIGIL_UI_URL = 'http://127.0.0.1:8080'
+npm.cmd run test:observations
+```
+
+Seed cria uma conta/projeto exclusivos com snapshots explicitamente sintéticos; não executa HTTP, não inicia jobs nem habilita gates. Exige PostgreSQL 17 local/public e recusa 55432, produção e manifesto existente. Login e expectativas ficam no manifesto privado ignorado pelo Git/Docker. O teste consulta as rotas reais e verifica desktop/mobile, métricas/buckets, histórico/retries, paginação, incidentes e ausência de dados privados na página pública.
+
+Execute o smoke até 45 minutos após o seed. Para repetir mais tarde, use novo caminho de manifesto e informe-o por `VIGIL_OBSERVATIONS_FIXTURE` no frontend. Falha ao gravar o manifesto após commit pode deixar a conta QA isolada no banco; não há limpeza automática. Relatórios/capturas ficam em `frontend/.impeccable/review/`.
 
 ## Retenção
 
@@ -46,6 +99,23 @@ Cada lote tem commit separado, `lock_timeout=1s` e `statement_timeout=10s`. Resu
 
 ## Backup e restauração
 
+Para o stack Compose PG17 local em 55433, use o ensaio com verificação de conteúdo:
+
+```powershell
+$env:VIGIL_BACKUP_DATABASE_URL = 'postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55433/vigil'
+./scripts/test-compose-backup-restore.ps1
+```
+
+Requer dependências backend e Docker Desktop ativos. O tooling confere PostgreSQL17, labels do container e identidade do cluster antes de usar os utilitários PG17 do próprio container. Mantém uma transação readonly REPEATABLE READ aberta, exporta seu snapshot e passa o mesmo snapshot ao `pg_dump`. Isso permite comparar o backup com a mesma visão da origem mesmo durante commits concorrentes, conforme [snapshots sincronizados](https://www.postgresql.org/docs/17/functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION) e [`pg_dump --snapshot`](https://www.postgresql.org/docs/17/app-pgdump.html).
+
+Restaura em `vigil_restore_qa_<UUID>` novo, compara todas as linhas das sete tabelas e Alembic via SHA256 ordenado por PK, além de colunas/defaults, índices e constraints. Usa a decompilação legível do PostgreSQL para comparar CHECKs sem diferenças de agrupamento associativo. `--clean --if-exists` atua apenas no banco novo, incluindo o schema public padrão. Origem é somente lida; pipeline/network não são habilitados.
+
+Sucesso exige conteúdo equivalente e ausência do banco temporário confirmada no catálogo após DROP. Timeouts encerram apenas o cliente próprio, deixam `cleanup=pending_review` e não repetem DROP nem usam FORCE; o resultado é falha até revisão operacional. Dumps e relatórios privados ficam em `.cache/backup-restore/<UUID>/`. Stderr nativo não é publicado porque pode conter dados privados; o relatório registra tipo da falha e etapa.
+
+Este ensaio cobre schema public/dados locais, sem owners/ACLs, roles globais, WAL/PITR, recuperação de cluster inteiro ou RPO/RTO de produção. Schemas efêmeros dos testes ficam excluídos. O script recusa outros hosts/portas/bancos e não toca as pendências do PG18.
+
+O script anterior para o cluster nativo permanece disponível:
+
 ```powershell
 ./scripts/test-backup-restore.ps1
 ```
@@ -57,6 +127,10 @@ O cliente de cleanup tem limite externo de 15 segundos (`CleanupTimeoutSeconds`)
 ## Pipeline
 
 `VIGIL_PIPELINE_ENABLED` e `VIGIL_MONITORING_NETWORK_ENABLED` permanecem `false` por padrão. Antes de habilitar execução externa, validar ACK/reclaim no Redis real, TLS/SNI/IPv6 com sockets reais em ambiente controlado, controles de egress e recuperação operacional.
+
+O ensaio `backend/tests/test_worker_process_recovery.py` usa PostgreSQL17 e Redis reais com schemas/streams UUID exclusivos. Interrompe abruptamente apenas subprocessos criados pelo próprio teste nos limites de entrega, claim, transação final e commit antes do ACK. Comprova reclaim, rollback, proteção da lease, retry pelo scheduler, ausência de resultados/incidentes duplicados e esgotamento após três crashes sem classificar falha do alvo. `verify.ps1 -RequireIntegration` exige sua execução sem skips.
+
+O executor é sintético e não abre HTTP; leases de 12s/2s aceleram somente esse ensaio, sem alterar os 90s de produção. Essa prova cobre recuperação de processos de trabalho, sem representar reinício de infraestrutura inteira, durabilidade após perda de host ou liberação de egress.
 
 Com esses critérios atendidos no ambiente isolado, os comandos implementados são:
 

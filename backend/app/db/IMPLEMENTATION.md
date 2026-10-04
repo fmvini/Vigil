@@ -1,5 +1,14 @@
 # Persistência Vigil — 2026-10-04
 
+## 2026-10-04 — Fixture sintética de observações no PostgreSQL 17
+
+- `seed_observations_qa.py` é tooling opt-in: exige URL explícita local em 55433/database vigil, PostgreSQL 17/schema public, ambiente não produtivo e ambos os gates desligados. Não é importado pelo produto.
+- Cada execução cria owner/projeto novos, seis monitores, 76 ciclos concluídos e 38 incidentes sintéticos. URLs `.invalid` nunca são acessadas; `next_check_at` permanece NULL. Encerramentos administrativos são exemplos de DTO, sem alegar execução dessas ações.
+- Manifesto privado registra login e expectativas derivadas das amostras. Métricas/buckets de 24h/7d/30d e incidentes são confrontados com consultas SQL antes e depois do commit. Manifestos existentes não são sobrescritos.
+- `tests/test_db_qa_seed.py`: 10 passed no PG17.11/55433, incluindo rejeição do PG18/55432, gates/produção, filtro público, p95 independente e rollback completo em schema isolado. Ruff passou.
+- Seed runtime e smoke foram executados apenas no PG17 Compose. Nenhuma gravação no PG18. Credenciais/relatórios ficam fora do Git. Falha de escrita do manifesto após o commit pode deixar um owner QA isolado; nenhuma limpeza destrutiva é automática.
+
+
 ## 2026-10-04 — Retenção revisada no PostgreSQL real
 
 ### Implementado

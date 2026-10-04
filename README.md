@@ -2,7 +2,7 @@
 
 Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil permitirá cadastrar endpoints, acompanhar disponibilidade e latência, identificar incidentes e publicar uma página de status por projeto.
 
-**Status atual: desenvolvimento funcional em 2026-10-04.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE privado com reconciliação REST passou em testes e no navegador real. Retenção foi validada no PostgreSQL. Execução de checks permanece desabilitada enquanto Redis real e critérios operacionais não forem validados. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limitações.
+**Status atual: desenvolvimento funcional em 2026-10-04.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real. Retenção, ACK/reclaim Redis, Pub/Sub entre processos e TLS/SNI/IPv6 foram validados com integrações reais controladas. Execução de checks externos permanece desabilitada até comprovar controles de egress, recuperação operacional e carga. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limitações.
 
 ## Objetivo
 
@@ -93,7 +93,7 @@ Abra `http://127.0.0.1:5173`; OpenAPI em `http://127.0.0.1:8000/docs`. A API usa
 
 Após o primeiro `uv sync`, mudanças de dependências exigem sincronizar novamente. Use Node 24 com certificados do sistema (`NODE_USE_SYSTEM_CA=1`) e `uv --system-certs` quando o ambiente exigir CA corporativa; não desabilite a verificação TLS.
 
-O profile `app` contém build da API/UI, execução da migration e Nginx no mesmo origin (`docker compose --profile app up --build -d`). A configuração Compose foi validada, mas as imagens ainda não foram executadas nesta sessão por indisponibilidade do daemon Docker.
+O profile `app` contém build da API/UI, execução da migration e Nginx no mesmo origin (`docker compose --profile app up --build -d`). Imagens e startup foram validados localmente com PostgreSQL 17.11, Redis 7.4.11 e UI em `http://127.0.0.1:8080`; migration concluiu antes da API e readiness passou. Se 5432 estiver ocupada, configure `POSTGRES_PORT=55433`. Ambientes com inspeção HTTPS podem usar a CA pública aprovada somente como secret opcional de build, conforme [OPERATIONS](docs/OPERATIONS.md).
 
 Verificação prevista após dependências instaladas:
 
@@ -103,6 +103,8 @@ Verificação prevista após dependências instaladas:
 
 Git local foi autorizado e inicializado; nenhuma operação de push é automática.
 
-Para exigir os testes PostgreSQL/Redis reais, use `./scripts/verify.ps1 -RequireIntegration` com `-TestDatabaseUrl` e `-TestRedisUrl` (ou suas variáveis `VIGIL_TEST_*`). O modo parcial avisa sobre integrações ausentes e registra os skips no relatório.
+Para exigir PostgreSQL/Redis/PubSub/sockets TLS reais, use `./scripts/verify.ps1 -RequireIntegration` com `-TestDatabaseUrl` e `-TestRedisUrl` (ou suas variáveis `VIGIL_TEST_*`). Em Windows com inspeção HTTPS de loopback, use `-BackendContainer` conforme [OPERATIONS](docs/OPERATIONS.md). O modo parcial avisa sobre integrações ausentes e registra os skips no relatório.
 
 A retenção pode ser inspecionada com `./scripts/run-retention.ps1 -DatabaseUrl $env:VIGIL_DATABASE_URL`; o padrão faz rollback. Consulte [OPERATIONS](docs/OPERATIONS.md) para aplicar lotes e verificar backup/restore.
+
+O ensaio PG17 Compose `./scripts/test-compose-backup-restore.ps1` exige `VIGIL_BACKUP_DATABASE_URL` explícita e comprova conteúdo/schema restaurados contra um snapshot consistente, com cleanup confirmado. Dumps privados permanecem fora do Git. Consulte [OPERATIONS](docs/OPERATIONS.md) para execução e limites.

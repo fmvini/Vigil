@@ -1,5 +1,24 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Crash abrupto de workers e recuperação durável
+
+- `tests/test_worker_process_recovery.py` inicia interpretadores independentes com Receiver Taskiq, PostgreSQL17 e Redis reais; interrompe somente seus próprios filhos após entrega, após claim confirmado, durante finalização não commitada e após commit antes do ACK.
+- Novo consumidor recupera a PEL sem publicação adicional. Lease válida evita execução duplicada; scheduler recupera a lease vencida e publicador envia a tentativa seguinte. Replay após conclusão não altera resultado, incidente ou revisão.
+- Três crashes técnicos esgotam o job sem amostra de saúde ou incidente; envelopes pendentes são drenados e ACKados sem nova execução. Cleanup atua somente no schema/stream UUID do teste.
+- Cinco cenários passaram no host com PG17.11/Redis7.4.11 em 66,30s e também no container Linux. Regressão central final: 383 backend passed/14 skips apenas SQLite em 214,06s; 30 tooling e 41 frontend passed, Ruff/TypeScript/build/Compose aprovados. A verificação exige este módulo sem skips.
+- Limites: executor sintético não faz HTTP; leases de 12s/2s são parâmetros de teste em subprocessos, mantendo o padrão de produção de 90s. Usa tarefa e Receiver reais, sem iniciar o startup produtivo nem alterar gates. Não demonstra recuperação de host/Redis/PG ou políticas físicas de egress.
+
+## 2026-10-04 — Redis Streams, Pub/Sub e sockets TLS reais
+
+- `test_broker_integration.py` usa streams/grupos UUID exclusivos: PEL, reclaim ocioso de múltiplos lotes sem publicação nova, ACK idempotente/envelope inválido e Receiver Taskiq real verificando commit PostgreSQL antes do ACK. Falha após flush reverte resultado e mantém mensagem recuperável.
+- `test_events_redis.py` comprova fanout/owner whitelist/eco/cleanup, entrega entre processos Python independentes e publicação sem assinante local. Um proxy TCP exclusivo sofre interrupção real, mantendo sinais locais/snapshots e recuperando entrega remota; Redis compartilhado não é parado ou limpo.
+- `test_transport_sockets.py` comprova TLS/SNI/Host em IPv4/IPv6, leitura somente dos headers mesmo com body declarado grande, CA desconhecida/hostname errado sem retries/HTTP e SSRF runtime bloqueando loopback/mistura de IPs antes do socket.
+- Certificados/chave em `tests/fixtures/tls/` são fixtures públicos sem finalidade produtiva. CA carregada somente na instância SSLContext do teste; CERT_REQUIRED/check_hostname permanecem ativos. A rota física para loopback existe apenas no adapter do teste.
+- No Windows o Avast substituiu até o certificado de loopback. Os oito testes TLS passaram em container Linux, sem alterar validação runtime; Pub/Sub passou também no Windows (3 passed). Scripts de verificação permitem container descartável com dependências dev fixadas e exigem módulos de integração executados, sem skips obrigatórios.
+- Limites: evidências usam Redis7.4.11/PG17.11 locais; não demonstram egress/firewall, disponibilidade externa, recuperação de infraestrutura inteira ou carga de produção. Gates continuam false.
+- Regressão central final `scripts/verify.ps1 -RequireIntegration -BackendContainer`: 378 passed e 14 skips apenas de variantes SQLite em 158,29s, nenhuma integração obrigatória ignorada. Inclui DB/schema/pipeline/retenção/seed, Redis real, Pub/Sub e sockets TLS. Ruff e 41 testes frontend/typecheck/build/Compose passaram.
+
+
 ## 2026-10-04 — SSE privado com sessão, revogação e isolamento
 
 ### Implementado

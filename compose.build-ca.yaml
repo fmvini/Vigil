@@ -1,0 +1,17 @@
+# Optional build-only trust for environments with a locally approved HTTPS CA.
+# docker compose -f compose.yaml -f compose.build-ca.yaml --profile app build
+services:
+  migrate:
+    build: &backend_build
+      context: ./backend
+      secrets: [build_ca]
+  api:
+    build: *backend_build
+  web:
+    build:
+      context: ./frontend
+      secrets: [build_ca]
+
+secrets:
+  build_ca:
+    file: ${VIGIL_BUILD_CA_FILE:?Set VIGIL_BUILD_CA_FILE to a trusted PEM CA file}
