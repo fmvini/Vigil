@@ -1,0 +1,195 @@
+"""Build/probe worker firewall in an exclusively owned internal Docker network."""
+
+import argparse
+import json
+import subprocess
+from pathlib import Path
+from uuid import uuid4
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class Docker:
+    def __init__(self, *, run=subprocess.run):
+        self.run = run
+
+    def command(self, *arguments, timeout=60):
+        result = self.run(
+            ["docker", *map(str, arguments)], capture_output=True, text=True, timeout=timeout
+        )
+        if result.returncode:
+            # Native output can contain deployment details. Keep report bounded/sanitized.
+            raise RuntimeError("Docker command failed: " + arguments[0])
+        return result.stdout.strip()
+
+    def inspect(self, kind, name):
+        records = json.loads(self.command(kind, "inspect", name))
+        if len(records) != 1:
+            raise ValueError("Expected exactly one exclusively owned Docker resource")
+        return records[0]
+
+
+def cleanup(docker, network, container, token):
+    # docker run --rm normally already removed this container. Never select by prefix.
+    names = docker.command("container", "ls", "-a", "--format", "{{.Names}}")
+    if container in names.splitlines():
+        record = docker.inspect("container", container)
+        if record["Config"]["Labels"].get("vigil.qa.token") != token:
+            raise ValueError("Refusing cleanup of a container without own UUID label")
+        docker.command("container", "rm", "--force", container)
+    record = docker.inspect("network", network)
+    if record["Labels"].get("vigil.qa.token") != token or not record["Internal"]:
+        raise ValueError("Refusing cleanup of a network without own UUID/internal guard")
+    if record.get("Containers"):
+        raise ValueError("Own network has unexpected endpoints; cleanup pending review")
+    docker.command("network", "rm", network)
+
+
+def probe(docker, *, image="vigil-worker-egress:qa"):
+    token = uuid4().hex
+    network, container = "vigil-egress-qa-" + token, "vigil-egress-probe-" + token
+    created = False
+    report = {"token": token, "network": network, "container": container, "success": False}
+    try:
+        docker.command(
+            "network",
+            "create",
+            "--internal",
+            "--ipv6",
+            "--label",
+            "vigil.qa.token=" + token,
+            network,
+        )
+        created = True
+        record = docker.inspect("network", network)
+        if (
+            record["Labels"].get("vigil.qa.token") != token
+            or not record["Internal"]
+            or not record["EnableIPv6"]
+        ):
+            raise ValueError("QA network ownership/isolation mismatch")
+        output = docker.command(
+            "run",
+            "--rm",
+            "--name",
+            container,
+            "--label",
+            "vigil.qa.token=" + token,
+            "--network",
+            network,
+            "--cap-drop",
+            "ALL",
+            "--cap-add",
+            "NET_ADMIN",
+            "--cap-add",
+            "SETUID",
+            "--cap-add",
+            "SETGID",
+            "--cap-add",
+            "SETPCAP",
+            "--security-opt",
+            "no-new-privileges",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:size=32m,mode=1777",
+            "--mount",
+            f"type=bind,source={ROOT / 'infra' / 'worker'},target=/qa,readonly",
+            "-e",
+            "VIGIL_EGRESS_QA_TOKEN=" + token,
+            "-e",
+            "VIGIL_QA_CONTAINER=" + container,
+            "-e",
+            "VIGIL_PIPELINE_ENABLED=false",
+            "-e",
+            "VIGIL_MONITORING_NETWORK_ENABLED=false",
+            "--entrypoint",
+            "python",
+            image,
+            "/qa/qa_probe.py",
+            timeout=50,
+        )
+        report["probe"] = json.loads(output)
+        expected = report["probe"]
+        if (
+            expected["blocked"] != 18
+            or len(expected["allowed"]) != 6
+            or expected["uid"] != 10001
+            or expected["capabilities"] != 0
+            or expected["dns"] != "internal_resolved"
+        ):
+            raise ValueError("Incomplete physical socket/privilege proof")
+        # Probe the actual image entrypoint too, using only literal synthetic control IPs.
+        output = docker.command(
+            "run",
+            "--rm",
+            "--name",
+            container,
+            "--label",
+            "vigil.qa.token=" + token,
+            "--network",
+            network,
+            "--cap-drop",
+            "ALL",
+            "--cap-add",
+            "NET_ADMIN",
+            "--cap-add",
+            "SETUID",
+            "--cap-add",
+            "SETGID",
+            "--cap-add",
+            "SETPCAP",
+            "--security-opt",
+            "no-new-privileges",
+            "--read-only",
+            "-e",
+            "VIGIL_DATABASE_URL=postgresql+asyncpg://qa:synthetic@192.168.240.11:5432/qa",
+            "-e",
+            "VIGIL_REDIS_URL=redis://192.168.240.12:6379/0",
+            image,
+            "python",
+            "-c",
+            "import os; from pathlib import Path; assert os.getuid()==os.getgid()==10001; "
+            "assert int(next(x for x in Path('/proc/self/status').read_text().splitlines() if x.startswith('CapEff:')).split(':')[1],16)==0; print('entrypoint_dropped')",
+            timeout=20,
+        )
+        if output != "entrypoint_dropped":
+            raise ValueError("Worker entrypoint did not drop privileges")
+        report["entrypoint"] = "dropped"
+        report["success"] = True
+    except Exception as error:
+        report["error_type"] = type(error).__name__
+    finally:
+        if created:
+            try:
+                cleanup(docker, network, container, token)
+                report["cleanup"] = "confirmed"
+            except Exception as error:
+                report["cleanup"] = "pending_review"
+                report["cleanup_error_type"] = type(error).__name__
+                report["success"] = False
+    return report
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--build", action="store_true")
+    parser.add_argument("--image", default="vigil-worker-egress:qa")
+    args = parser.parse_args(argv)
+    docker = Docker()
+    if args.build:
+        docker.command("build", "--tag", args.image, ROOT / "infra" / "worker", timeout=300)
+    report = probe(docker, image=args.image)
+    directory = ROOT / ".cache" / "egress-qa" / report["token"]
+    directory.mkdir(parents=True, exist_ok=False)
+    path = directory / "report.json"
+    path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(
+        json.dumps(
+            {"success": report["success"], "cleanup": report.get("cleanup"), "report": str(path)}
+        )
+    )
+    return 0 if report["success"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

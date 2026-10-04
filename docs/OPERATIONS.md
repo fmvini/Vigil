@@ -47,13 +47,13 @@ Esse modo recusa URLs ausentes e testes de integração ignorados. Skips das var
 Se o antivírus inspecionar também os certificados de loopback, use o backend em container temporário, com a imagem `vigil-api` já construída:
 
 ```powershell
-./scripts/verify.ps1 -RequireIntegration -BackendContainer `
+./scripts/verify.ps1 -RequireIntegration -BackendContainer -ContainerNetwork vigil_default `
   -TestDatabaseUrl 'postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55433/vigil' `
   -TestRedisUrl 'redis://127.0.0.1:6379/0' `
   -TestBuildCaFile .cache/build/build-ca.pem
 ```
 
-`TestBuildCaFile` é opcional, necessário somente quando os downloads exigem a CA pública confiável do ambiente. O helper instala dependências dev fixadas em `uv.lock` no container descartável, monta código somente para leitura e grava o mesmo relatório JUnit. URLs loopback são traduzidas para o gateway do Docker Desktop; serviços existentes continuam ativos. O transporte de monitoramento mantém seu contexto TLS independente, sem essa CA. O modo obrigatório exige os módulos Redis Streams, Pub/Sub e sockets TLS, recusando skips nessas provas.
+`TestBuildCaFile` é opcional, necessário somente quando os downloads exigem a CA pública confiável do ambiente. O helper Python instala dependências dev fixadas em `uv.lock` no container descartável, monta código somente para leitura e grava o mesmo relatório JUnit. `ContainerNetwork vigil_default` usa serviços internos postgres:5432/redis:6379 após confirmar labels Compose, serviço ativo, rede e binding loopback correspondentes às URLs fornecidas. Os testes operacionais nativos continuam nas URLs originais. Sem essa opção, URLs loopback usam o gateway Docker Desktop, que apresentou timeouts transitórios de conexão nesta máquina. Serviços existentes continuam ativos. O transporte mantém seu contexto TLS independente, sem a CA extra. O modo obrigatório exige Redis Streams, Pub/Sub, sockets TLS, crash de worker, snapshots PG17 e firewall físico, recusando skips nessas provas.
 
 Nesta sessão o Avast substituiu o certificado do socket local por uma cadeia emitida por `Avast Web/Mail Shield Untrusted Root`. Os testes positivos passaram em Linux/containers sem alterar validação TLS ou trust do produto. O proxy TCP do teste de Pub/Sub corta apenas suas conexões para provar fallback/reconexão; não há shutdown, FLUSHDB ou interrupção do Redis compartilhado.
 
@@ -123,6 +123,27 @@ O script anterior para o cluster nativo permanece disponível:
 O script usa o PostgreSQL 18 local na porta 55432 por padrão. Ajuste `PostgresBin`, `HostName`, `Port`, `UserName`, `Database` e `Password` para outro ambiente. Faz backup somente do schema `public`, restaura em um banco novo com nome aleatório, verifica a revisão Alembic e consulta as sete tabelas; remove apenas esse banco temporário. O dump permanece em `.cache/backup-restore/` e contém dados privados. Essa prova não compara cada linha com a origem nem demonstra recuperação operacional completa.
 
 O cliente de cleanup tem limite externo de 15 segundos (`CleanupTimeoutSeconds`). Se exceder esse limite, o script encerra apenas seu cliente `dropdb` e informa o banco pendente; isso não confirma cancelamento do `DROP` no servidor. Inspecione `pg_stat_activity` antes de repetir a remoção. Na sessão Windows de 2026-10-04, o restore foi verificado, mas seu cleanup ficou em `IPC/ProcSignalBarrier`; nenhum walwriter ou processo do servidor foi encerrado. Uma advertência de cleanup precisa ser resolvida operacionalmente mesmo que a validação do dump tenha passado.
+
+## Controle de egress do worker
+
+O perfil opt-in `compose.worker.yaml` adiciona um worker Linux separado com firewall de OUTPUT IPv4/IPv6. A API normal não recebe NET_ADMIN. O inicializador instala as regras, então executa Taskiq como UID/GID 10001, sem grupos suplementares, capabilities herdadas/efetivas/bounding/ambient e com no-new-privileges. Falha de resolução, configuração, iptables ou ip6tables impede iniciar o comando.
+
+Permite somente TCP 80/443 para destinos públicos após excluir faixas especiais, DNS para o resolver Docker `127.0.0.11:53` e os IPs RFC1918 exatos resolvidos na inicialização de PostgreSQL:5432/Redis:6379. O DNS usa destino original conntrack, pois Docker traduz a porta antes do filtro OUTPUT. IPv6 permite apenas unicast `2000::/3` após excluir faixas especiais e Neighbor Discovery em eth0 com hop limit 255. Destinos privados em 80/443, metadata/link-local, loopback, CGNAT, documentação, transição IPv6 e outras portas/protocolos são rejeitados. A whitelist de controle não permite HTTP nesses IPs.
+
+O filtro complementa a validação SSRF e o transporte com pinning/TLS; não substitui autenticação ou a verificação do peer. Reservas são conservadoras e incluem algumas exceções públicas de faixas especiais. A política exige Docker Linux com bridge própria e resolver interno, controle IPv4 RFC1918 nas portas padrão e namespace exclusivo: nunca use host networking, `network_mode: container/...`, Docker socket montado ou namespace compartilhado. Mudança do IP de PG/Redis exige reinicializar esse worker para recompor a whitelist; falha nesse intervalo fecha o acesso.
+
+Para construir e executar somente a prova física, com a imagem API já construída:
+
+```powershell
+backend/.venv/Scripts/python.exe scripts/egress_check.py --build
+docker compose -f compose.yaml -f compose.worker.yaml --profile app --profile workers config --quiet
+```
+
+O tooling cria rede internal IPv4/IPv6 e containers UUID exclusivos, sem publicar portas ou usar servidores compartilhados. Atribui endereços de teste ao loopback daquele namespace e confirma listeners ativos antes do filtro; depois comprova seis conexões permitidas, 18 negativas, DNS interno, capabilities zero, socket raw negado e impossibilidade de alterar iptables. Também executa o entrypoint da imagem com comando sintético, sem iniciar Taskiq. Cleanup exige labels UUID e rede sem endpoints inesperados; falha fica `pending_review` e não produz sucesso. Relatório em `.cache/egress-qa/<UUID>/report.json`.
+
+`verify.ps1 -RequireIntegration` constrói e executa essa prova obrigatoriamente. O perfil de worker não foi iniciado; gates seguem false. Limites: prova no kernel Docker Desktop local, destinos com rota local e controle TCP sintético, sem HTTP externo, conectividade pública real, ensaio de Neighbor Discovery entre hosts ou política instalada no ambiente produtivo. Rede internal ainda pode alcançar o gateway/serviços adequadamente configurados no host; o filtro de destino é necessário além do isolamento Docker.
+
+Referências: [rede internal Docker](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal), [iptables/ip6tables](https://www.netfilter.org/projects/iptables/index.html), [reservas IPv6 IANA](https://www.iana.org/assignments/iana-ipv6-special-registry/) e [Neighbor Discovery RFC4861](https://www.rfc-editor.org/rfc/rfc4861.html).
 
 ## Pipeline
 

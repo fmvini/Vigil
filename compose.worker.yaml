@@ -1,0 +1,24 @@
+# Opt-in deployment only. Build api image first; default gates still refuse startup.
+services:
+  worker:
+    profiles: ["workers"]
+    build: ./infra/worker
+    image: vigil-worker-egress:local
+    environment:
+      VIGIL_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vigil}:${POSTGRES_PASSWORD:-vigil_local_only}@postgres:5432/${POSTGRES_DB:-vigil}
+      VIGIL_REDIS_URL: redis://redis:6379/0
+      VIGIL_PIPELINE_ENABLED: ${VIGIL_PIPELINE_ENABLED:-false}
+      VIGIL_MONITORING_NETWORK_ENABLED: ${VIGIL_MONITORING_NETWORK_ENABLED:-false}
+    cap_drop: ["ALL"]
+    cap_add: ["NET_ADMIN", "SETUID", "SETGID", "SETPCAP"]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

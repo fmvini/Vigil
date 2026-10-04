@@ -1,5 +1,36 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Firewall de worker com queda de privilégios
+
+### Implementado
+- Imagem Linux específica de worker, inicializador de firewall IPv4/IPv6 e perfil Compose opt-in separado da API, com gates false por padrão.
+- Prova física em rede internal/containers UUID exclusivos, listeners positivos antes da política, destinos especiais bloqueados e entrypoint real sem privilégios.
+- Testes de resolução mista/unsafe, falha antes do exec, regra DNS após DNAT e cleanup que recusa recursos alheios. Verificação central exige a prova física.
+
+### Arquivos principais alterados
+- `infra/worker/Dockerfile`, `infra/worker/.dockerignore`, `infra/worker/egress.py`, `infra/worker/qa_probe.py`
+- `compose.worker.yaml`, `scripts/egress_check.py`, `scripts/tests/test_worker_egress.py`, `scripts/verify.ps1`
+- `scripts/verify_backend_container.py`, `scripts/verify-backend-container.ps1`, `scripts/tests/test_verify_backend_container.py`
+- `README.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- OUTPUT permite público TCP80/443, DNS Docker original 127.0.0.11:53 e PG5432/Redis6379 somente em IPs RFC1918 resolvidos na inicialização. IPv6 unicast e Neighbor Discovery têm regras próprias; faixas especiais são conservadoras.
+- Docker faz DNAT do resolver antes de OUTPUT; matching conntrack do destino/porta originais preserva DNS sem permitir portas arbitrárias de loopback.
+- Após instalar ambos os filtros, setpriv remove todas as capabilities e executa UID/GID10001 com no-new-privileges. Inicialização com falha não inicia worker.
+- Somente namespaces exclusivos recebem regras/endereços; cleanup confere labels UUID e endpoints. Nenhuma alteração de firewall do host, gates ou processos compartilhados.
+- Runner backend pode usar rede Compose interna guardada por labels/serviço/binding da URL nativa. Evita timeouts transitórios do gateway Docker Desktop sem alterar os testes; tooling nativo permanece na origem loopback.
+
+### Estado atual
+- Prova física final passou: seis conexões permitidas, 18 bloqueadas com 17 listeners negativos comprovadamente ativos, DNS interno, UID10001/capabilities zero e entrypoint da imagem sem privilégios. Relatório `.cache/egress-qa/c173df7a2c5e4ce280d97049037b83a8/report.json`, cleanup confirmado.
+- Verificação central pela rede interna passou: 383 backend passed/14 skips apenas SQLite em 174,99s, 64 tooling e 41 frontend passed; Ruff/TypeScript/build/Compose/whitespace aprovados, zero integrações obrigatórias ignoradas. Stack atual continua gates false e worker opt-in não foi iniciado. PG18 preservado.
+- Versão intermediária PowerShell de roteamento foi bloqueada e removida pelo antivírus. Substituída por wrapper simples e implementação Python com 13 testes de guards; proteção permaneceu ativa. Regressores backend por gateway tiveram timeouts de abertura de conexão em testes distintos, sem falha de lógica comprovada.
+- Limites: destinos de socket com rotas locais ao namespace, sem HTTP externo, disponibilidade pública, NDP entre hosts ou implantação produtiva; controle DB/Redis TCP sintético. IPs de controle alterados exigem reiniciar worker; política conservadora pode bloquear exceções públicas especiais.
+
+### Próximos passos
+- Medir fanout, filas lentas e limites por owner com múltiplos processos API/Redis, mantendo runtime externo desligado.
+- Ensaiar transporte runtime dentro da política e NDP entre namespaces antes de qualquer implantação externa.
+
+
 ## 2026-10-04 — Crash de workers nos limites de persistência e ACK
 
 ### Implementado

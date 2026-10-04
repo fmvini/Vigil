@@ -2,7 +2,7 @@
 
 Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil permitirá cadastrar endpoints, acompanhar disponibilidade e latência, identificar incidentes e publicar uma página de status por projeto.
 
-**Status atual: desenvolvimento funcional em 2026-10-04.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real. Retenção, ACK/reclaim Redis, Pub/Sub entre processos e TLS/SNI/IPv6 foram validados com integrações reais controladas. Execução de checks externos permanece desabilitada até comprovar controles de egress, recuperação operacional e carga. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limitações.
+**Status atual: desenvolvimento funcional em 2026-10-04.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 foram validados com integrações reais controladas. Firewall de worker tem perfil opt-in e prova física em namespace isolado; checks externos permanecem desabilitados até validar implantação e carga. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limitações.
 
 ## Objetivo
 
@@ -103,7 +103,7 @@ Verificação prevista após dependências instaladas:
 
 Git local foi autorizado e inicializado; nenhuma operação de push é automática.
 
-Para exigir PostgreSQL/Redis/PubSub/sockets TLS reais, use `./scripts/verify.ps1 -RequireIntegration` com `-TestDatabaseUrl` e `-TestRedisUrl` (ou suas variáveis `VIGIL_TEST_*`). Em Windows com inspeção HTTPS de loopback, use `-BackendContainer` conforme [OPERATIONS](docs/OPERATIONS.md). O modo parcial avisa sobre integrações ausentes e registra os skips no relatório.
+Para exigir PostgreSQL/Redis/PubSub/sockets TLS, crash de worker e firewall físico, use `./scripts/verify.ps1 -RequireIntegration` com `-TestDatabaseUrl` e `-TestRedisUrl` (ou suas variáveis `VIGIL_TEST_*`). Requer Docker e imagem API construída. Em Windows com inspeção HTTPS de loopback, use `-BackendContainer -ContainerNetwork vigil_default` conforme [OPERATIONS](docs/OPERATIONS.md). O modo parcial avisa sobre integrações ausentes e registra os skips no relatório.
 
 A retenção pode ser inspecionada com `./scripts/run-retention.ps1 -DatabaseUrl $env:VIGIL_DATABASE_URL`; o padrão faz rollback. Consulte [OPERATIONS](docs/OPERATIONS.md) para aplicar lotes e verificar backup/restore.
 

@@ -3,6 +3,7 @@ param(
     [string]$TestRedisUrl = $env:VIGIL_TEST_REDIS_URL,
     [switch]$RequireIntegration,
     [switch]$BackendContainer,
+    [string]$ContainerNetwork,
     [string]$TestBuildCaFile
 )
 
@@ -30,7 +31,7 @@ function Assert-CommandSuccess([string]$Step) {
 Push-Location (Join-Path $projectRoot 'backend')
 try {
     if ($BackendContainer) {
-        & (Join-Path $PSScriptRoot 'verify-backend-container.ps1') -TestDatabaseUrl $TestDatabaseUrl -TestRedisUrl $TestRedisUrl -TestBuildCaFile $TestBuildCaFile
+        & (Join-Path $PSScriptRoot 'verify-backend-container.ps1') -TestDatabaseUrl $TestDatabaseUrl -TestRedisUrl $TestRedisUrl -TestBuildCaFile $TestBuildCaFile -ContainerNetwork $ContainerNetwork
     } else {
         uv run --system-certs --frozen pytest -q -ra -p no:cacheprovider "--junitxml=$backendReport"
     }
@@ -63,7 +64,7 @@ try {
             throw "Integracoes obrigatorias ignoradas: $names"
         }
     }
-    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/tests
+    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/egress_check.py ../scripts/verify_backend_container.py ../scripts/tests ../infra/worker
     Assert-CommandSuccess 'Lint backend'
     uv run --system-certs --frozen pytest ../scripts/tests -c pyproject.toml -q -ra -p no:cacheprovider "--junitxml=$scriptsReport"
     Assert-CommandSuccess 'Testes de tooling operacional'
@@ -73,6 +74,8 @@ try {
         if ($snapshotTests.Count -ne 2 -or @($snapshotTests | Where-Object { $_.SelectSingleNode('skipped') }).Count) {
             throw 'Provas obrigatorias de conteudo/snapshot PostgreSQL do tooling ausentes ou ignoradas.'
         }
+        uv run --system-certs --frozen python ../scripts/egress_check.py --build
+        Assert-CommandSuccess 'Firewall fisico IPv4/IPv6 e privilegios do worker'
     }
 } finally { Pop-Location }
 
@@ -88,6 +91,8 @@ Push-Location $projectRoot
 try {
     docker compose --profile app config --quiet
     Assert-CommandSuccess 'Configuracao Compose'
+    docker compose -f compose.yaml -f compose.worker.yaml --profile app --profile workers config --quiet
+    Assert-CommandSuccess 'Configuracao opt-in de worker protegido'
     git diff --check
     Assert-CommandSuccess 'Verificacao de whitespace'
 } finally { Pop-Location }
