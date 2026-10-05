@@ -83,8 +83,9 @@ h3 { font-size: 1rem; font-weight: 600; }
 p { max-width: 70ch; }
 small { display: block; color: var(--muted); font-size: .75rem; line-height: 1.5; margin-top: 6px; }
 .quiet { color: var(--muted); }
-.brand { display: inline-flex; align-items: center; gap: 3px; color: #143a2c; font-size: 2rem; font-weight: 700; letter-spacing: -.04em; line-height: 1; text-decoration: none; }
-.brand-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); align-self: flex-end; margin-bottom: 4px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: #143a2c; font-size: 2rem; font-weight: 700; letter-spacing: -.04em; line-height: 1; text-decoration: none; }
+.brand-eye { display: block; width: 36px; height: 36px; flex-shrink: 0; }
+a.brand { min-height: 44px; }
 .full { width: 100%; }
 .alert, .success { padding: 12px 16px; margin: 16px 0; border-radius: var(--radius); font-size: .875rem; max-width: none; overflow-wrap: anywhere; }
 .alert { color: #802525; background: #ffefee; border: 1px solid #eab9b3; }

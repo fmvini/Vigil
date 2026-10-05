@@ -3,6 +3,7 @@ name: Vigil
 description: Console claro para administrar projetos e monitores HTTP.
 colors:
   accent: "#145c43"
+  brand-text: "#143a2c"
   accent-hover: "#0e4934"
   muted: "#5c6b63"
   border: "#dbe3de"
@@ -77,6 +78,12 @@ typography:
     fontSize: ".875rem"
     fontWeight: 600
     lineHeight: 1.4
+  brand:
+    fontFamily: "Public Sans, sans-serif"
+    fontSize: "2rem"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-.04em"
 rounded:
   link: "2px"
   badge: "4px"
@@ -94,6 +101,13 @@ spacing:
   32: "32px"
   36: "36px"
 components:
+  brand:
+    textColor: "{colors.brand-text}"
+    typography: "{typography.brand}"
+  brand-eye:
+    textColor: "{colors.accent}"
+    width: "36px"
+    height: "36px"
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.surface}"
@@ -199,7 +213,8 @@ O verde profundo concentra ação e seleção; os neutros esverdeados sustentam 
 
 ### Primary
 
-- **Verde de ação** (`accent`, `accent-hover`): botões principais, links e ponto da marca; o hover escurece a ação.
+- **Verde de ação** (`accent`, `accent-hover`): botões principais, links e símbolo do olho; o hover escurece a ação.
+- **Verde do wordmark** (`brand-text`): nome textual Vigil e lettering dos assets da marca, preservando a cor existente.
 - **Verde de seleção** (`selected-bg`, `selected-text`): combinação tonal reservada ao projeto atual.
 - **Verde de foco** (`focus`): contorno visível para navegação por teclado.
 
@@ -249,11 +264,27 @@ O CSS não define sombras. Fundo, borda e espaço distinguem navegação, trabal
 
 ## Shapes
 
-Controles têm curvas discretas (`rounded.control`); badges são menores (`rounded.badge`); editores, estados vazios, confirmação e linhas mobile usam cantos mais amplos (`rounded.panel`). O botão de texto usa a curva mínima (`rounded.link`). O ponto da marca é circular, sem introduzir outro vocabulário de formas.
+Controles têm curvas discretas (`rounded.control`); badges são menores (`rounded.badge`); editores, estados vazios, confirmação e linhas mobile usam cantos mais amplos (`rounded.panel`). O botão de texto usa a curva mínima (`rounded.link`). A marca combina contorno geométrico de olho e pupila circular; substitui o ponto anterior sem alterar as formas dos controles.
 
 Campos e superfícies usam bordas (1px). O foco global usa um contorno (3px), deslocado (3px), que permanece visível fora do controle.
 
 ## Components
+
+### Brand
+
+`src/Brand.tsx` combina o olho estático em `public/brand/vigil-eye.svg` com o nome textual `vigil`. O símbolo usa o verde existente (`accent`, #145c43); o nome usa `brand-text` (#143a2c), Public Sans 700, tamanho (2rem), entrelinha (1) e tracking (-.04em). Somente a marca na sidebar mobile reduz o texto para (1.75rem). O olho permanece (36 × 36px), sem encolher, com espaço (10px) até o nome; links da marca têm altura mínima (44px) e preservam o foco global.
+
+Login, dashboard, abertura/erro de sessão e página pública reutilizam o componente. A imagem na UI é decorativa (`alt=""`, `aria-hidden="true"`); o texto fornece o nome acessível. Links mantêm os destinos existentes: formulário, conteúdo principal ou raiz. A marca não representa saúde, freshness ou atividade, e a pupila não anima nem muda de cor conforme estado de monitor.
+
+Assets de produto:
+
+- `public/brand/vigil-eye.svg`: símbolo vetorial transparente.
+- `public/brand/vigil-logo.svg`: olho e wordmark Public Sans Bold convertido em contornos; dispensa fonte externa. `public/brand/vigil-logo.png`: exportação transparente de (1024 × 382px).
+- `public/favicon.svg`: olho branco sobre o verde de ação, ajustado para tamanhos pequenos. `public/favicon.ico`: representações (16 × 16px) e (32 × 32px).
+- `public/apple-touch-icon.png`: ícone (180 × 180px). As referências ficam em `index.html`.
+- `public/brand/PUBLIC-SANS-LICENSE.txt`: licença SIL Open Font License 1.1 da Public Sans usada no lettering. Os pesos da UI continuam nos imports locais de `@fontsource/public-sans` em `src/main.tsx`.
+
+Revisão das seis montagens login/dashboard/pública em (1440px) e (390px), incluindo foco e alvos de (44px), está em `.impeccable/review/branding/`. As capturas e relatórios são evidência local com API sintética, não assets de produto nem prova de integração física.
 
 ### Buttons
 

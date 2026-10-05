@@ -6,6 +6,7 @@ import type { Freshness, Monitor, Project, Session } from './types';
 import { IncidentList, MetricsPanel, MonitorDetail, PublicLink, PublicStatus, useResource } from './Observations';
 import { useLiveUpdates } from './live';
 import { ProcessingFailures } from './ProcessingFailures';
+import { Brand } from './Brand';
 
 type Editor = { type: 'project'; value?: Project } | { type: 'monitor'; value?: Monitor } | null;
 type Archive = { type: 'project'; value: Project } | { type: 'monitor'; value: Monitor } | null;
@@ -39,8 +40,8 @@ function AuthenticatedApp() {
     api.onUnauthorized = () => { api.setCsrfToken(null); setSession(null); setNotice('Sua sessão expirou. Entre novamente para continuar.'); };
     return () => { api.onUnauthorized = undefined; };
   }, []);
-  if (loading) return <main className="boot"><span className="brand">vigil</span><p role="status">Verificando sua sessão…</p></main>;
-  if (error) return <main className="boot"><span className="brand">vigil</span><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button></main>;
+  if (loading) return <main className="boot"><Brand /><p role="status">Verificando sua sessão…</p></main>;
+  if (error) return <main className="boot"><Brand /><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button></main>;
   if (!session) return <AuthForm notice={notice} onSession={value => { setSession(value); setNotice(''); }} />;
   return <Dashboard session={session} onLogout={() => { api.setCsrfToken(null); setSession(null); setNotice(''); }} />;
 }
@@ -127,7 +128,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
   return <div className="app-shell">
     <a className="skip-link" href="#main">Pular para o conteúdo</a>
     <aside className="sidebar">
-      <a className="brand" href="#main">vigil<span className="brand-dot" aria-hidden="true" /></a>
+      <Brand href="#main" />
       <div className="sidebar-heading"><h2>Projetos</h2><button className="link" onClick={() => openEditor({ type: 'project' })} disabled={actionsDisabled}>Novo</button></div>
       {projectLoading ? <p role="status" className="quiet">Carregando projetos…</p> : projectError ? <><Alert message={projectError} /><button onClick={() => setReloadProjects(n => n + 1)}>Tentar novamente</button></> : <nav aria-label="Projetos"><ul className="project-list">{projects.map(p => <li key={p.id}><button disabled={Boolean(busy || editorBusy)} aria-current={p.id === projectId ? 'page' : undefined} onClick={() => select(p.id)}>{p.name}</button></li>)}</ul>{projects.length === 0 && <p className="quiet">Seus projetos aparecerão aqui.</p>}</nav>}
       <div className="account"><span title={session.user.email}>{session.user.email}</span><button className="link" onClick={logout} disabled={Boolean(busy || editorBusy)}>{busy === 'logout' ? 'Saindo…' : 'Sair da conta'}</button></div>

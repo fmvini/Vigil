@@ -1,5 +1,31 @@
 # Registro de desenvolvimento
 
+## 2026-10-05 — Logo de olho e favicons do Vigil
+
+### Implementado
+- Marca vetorial de olho aplicada no login, dashboard, abertura de sessão e status pública. Componente Brand compartilha símbolo decorativo e nome textual acessível, preservando destinos dos links.
+- Logo com lettering Public Sans Bold em contornos, PNG transparente de 1024px, favicon SVG e ICO de 16/32px, além de ícone de 180px para tela inicial.
+
+### Arquivos principais alterados
+- `frontend/src/Brand.tsx`, `frontend/src/App.tsx`, `frontend/src/Forms.tsx`, `frontend/src/Observations.tsx`, `frontend/src/styles.css`
+- `frontend/public/brand/vigil-eye.svg`, `frontend/public/brand/vigil-logo.svg`, `frontend/public/brand/vigil-logo.png`, `frontend/public/brand/README.md`, `frontend/public/brand/PUBLIC-SANS-LICENSE.txt`
+- `frontend/public/favicon.svg`, `frontend/public/favicon.ico`, `frontend/public/apple-touch-icon.png`, `frontend/index.html`
+- `frontend/DESIGN.md`, `frontend/.impeccable/design.json`, `frontend/IMPLEMENTATION.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Olho geométrico mantém verde profundo e tipografia existentes. Favicon em negativo é simplificado para tamanhos pequenos; símbolo estático não comunica saúde ou atividade de monitor.
+- SVG da logo é independente de fontes externas; Public Sans já instalada foi convertida em contornos com ferramenta temporária, sem adicionar dependência ao produto. PNG/ICO são renderizações dos SVGs autorais.
+- Ícone da aplicação tem alt vazio/aria-hidden para evitar nome duplicado. Links mantêm foco visível e área mínima de 44px, com olho de 36px.
+
+### Estado atual
+- Central: 72 Vitest passed/zero skips, TypeScript/Vite build aprovado. Edge154 verificou login/dashboard/status pública em 1440 e 390: seis capturas, assets carregados, sem overflow/erros, nome/destinos/foco preservados e altura de 44px.
+- Frontend fez revisão visual read-only das seis montagens e da prancha da identidade, sem bloqueadores. Evidências em `frontend/.impeccable/review/branding/`; ICO decodificado no navegador.
+- Essas capturas usam API sintética isolada, sem alegar smoke físico do produto. A seção de jobs também passou nos seis estados desktop/mobile, com `processing-failures/report.json` final aprovado.
+
+### Próximos passos
+- Reutilizar os assets e o componente Brand nas próximas superfícies; preservar nome acessível, destinos e área de foco.
+- Continuar provas PG17/Redis dos jobs e helper em QA exclusivo; registrar campanha física e limites separadamente.
+
 ## 2026-10-05 — Relatório de carga exige tipos inteiros do protocolo
 
 ### Implementado

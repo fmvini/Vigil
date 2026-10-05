@@ -8,6 +8,10 @@
         "role": "primary",
         "displayName": "Verde de ação"
       },
+      "brand-text": {
+        "role": "primary",
+        "displayName": "Verde do wordmark"
+      },
       "accent-hover": {
         "role": "primary",
         "displayName": "Verde de ação em hover"
@@ -154,6 +158,10 @@
       }
     },
     "typographyMeta": {
+      "brand": {
+        "displayName": "Nome Vigil",
+        "purpose": "Wordmark textual em Public Sans 700; somente a sidebar mobile reduz para 1.75rem. Olho decorativo separado do nome acessível."
+      },
       "display": {
         "displayName": "Mensagem de autenticação",
         "purpose": "Título da apresentação de login/cadastro."
@@ -203,6 +211,14 @@
     ]
   },
   "components": [
+    {
+      "name": "Marca Vigil",
+      "kind": "custom",
+      "refersTo": "brand",
+      "description": "Olho estático de observação e nome acessível vigil. Fonte: src/Brand.tsx, src/styles.css e public/brand/vigil-eye.svg. Links têm altura mínima44px; símbolo36px e espaço10px. Não indica saúde ou atividade. Assets/wordmark em contornos e licença: public/brand/; ícones: public/favicon.svg, public/favicon.ico e public/apple-touch-icon.png.",
+      "html": "<a class=\"ds-brand\" href=\"/\"><svg class=\"ds-brand-eye\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"36\" height=\"36\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 32C12 20 21 14 32 14s20 6 27 18c-7 12-16 18-27 18S12 44 5 32Z\" stroke=\"var(--accent,#145c43)\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"32\" cy=\"32\" r=\"8\" fill=\"var(--accent,#145c43)\"/></svg><span>vigil</span></a>",
+      "css": ".ds-brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:#143a2c;font-family:'Public Sans',sans-serif;font-size:2rem;font-weight:700;letter-spacing:-.04em;line-height:1;text-decoration:none;}.ds-brand-eye{display:block;width:36px;height:36px;flex-shrink:0;}.ds-brand:focus-visible{outline:3px solid #26785a;outline-offset:3px;}@media(max-width:760px){.ds-brand.ds-brand-sidebar{font-size:1.75rem;}}"
+    },
     {
       "name": "Botão principal",
       "kind": "button",

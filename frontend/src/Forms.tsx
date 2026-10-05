@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Brand } from './Brand';
 import { api, errorMessage } from './api';
 import { defaultConfig, validateMonitor } from './domain';
 import type { Monitor, MonitorConfig, Project, Session, User } from './types';
@@ -28,7 +29,7 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
     finally { setBusy(false); }
   }
   return <main className="auth-page">
-    <div className="auth-story"><a href="#auth-form" className="brand">vigil<span className="brand-dot" aria-hidden="true" /></a>
+    <div className="auth-story"><Brand href="#auth-form" />
       <div><h1>Seus serviços, <br />sob observação.</h1><p>Organize endpoints em projetos e configure como cada serviço será monitorado.</p>
         <div className="auth-note">Uma leitura honesta do estado dos seus serviços. Dados ausentes ou antigos nunca significam que está tudo bem.</div>
       </div><span className="quiet">Monitoramento HTTP</span>
