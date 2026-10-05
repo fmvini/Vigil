@@ -165,6 +165,14 @@ O ensaio de NDP usa outra rede internal com prefixo global-unicast QA aleatório
 
 Referências: [rede internal Docker](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal), [iptables/ip6tables](https://www.netfilter.org/projects/iptables/index.html), [reservas IPv6 IANA](https://www.iana.org/assignments/iana-ipv6-special-registry/) e [Neighbor Discovery RFC4861](https://www.rfc-editor.org/rfc/rfc4861.html).
 
+## Revalidação do upstream web
+
+Nginx usa `upstream vigil_api` com zone64k, `server api:8000 resolve`, DNS Docker127.0.0.11, valid5s e resolver_timeout2s. `/api/` e `/health/` usam esse grupo; SSE conserva HTTP1.1/buffering off/read timeout75s. O [resolve com shared zone](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#server) acompanha IPs sem reiniciar Nginx e está disponível no Nginx open source usado (1.28); [valid/resolver](https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver) controla cache de respostas DNS. Não remove a janela de atualização ou garante disponibilidade de uma API única.
+
+`backend/.venv/Scripts/python.exe scripts/proxy_recovery_check.py` cria bridge internal e três containers UUID, sem portas publicadas. Dois listeners sintéticos permanecem vivos: o tooling move só o alias api, conserva IPs distintos, confirma novo DNS e exige que o proxy passe à substituta sem mudar master/workers. Confere `/api/` e `/health/`, além de receber primeiro frame SSE antes do término do corpo. `verify.ps1 -RequireIntegration` exige essa prova; requer imagens locais vigil-api/vigil-web construídas. Relatório em `.cache/proxy-qa/<UUID>/report.json`.
+
+Antes de mutações/cleanup, confere label UUID e redes de cada container; endpoints inesperados preservam recursos para revisão. Desconexão parcial própria permite cleanup, sem aceitar rede estrangeira. Limites: fixture HTTP/SSE sintética em Docker local, sem banco, autenticação, TLS externo, medição de balanceamento ou migração de streams já abertos. Smoke separado do produto verifica sessão/REST/SSE reais no Compose.
+
 ## Logs de atividade
 
 A API e os entrypoints scheduler/worker configuram `vigil.activity` para JSON em stderr. O CMD da API usa `--no-access-log` para evitar a linha Uvicorn com URI/query; use também essa opção ao iniciar Uvicorn nativo. `request_headers` mede até o envio inicial; `request_finished` mede a duração do ASGI, portanto pode durar minutos no SSE e não representa latência REST. Um stream que falha depois dos headers conserva status200 e registra outcome=error/cancelled, em vez de fabricar outro status HTTP. Requisições recebem X-Request-ID UUID gerado no servidor; headers recebidos não determinam a correlação. O campo route vem do template declarado, com unmatched para rotas desconhecidas.

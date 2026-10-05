@@ -1,5 +1,14 @@
 # Implementação do frontend Vigil
 
+## 2026-10-04 — Proxy acompanha mudança de IP da API
+
+- Infra `nginx.conf` usa upstream com zone, server resolve e resolver Docker127.0.0.11/valid5s/timeout2s. `/api/` e `/health/` acompanham DNS sem reload/restart; headers, URI e SSE sem buffering preservados.
+- Ensaio físico próprio move alias api entre dois listeners vivos em IPs distintos, mantendo a API antiga alcançável. Configuração anterior continuou enviando 27 leituras à antiga depois de DNS já apontar à substituta.
+- Configuração corrigida passou: recuperação 3,534s, master/workers mesmos PIDs, primeiro frame SSE 16ms antes dos cinco segundos de conclusão do corpo; cleanup confirmado. Fixture HTTP/SSE é sintética, sem dados PG/Redis ou checks externos.
+- Tooling 85 passed com PG17/Redis/Edge e Ruff aprovado; `verify.ps1 -RequireIntegration` inclui prova física. Backend/produto JS não mudaram; central anterior permanece 403 backend/16 skips apenas SQLite e 44 frontend.
+- Web reconstruído/atualizado isoladamente, `nginx -t` aprovado. Edge8080 aprovou CRUD/history/no_data/status pública/404 em desktop1440/mobile390 e SSE connected/project.updated/periodic/REST/revogação. Smoke CRUD passou a correlacionar exclusivamente GET privado401 recebido após pedido real de logout, com rota/fase nos erros restantes; uma leitura de métricas durante revogação havia causado falso negativo.
+- Limites: DNS Docker local/IPv4 na fixture, um alias substituído e duas APIs sintéticas; não mede SLA, balanceamento produtivo, migração de streams abertos, failover de host ou TLS externo.
+
 ## 2026-10-04 — Recuperação do EventSource após HTTP temporário
 
 - Ensaio real no Edge reproduziu stream permanentemente CLOSED após 503 do proxy QA. `src/live.ts` recria fontes terminais com esperas de 2/4/8/16/30s, limitadas a 30s e reiniciadas após conexão; fontes CONNECTING mantêm seu retry nativo.

@@ -1,5 +1,32 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Nginx acompanha mudança de IP da API
+
+### Implementado
+- Upstream compartilhado com resolução periódica do DNS Docker para `/api/` e `/health/`, mantendo URI/headers e SSE sem buffering.
+- Prova física em rede internal UUID move alias api entre listeners vivos de IPs distintos, verifica nova rota sem reload/restart e primeiro frame SSE antes da conclusão do corpo.
+- Guardas recusam mutação/cleanup de redes ou containers estrangeiros; integração obrigatória inclui o ensaio. Smoke CRUD identifica rota/fase e correlaciona GET401 privado somente após logout real.
+
+### Arquivos principais alterados
+- `frontend/nginx.conf`, `frontend/scripts/browser-smoke.mjs`, `frontend/IMPLEMENTATION.md`
+- `infra/web/qa_upstream.py`, `scripts/proxy_recovery_check.py`, `scripts/tests/test_proxy_recovery.py`, `scripts/verify.ps1`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Shared zone/server resolve usa resolver127.0.0.11, validade5s e timeout2s; evita manter o IP inicial indefinidamente sem prometer atualização instantânea.
+- A API antiga permanece viva/alcançável: voltar a receber HTTP200 não basta como evidência, o proxy precisa retornar a identidade da substituta. PIDs master/workers e StartedAt devem permanecer iguais.
+- 401 de métricas durante revogação foi reproduzido; o smoke exige resposta GET401 da mesma rota/origem após pedido POST logout e não silencia erros durante o workflow.
+
+### Estado atual
+- Configuração anterior manteve 27 respostas da antiga por12s mesmo após DNS apontar só à substituta. Corrigida recuperou em3,534s, primeiro frame SSE16ms, mesmos PIDs e cleanup confirmado: `.cache/proxy-qa/fc6a94fe23394f29986c0498525b9c00/report.json`.
+- Tooling85 passed/sem skips em19,63s com PG17/Redis/Edge; Ruff, Compose, whitespace e nginx -t aprovados. Guards novos são8 casos. Não foi repetida a suíte backend/produto JS, que não mudou; baseline central anterior403 backend/16 skips apenasSQLite e44 frontend.
+- Web atualizado isoladamente; Edge8080 passou CRUD/history/no_data/status pública/404, desktop1440/mobile390 sem overflow e SSE connected/project.updated/periodic/REST/revogação. API/PG17/Redis preservados, gates false e nenhum sinal/alteração no PG18.
+- Limites: troca de alias IPv4 em Docker local/fixtures sintéticas, sem SLA, balanceamento produtivo, migração de streams já abertos, failover de host ou TLS externo.
+
+### Próximos passos
+- Implementar snapshot operacional read-only de backlog/PEL/leases e idade de ticks, sem endpoint público nem labels de alta cardinalidade.
+- Provar carga controlada end-to-end do pipeline com executor TLS real somente contra fixtures isoladas, mantendo checks externos desabilitados.
+
 ## 2026-10-04 — Correlação HTTP e logs JSON de atividade
 
 ### Implementado

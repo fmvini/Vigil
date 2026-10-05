@@ -13,16 +13,25 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 900 
 const page = await context.newPage();
 const errors = [];
 const expectedSessionProbes = [];
+const expectedRevokedReads = [];
 const publicChecks = {};
+let phase = 'workflow';
+page.on('request', request => {
+  if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/v1/auth/logout') phase = 'logout';
+});
 page.on('pageerror', error => errors.push(error.message));
 page.on('console', message => {
   if (message.type() !== 'error') return;
   if (message.location().url.endsWith('/api/v1/auth/me') && message.text().includes('401')) expectedSessionProbes.push(message.text());
-  else errors.push(message.text());
+  else errors.push({ message: message.text(), path: message.location().url ? new URL(message.location().url).pathname : '', phase });
 });
 const mutations = [];
 page.on('response', response => {
   if (response.url().includes('/api/v1') && response.request().method() !== 'GET') mutations.push({ path: new URL(response.url()).pathname, method: response.request().method(), status: response.status() });
+  const url = new URL(response.url());
+  // Revocation may reach an already pending read before React unmounts it.
+  // Match a real private GET 401 after the actual logout request, never all 401s.
+  if (phase === 'logout' && url.origin === new URL(baseURL).origin && response.request().method() === 'GET' && response.status() === 401 && /^\/api\/v1\/(?:events$|projects(?:\/|$)|monitors(?:\/|$))/.test(url.pathname)) expectedRevokedReads.push(url.pathname);
 });
 async function noOverflow(label) {
   const dimensions = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth }));
@@ -131,9 +140,17 @@ try {
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
   await page.getByRole('heading', { name: 'Entre no Vigil' }).waitFor();
   await noOverflow('mobile login'); await capture('mobile-login');
-  assert.deepEqual(errors, [], 'Browser console or runtime errors');
+  const remainingRevocations = [...expectedRevokedReads];
+  const unexpectedErrors = errors.filter(error => {
+    if (typeof error !== 'object' || error.phase !== 'logout' || !error.message.includes('401')) return true;
+    const index = remainingRevocations.indexOf(error.path);
+    if (index < 0) return true;
+    remainingRevocations.splice(index, 1);
+    return false;
+  });
+  assert.deepEqual(unexpectedErrors, [], 'Browser console or runtime errors');
   assert.ok(mutations.every(m => m.status >= 200 && m.status < 300), JSON.stringify(mutations));
-  const report = { baseURL, desktop, mobile, errors, expectedSessionProbes, publicChecks, mutations, screenshots: ['desktop', 'mobile', 'mobile-editor', 'mobile-login', 'monitor-detail-desktop', 'monitor-detail-mobile', 'public-desktop', 'public-mobile'].map(name => `${output}/${name}.png`), qaFixture: { email, password, publicPath }, result: 'passed' };
+  const report = { baseURL, desktop, mobile, errors: unexpectedErrors, expectedSessionProbes, expectedRevokedReads, publicChecks, mutations, screenshots: ['desktop', 'mobile', 'mobile-editor', 'mobile-login', 'monitor-detail-desktop', 'monitor-detail-mobile', 'public-desktop', 'public-mobile'].map(name => `${output}/${name}.png`), qaFixture: { email, password, publicPath }, result: 'passed' };
   await writeFile(`${output}/browser-smoke.json`, JSON.stringify(report, null, 2));
-  console.log(JSON.stringify({ result: report.result, desktop, mobile, errors, mutations, screenshots: report.screenshots }, null, 2));
+  console.log(JSON.stringify({ result: report.result, desktop, mobile, errors: unexpectedErrors, expectedRevokedReads, mutations, screenshots: report.screenshots }, null, 2));
 } finally { await browser.close(); }

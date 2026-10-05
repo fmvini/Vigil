@@ -64,7 +64,7 @@ try {
             throw "Integracoes obrigatorias ignoradas: $names"
         }
     }
-    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/egress_check.py ../scripts/verify_backend_container.py ../scripts/tests ../infra/worker
+    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/egress_check.py ../scripts/proxy_recovery_check.py ../scripts/verify_backend_container.py ../scripts/tests ../infra/worker ../infra/web
     Assert-CommandSuccess 'Lint backend'
     uv run --system-certs --frozen pytest ../scripts/tests -c pyproject.toml -q -ra -p no:cacheprovider "--junitxml=$scriptsReport"
     Assert-CommandSuccess 'Testes de tooling operacional'
@@ -80,6 +80,8 @@ try {
         }
         uv run --system-certs --frozen python ../scripts/egress_check.py --build
         Assert-CommandSuccess 'Firewall fisico IPv4/IPv6 e privilegios do worker'
+        uv run --system-certs --frozen python ../scripts/proxy_recovery_check.py
+        Assert-CommandSuccess 'Revalidacao DNS do Nginx e SSE sem buffering em rede propria'
     }
 } finally { Pop-Location }
 
