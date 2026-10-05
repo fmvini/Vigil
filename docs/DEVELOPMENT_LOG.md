@@ -1,5 +1,235 @@
 # Registro de desenvolvimento
 
+## 2026-10-05 — Relatório de carga exige tipos inteiros do protocolo
+
+### Implementado
+- Corrigida aceitação de booleano/decimal no identificador de versão, limites configurados de concorrência e UID do relatório QA. O runner exige inteiros JSON além dos valores esperados.
+
+### Arquivos principais alterados
+- `scripts/pipeline_load_check.py`, `scripts/tests/test_pipeline_load_check.py`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Igualdade numérica do Python não valida o tipo do protocolo: true == 1 e 1.0 == 1. A recusa de tipos incorretos complementa as guardas existentes de contagens, quantis, ordem, identidade e cleanup.
+- Versão 1, limites 50/5/50 e UID10001 permanecem; não houve alteração no helper, infraestrutura ou runtime.
+
+### Estado atual
+- Sete entradas indevidas reproduzidas antes da correção, em `.cache/verification/load-protocol-types-before.xml`. Depois, 49 testes do runner passaram em 0,14s; Ruff check/format aprovados. JUnit `.cache/verification/load-protocol-types-after.xml`.
+- Regressão de guardas de egress/proxy/carga: 95 passed/1 deselected em 0,18s; o caso de diretório temporário foi excluído por restrição de ACL já identificada. JUnit `.cache/verification/load-protocol-guards-regression.xml`; lint completo de scripts/infra aprovado.
+- São provas de parsing e guardas com recursos controlados, não campanha física PG17/Redis/TLS. Commit local continua impedido pela escrita em `.git`.
+
+### Próximos passos
+- Executar a campanha real com o helper v1 de 13 fases quando o terminal tiver acesso ao Docker; preservar os relatórios e validar cleanup.
+- Integrar testes à unidade do runner/fix, sem commit exclusivo de testes.
+
+## 2026-10-05 — Contrato de leitura de falhas do processamento
+
+### Implementado
+- Acordado o contrato privado de leitura de jobs exhausted/expired, com filtros, paginação, projeção sanitizada e janela de agenda. API e interface ainda estão em implementação.
+- Frontend documentou DTO e léxico estático; Banco revisou população da query, snapshot, autorização e limites dos índices existentes sem alterar persistência.
+
+### Arquivos principais alterados
+- `docs/API.md`, `docs/DEVELOPMENT_LOG.md`
+- `frontend/JOBS_UI_CONTRACT.md`, `frontend/IMPLEMENTATION.md`
+- Fontes em implementação: `backend/app/api/jobs.py`, `backend/app/services/operational_jobs.py`, `backend/app/main.py`.
+
+### Decisões técnicas
+- Default all reúne somente exhausted/expired. Pausados entram e arquivados não. A leitura não modifica jobs, saúde ou incidentes e não depende de Redis.
+- Autenticação termina antes do snapshot de observação; owner/projeto/monitor, COUNT e itens usam a mesma leitura. Projeção SQL impede carregar configuração privada no DTO; códigos desconhecidos viram null.
+- Janela usa scheduled_at, retenção usa finished_at e elegibilidade. Snapshot de uma resposta não estabiliza páginas entre requests; COUNT/OFFSET não têm custo limitado pela quantidade de itens. Nenhuma migration especulativa.
+- Recuperação de manifesto QA permanece apenas proposta: não implementar journal/publisher/reseed nesta etapa. Arquivo e PostgreSQL não têm commit atômico conjunto.
+
+### Estado atual
+- Contrato confirmado pelos três agentes. Backend implementa API/testes; Frontend implementa componente isolado contra fixture exata, aguardando freeze para revisão integrada. Ainda não há evidência de funcionamento da feature de jobs.
+- Central confirmou a baseline das unidades anteriores: 174 passed/5 skips de integrações PG/Redis, mais 7 testes Node sem skips e TypeScript aprovado. JUnit `.cache/verification/contracts-jobs-integration-baseline.xml`. Isso não valida a API nova.
+- Regressão central de compatibilidade com o router registrado: 62 passed/3 skips que exigem PG/56 deselected, em 124,38s; JUnit `.cache/verification/api-compatibility-jobs-router.xml`. Banco compilou COUNT/página em dialect PostgreSQL sem conexão, confirmou join inequívoco e oito campos; não é plano ou teste RR/RO real.
+- Docker e Git seguem sem acesso de escrita/pipe neste terminal; testes físicos e commits locais continuam pendentes.
+
+### Próximos passos
+- Revisar e executar `backend/tests/test_operational_jobs.py` após liberação do Backend; exigir isolamento, fronteiras, whitelist, zero efeitos e provas PG separadas.
+- Liberar consumo do DTO congelado ao Frontend; validar componente, mensagens, GET apenas, troca de projeto, teclado e mobile com fixture própria.
+- Atualizar esta documentação para implementado somente após os testes correspondentes; executar PG17 RR/RO e smoke físico quando a infraestrutura estiver acessível.
+
+## 2026-10-05 — Filtros de qualidade na lista de monitores
+
+### Implementado
+- Seletor Todos/Atualizados/Desatualizados/Sem dados/Pausados combinado com busca de nome/URL, usando freshness atual e clock15s existente; não filtra pela saúde histórica.
+- Contagem do snapshot fora de aria-live, reset ao trocar projeto, estados vazios distintos e Limpar filtros com retorno de foco à busca. Pausa/retomada pode retirar item do filtro sem alterar a seleção.
+
+### Arquivos principais alterados
+- `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/src/test/MonitorFilters.test.tsx`
+- `frontend/IMPLEMENTATION.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Filtragem local sobre snapshot do projeto, sem API/busca global ou inferência de disponibilidade. Timer existente permite envelhecer dados sem nova resposta HTTP.
+
+### Estado atual
+- Frontend entregou64 Vitest passed/zero skips em7,84s, TypeScript/build/whitespace aprovados; seis regressões de filtros.
+- Edge154 com build e API sintética próprios passou todas as opções, foco/teclado/reset em1440/390, sem overflow/erros. Controles mobile44px ou mais; relatório `frontend/.impeccable/review/monitor-filters/report.json`. Não é prova do produto8080/PG real.
+- Maestro confirmou typecheck e revisão de lógica/reset; unidade liberada sem alterações de auth/polling/API. Commit permanece impedido por Git readonly.
+
+### Próximos passos
+- Smoke físico da lista após readiness com owner exclusivo, preservando checks externos desligados.
+- Alinhar DTO exato e implementar leitura de falhas operacionais do Vigil em seção separada dos incidentes do alvo, sem retry/mutação.
+
+## 2026-10-05 — Configuração recusa portas de origem inválidas
+
+### Implementado
+- Settings valida a porta explícita da origem HTTP(S), rejeita zero/vazia/não numérica/fora do intervalo e sanitiza erros de parsing IPv6. Strings não são normalizadas; defaults e regra HTTPS de produção preservados.
+
+### Arquivos principais alterados
+- `backend/app/config.py`, `backend/tests/test_validation.py`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- urlsplit não validava porta sem acessar parsed.port; a validação agora ocorre no startup para impedir configuração de origem inviável.
+
+### Estado atual
+- Oito entradas indevidas aceitas antes, com regressão registrada. Central66 passed/zero skips em0,12s; nove negativos e oito positivos novos, incluindo IPv6/portas1/65535. JUnit `.cache/verification/origin-port-central.xml`; Ruff aprovado.
+- Nenhum endpoint, DB, gate ou processo foi alterado. Git readonly mantém commit pendente.
+
+### Próximos passos
+- Preservar origens explícitas válidas e produção HTTPS na próxima verificação de API.
+- Finalizar feature de jobs operacionais readonly em módulo separado, sem introduzir política Redis ou migration especulativa.
+
+## 2026-10-05 — Seed QA recusa diretório inválido antes do banco
+
+### Implementado
+- `run_seed` valida/cria o diretório pai do manifesto antes de criar engine, evitando fixture commitada para esse erro determinístico de filesystem.
+- Regressão usa pai que é arquivo real e proíbe engine; erro/cancelamento com transações controladas confirma saída/rollback/dispose sem manifesto.
+
+### Arquivos principais alterados
+- `backend/app/db/seed_observations_qa.py`, `backend/tests/test_db_qa_seed_preflight.py`
+- `backend/app/db/IMPLEMENTATION.md`, `backend/app/db/RETENTION_QA_CONTRACT.md`, `docs/DEVELOPMENT_LOG.md`
+- `AGENTS.md` registra preferência atual por commits de feat/fix, com testes acompanhando a unidade e sem commit exclusivo de testes.
+
+### Decisões técnicas
+- Mudança restrita à ordem; open exclusivo e conteúdo do manifesto preservados. Arquivo/PG não são atômicos: I/O/cancelamento após commit ainda pode deixar owner QA isolado.
+- Auditoria estrutural registra que FK de evidência garante existência, enquanto finalize/seed garantem mesmo monitor; não foi encontrado vetor público para fornecer IDs de evidência.
+
+### Estado atual
+- Banco entregou38 passed/2 skips PG em0,59s. Central preflight/contratos/schema/validação aninhada30 passed/zero skips em0,50s; JUnit `.cache/verification/seed-preflight-central.xml`, Ruff/whitespace aprovados.
+- Nenhum seed real, manifesto anterior, schema/migration/serviço ou PG18/runtime foi alterado. Commit local segue bloqueado pela escrita em `.git`.
+
+### Próximos passos
+- Repetir testes reais do seed em schema UUID PG17/migrations próprio, sem renovar manifesto/public existente.
+- Manter limite pós-commit explícito; discutir fluxo de publicação do manifesto somente com teste de falhas real e preservação de recursos exclusivos.
+
+## 2026-10-05 — Janelas de observação rejeitam epoch implícito
+
+### Implementado
+- Tipo de query compartilhado nas quatro rotas privadas de checks/métricas/incidentes rejeita epoch em segundos/milissegundos antes da coerção Pydantic; preserva ISO, offsets, defaults e regras de janela do serviço.
+- Respostas422 mantêm apenas query.from/to e tipo do erro, sem valores/contexto privados.
+
+### Arquivos principais alterados
+- `backend/app/api/observations.py`, `backend/tests/test_observations.py`
+- `docs/API.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Corrige aceitação silenciosa de formatos fora do contrato ISO, sem alterar DTOs, serviço, banco ou política de queries desconhecidas. Incidentes públicos aceitam somente period/state/limit/offset, sem janela from/to explícita.
+
+### Estado atual
+- Duas falhas HTTP reproduzidas antes do fix, com200 para epoch segundos/ms. Central final direcionada16 passed/7 PG skips/22 deselected em15,86s; nove formatos puros e sete casos HTTP/SQLite. JUnit `.cache/verification/window-epoch-central.xml`.
+- Backend entregou regressão49 passed/1 skip SQLite snapshot/38 deselected em52,98s. Readiness ASGI controlada confirmou erro/timeout503 sanitizado e propagação/cleanup de cancelamento; não é prova de driver/pool PG.
+- Ruff/format/whitespace aprovados; integração PG pendente e commit bloqueado pela sessão Git readonly.
+
+### Próximos passos
+- Repetir testes reais PG17 após liberação de infraestrutura; preservar ISO-Z/-03, sanitização e janelas antigas.
+- Continuar revisão de API sem introduzir política de rate limiting antes de coordenar contrato/falha Redis e validar integração real.
+
+## 2026-10-05 — Mensagens de autenticação em português
+
+### Implementado
+- Login com invalid_credentials mostra orientação genérica ptBR, sem distinguir conta/senha. Erros conhecidos de sessão/CSRF/origin/browser/JSON e fallback401/403 usam mensagens estáticas, sem ecoar message/details do servidor.
+- Transporte, ApiError, cookies, callbacks de sessão e contrato do backend preservados.
+
+### Arquivos principais alterados
+- `frontend/src/api.ts`, `frontend/src/test/api.test.ts`, `frontend/src/test/AuthErrors.test.tsx`
+- `frontend/IMPLEMENTATION.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Tradução usa código estável do backend; login401 não invalida sessão pelo callback reservado às leituras privadas. Outros erros desconhecidos conservam comportamento anterior.
+
+### Estado atual
+- Frontend entregou58 Vitest passed em8,14s e TypeScript/Vite build aprovados; cobre nove traduções com sentinelas, login401 e alerta acessível do formulário.
+- Maestro confirmou oito mappings sanitizados e login401 sem callback mediante compilação TypeScript/Node local; typecheck aprovado. Não executado login físico da API nesta unidade. Git readonly impede commit local.
+
+### Próximos passos
+- Validar formulário/login no smoke real em owner exclusivo quando readiness estiver disponível; não usar transporte isolado como evidência física.
+- Concluir filtro de qualidade dos monitores com contagem/foco/reset e verificação desktop/mobile, em unidade feat separada.
+
+## 2026-10-05 — Sincronização acessível e coleta passiva SSE
+
+### Implementado
+- Topo do dashboard mostra conexão, fallback30s, espera durante ação e última consulta de monitores bem-sucedida. Horário conserva em erro, reinicia ao trocar projeto e fica fora da região anunciada.
+- Coletor QA correlaciona requestId CDP, sinal/revisão, GET posterior e DOM; prepara240 leituras REST e25 atualizações em owner/projeto privado vazio exclusivo. Guardas e métodos de quantis documentados no relatóriov2.
+
+### Arquivos principais alterados
+- `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/src/test/SyncStatus.test.tsx`
+- `frontend/scripts/live-latency-smoke.mjs`, `frontend/scripts/live-latency-observer.mjs`, `frontend/scripts/live-latency-unit.mjs`, `frontend/scripts/live-latency-observer-browser.mjs`
+- `frontend/package.json`, `frontend/IMPLEMENTATION.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Conexão/consulta da UI não representa saúde nem horário de check. Somente modo muda dentro de role=status; horário não anuncia ticks.
+- PATCH-start→DOM é limite superior, não medição exata commit→DOM. SSE→GET usa um clock CDP; polling permanece ativo e pode tornar causalidade ambígua. Não combinar percentis por rota nem quantis desta amostra vazia com carga de worker.
+
+### Estado atual
+- Frontend entregou47 Vitest passed, TypeScript/build aprovados,7 Node e1 Edge em fixture sintética própria; seis estados desktop1440/mobile390 passaram sem overflow/erros. Captura mobile revisada centralmente; relatório `frontend/.impeccable/review/sync-ux/report.json`.
+- Maestro confirmou7 Node/zero skips e TypeScript/sintaxe. Vitest/build/Edge no terminal Maestro bloqueiam spawn EPERM; evidências do Frontend são identificadas separadamente.
+- Nenhum smoke de latência do produto8080 nem latência de pipeline foi medido nesta unidade. Git local bloqueado pelo sandbox read-only de `.git`; nenhum commit/push alegado.
+
+### Próximos passos
+- Confirmar readiness da API/UI reais em terminal com acesso Docker e executar `test:latency` com janela liberada/owner novo. Preservar archive/logout e relatório privado; não renovar seed anterior.
+- Concluir correção ptBR de erros de autenticação em `frontend/src/api.ts` com regressões, separada da sincronização e do tooling.
+
+## 2026-10-05 — Guardas de carga e auditoria offline de retenção
+
+### Implementado
+- Helper/runner QA observa13 fases de agenda/publicação/claim/commit/ACK com contagens, backlog, concorrência, CPU/RSS e limites de amostragem; namespace UUID, CA fixture e serviços PG17/Redis/TLS descartáveis próprios.
+- Runner exige identidade/protocolov1, ordem, commit visível em conexão distinta antes do ACK, todas as amostras/quantis finitos e cleanup; booleanos JSON não substituem contagens numéricas.
+- Verificador obrigatório inclui campanha/guardas PG/Redis e coletor Edge; recusa daemon Docker inacessível antes de testes caros/recursos, com mensagem sanitizada.
+- CLI offline compara somente FKs de evidência e índices de incidents com SQL Alembic real; registra investigação antes/depois sem alterar models/migrations.
+
+### Arquivos principais alterados
+- `backend/tests/helpers/pipeline_load_process.py`, `backend/tests/test_pipeline_load.py`
+- `scripts/pipeline_load_check.py`, `scripts/tests/test_pipeline_load_check.py`, `infra/worker/qa_pipeline_load.py`, `scripts/verify.ps1`
+- `backend/app/db/audit_retention_contract.py`, `backend/tests/test_db_retention_contract.py`, `backend/app/db/RETENTION_QA_CONTRACT.md`, `backend/app/db/IMPLEMENTATION.md`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Metadata da fixture não valida migrations/head. Verifier por ACK/sampler alteram custo observado; locks de um projeto serializam writes. Percentis de fases não são somáveis; backlog máximo é amostrado e não SLA.
+- Auditoria offline tem escopo explícito e recusa ALTER/DROP; ausência de índice inicial apoia investigação, sem provar scan/custo/ganho ou justificar migration especulativa.
+
+### Estado atual
+- Central final:105 passed/5 skips obrigatórios ainda não executados (quatro PG17 e um Redis), em1,06s, JUnit `.cache/verification/qa-contracts-central-final.xml`. Runner42, helper39 e contratos/schema24 passaram localmente; Ruff/config do backend/format aprovados.
+- Preflight PowerShell aprovado com daemon ausente, versão inválida/válida simuladas e recusa real do pipe, sem iniciar campanha. Tooling parcial completo117 passed/3 skips/2 falhas/4 erros de restrições em pipes/tmp do sandbox; não é aprovação global.
+- Campanha física100/60s e negativos PG/Redis atuais continuam pendentes. Docker aberto pelo usuário, pipe negado no Maestro; nenhum startup compartilhado, gate ou PG18 foi alterado. Infra TLS nova ainda precisa da prova Linux real.
+- Auditoria confirma head0001_initial e FKs nullable/SET NULL para check_results, sem candidato B-tree inicial nas duas evidências; nenhum SET NULL/plano/otimização real medido. Git bloqueado; não houve commit/push desta unidade.
+
+### Próximos passos
+- Liberado acesso ao daemon/Git no terminal, executar verificação obrigatória Linux/PG17/Redis e campanha100 jobs/60s; exigir cleanup confirmado e preservar todos os relatórios de falhas anteriores.
+- Executar ensaio de retenção descrito em `backend/app/db/RETENTION_QA_CONTRACT.md` antes de decidir índices/migration; não conectar PG18.
+
+## 2026-10-05 — Validação422 não ecoa nomes JSON extras
+
+### Implementado
+- Handler remove do caminho o nome de campo extra controlado pelo cliente; conserva envelope422 e caminhos de campos declarados/índices numéricos.
+- Regressões HTTP cobrem cadastro/login, objetos aninhados, erro de parsing JSON e contexto privado de validador.
+
+### Arquivos principais alterados
+- `backend/app/api/errors.py`, `backend/tests/test_auth.py`, `backend/tests/test_validation_errors.py`
+- `docs/API.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- `extra_forbidden` aponta para o objeto pai; valores/input/contexto permanecem ausentes. Schemas e respostas de sucesso não mudam.
+
+### Estado atual
+- Duas regressões de auth falharam antes do fix. Revisão central: auth/validation/observability74 passed/25 skips PostgreSQL em8,02s; três casos aninhados passed em0,05s. Ruff e whitespace aprovados. JUnit `.cache/verification/validation-field-review.xml` e `validation-nested-review.xml`.
+- Central parcial anterior:275 passed/214 skips e2 falhas TLS físicas no Windows; peer substituído por Avast, conforme diagnóstico do Backend. Trust não foi alterado. Nenhuma integração PG/Redis desta unidade foi alegada.
+- Docker Desktop aberto pelo usuário, mas terminal Maestro recebe permission denied no pipe; provas de carga/retention PG17 continuam pendentes. Sem alteração de gates ou PG18.
+
+### Próximos passos
+- Integrar tooling de carga e observação SSE após revisão local; registrar separadamente resultados sintéticos e campanha real ainda pendente.
+- Rodar verificação obrigatória Linux/PG17/Redis quando o terminal autorizado tiver acesso Docker; não tratar skips ou interceptação TLS como aprovação global.
+
 ## 2026-10-04 — Regressão do seed QA verifica dados commitados
 
 ### Implementado

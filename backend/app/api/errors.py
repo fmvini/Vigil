@@ -39,9 +39,12 @@ def install_handlers(app):
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
         # Never echo input (password, URL/query, cookie) or arbitrary validator context.
-        details = [
-            {"field": ".".join(str(x) for x in e["loc"]), "type": e["type"]} for e in exc.errors()
-        ]
+        details = []
+        for error in exc.errors():
+            # An extra key is caller input, unlike a declared model field. Report
+            # its parent while keeping known field paths usable by the frontend.
+            location = error["loc"][:-1] if error["type"] == "extra_forbidden" else error["loc"]
+            details.append({"field": ".".join(str(x) for x in location), "type": error["type"]})
         return response(request, 422, "validation_error", "Request validation failed", details)
 
     @app.exception_handler(HTTPException)

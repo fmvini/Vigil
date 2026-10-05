@@ -1,12 +1,14 @@
 import asyncio
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 import httpx
 import pytest
 from conftest import authenticate
+from pydantic import TypeAdapter, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.observations import IsoTimestamp
 from app.db.models import CheckJob, CheckResult, Incident, Monitor
 from app.security import utcnow
 
@@ -169,6 +171,77 @@ async def test_check_pagination_half_open_window_and_attempt_whitelist(
 async def test_invalid_metric_window_rejected(authenticated, monitor, params):
     result = await authenticated.get(f"/api/v1/monitors/{monitor['id']}/metrics", params=params)
     assert result.status_code == 422
+
+
+@pytest.mark.parametrize("timestamp_scale", [1, 1000], ids=["epoch-seconds", "epoch-milliseconds"])
+async def test_numeric_window_requires_explicit_iso_timezone(
+    authenticated, project, monitor, timestamp_scale
+):
+    now = utcnow()
+    timestamps = {"from": now - timedelta(hours=1), "to": now - timedelta(minutes=1)}
+    for path in (
+        f"/monitors/{monitor['id']}/checks",
+        f"/monitors/{monitor['id']}/metrics",
+        f"/projects/{project['id']}/metrics",
+        f"/projects/{project['id']}/incidents",
+    ):
+        for field, timestamp in timestamps.items():
+            params = {key: value.isoformat() for key, value in timestamps.items()}
+            numeric_input = str(int(timestamp.timestamp() * timestamp_scale))
+            params[field] = numeric_input
+            result = await authenticated.get("/api/v1" + path, params=params)
+            assert result.status_code == 422, (path, field, result.text)
+            assert result.json()["error"]["code"] == "validation_error"
+            assert result.json()["error"]["details"] == [
+                {"field": "query." + field, "type": "value_error"}
+            ]
+            assert numeric_input not in result.text
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "1791192852",
+        "-1791192852",
+        "1791192852.5",
+        "-1791192852.5",
+        "1791192852000",
+        "-1791192852000",
+        "1791192852000.5",
+        "-1791192852000.5",
+        "20261005",  # fromisoformat accepts basic dates; Pydantic treats digits as epoch.
+    ],
+)
+def test_epoch_seconds_milliseconds_signs_and_decimals_are_not_iso_input(value):
+    assert TypeAdapter(datetime).validate_python(value).utcoffset() == timedelta(0)
+    with pytest.raises(ValidationError, match="Window timestamps must use ISO 8601"):
+        TypeAdapter(IsoTimestamp).validate_python(value)
+
+
+async def test_iso_window_offsets_remain_valid_and_normalize_to_utc(
+    authenticated, project, monitor
+):
+    end = utcnow() - timedelta(minutes=1)
+    start = end - timedelta(hours=1)
+    offset = timezone(timedelta(hours=-3))
+    params = {
+        "from": start.astimezone(offset).isoformat(),
+        "to": end.isoformat().replace("+00:00", "Z"),
+    }
+    for path in (
+        f"/monitors/{monitor['id']}/checks",
+        f"/monitors/{monitor['id']}/metrics",
+        f"/projects/{project['id']}/metrics",
+        f"/projects/{project['id']}/incidents",
+    ):
+        result = await authenticated.get("/api/v1" + path, params=params)
+        assert result.status_code == 200, result.text
+        if path.endswith("/metrics"):
+            value = result.json()
+            assert datetime.fromisoformat(value["from"]) == start
+            assert datetime.fromisoformat(value["to"]) == end
+            assert datetime.fromisoformat(value["from"]).tzinfo == UTC
+            assert datetime.fromisoformat(value["to"]).tzinfo == UTC
 
 
 async def test_all_private_observations_authorize_owner(authenticated, api_app, project, monitor):

@@ -16,6 +16,18 @@ if ($TestRedisUrl) { $env:VIGIL_TEST_REDIS_URL = $TestRedisUrl }
 if ($RequireIntegration -and (!$TestDatabaseUrl -or !$TestRedisUrl)) {
     throw 'RequireIntegration exige TestDatabaseUrl e TestRedisUrl (ou VIGIL_TEST_DATABASE_URL e VIGIL_TEST_REDIS_URL).'
 }
+if ($RequireIntegration) {
+    # Fail before expensive tests or disposable resources when the daemon is
+    # stopped or its transport is unavailable to this terminal.
+    $dockerAccessible = $false
+    try {
+        $dockerVersion = & docker info --format '{{.ServerVersion}}' 2>&1
+        $dockerAccessible = $LASTEXITCODE -eq 0 -and ($dockerVersion -join '').Trim() -match '^\d+\.\d+\.\d+[^\s]*$'
+    } catch { $dockerAccessible = $false }
+    if (!$dockerAccessible) {
+        throw 'RequireIntegration precisa de acesso ao daemon Docker neste terminal. Verifique Docker Desktop e permissoes do pipe; nenhum ensaio foi iniciado.'
+    }
+}
 if (!$TestDatabaseUrl) { Write-Warning 'PostgreSQL real nao informado: testes dessa integracao serao ignorados.' }
 if (!$TestRedisUrl) { Write-Warning 'Redis real nao informado: ACK/reclaim nao sera validado.' }
 
@@ -42,7 +54,7 @@ try {
         # must execute: a supplied URL alone is not evidence of coverage.
         $integrationTests = @($report.SelectNodes('//testcase') | Where-Object {
             $_.name -notmatch '\[[^\]]*\bsqlite\b' -and (
-                $_.classname -match '(test_db_postgresql|test_db_qa_seed|test_pipeline_db|test_pipeline_status|test_scheduler_heartbeat|test_retention|test_worker|test_publisher|test_broker_integration|test_events_redis|test_events_tcp|test_transport_sockets|test_api_replicas|test_observability)' -or
+                $_.classname -match '(test_db_postgresql|test_db_qa_seed|test_pipeline_db|test_pipeline_load|test_pipeline_status|test_scheduler_heartbeat|test_retention|test_worker|test_publisher|test_broker_integration|test_events_redis|test_events_tcp|test_transport_sockets|test_api_replicas|test_observability)' -or
                 $_.name -match '(\[[^\]]*\bpostgres\b|test_real_redis_)'
             )
         })
@@ -53,7 +65,7 @@ try {
         if (!@($integrationTests | Where-Object { $_.classname -match 'test_db_postgresql' }).Count) {
             throw 'Testes reais PostgreSQL ausentes no relatorio backend.'
         }
-        foreach ($module in @('test_broker_integration', 'test_events_redis', 'test_events_tcp', 'test_transport_sockets', 'test_worker_process_recovery', 'test_api_replicas', 'test_pipeline_status', 'test_scheduler_heartbeat')) {
+        foreach ($module in @('test_broker_integration', 'test_events_redis', 'test_events_tcp', 'test_transport_sockets', 'test_worker_process_recovery', 'test_api_replicas', 'test_pipeline_load', 'test_pipeline_status', 'test_scheduler_heartbeat')) {
             if (!@($integrationTests | Where-Object { $_.classname -match $module }).Count) {
                 throw "Testes de integracao ausentes no relatorio backend: $module"
             }
@@ -64,7 +76,7 @@ try {
             throw "Integracoes obrigatorias ignoradas: $names"
         }
     }
-    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/egress_check.py ../scripts/proxy_recovery_check.py ../scripts/verify_backend_container.py ../scripts/tests ../infra/worker ../infra/web
+    uv run --system-certs --frozen ruff check --config pyproject.toml app tests ../scripts/backup_restore_check.py ../scripts/egress_check.py ../scripts/proxy_recovery_check.py ../scripts/pipeline_load_check.py ../scripts/verify_backend_container.py ../scripts/tests ../infra/worker ../infra/web
     Assert-CommandSuccess 'Lint backend'
     uv run --system-certs --frozen pytest ../scripts/tests -c pyproject.toml -q -ra -p no:cacheprovider "--junitxml=$scriptsReport"
     Assert-CommandSuccess 'Testes de tooling operacional'
@@ -82,6 +94,8 @@ try {
         Assert-CommandSuccess 'Firewall fisico IPv4/IPv6 e privilegios do worker'
         uv run --system-certs --frozen python ../scripts/proxy_recovery_check.py
         Assert-CommandSuccess 'Revalidacao DNS do Nginx e SSE sem buffering em rede propria'
+        uv run --system-certs --frozen python ../scripts/pipeline_load_check.py
+        Assert-CommandSuccess 'Carga Taskiq/PG17/Redis/TLS em servicos QA descartaveis'
     }
 } finally { Pop-Location }
 
@@ -89,6 +103,12 @@ Push-Location (Join-Path $projectRoot 'frontend')
 try {
     npm.cmd run test
     Assert-CommandSuccess 'Testes frontend'
+    npm.cmd run test:latency:unit
+    Assert-CommandSuccess 'Guardas e correlacao da medicao de latencia SSE'
+    if ($RequireIntegration) {
+        npm.cmd run test:latency:observer
+        Assert-CommandSuccess 'Coletor CDP no Edge com fixture sintetica propria'
+    }
     npm.cmd run build
     Assert-CommandSuccess 'Build frontend e TypeScript'
 } finally { Pop-Location }

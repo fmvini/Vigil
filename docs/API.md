@@ -6,6 +6,7 @@ Base: `/api/v1`. JSON, UUIDs e datas ISO 8601 em UTC. O OpenAPI gerado em `/docs
 
 - Listas retornam `{ "items": [...], "total": 0 }`; paginação por `limit` e `offset`.
 - Erros retornam `{ "error": { "code": "...", "message": "...", "details": null } }`.
+- Validação retorna 422 `validation_error` com `details` contendo somente `field` e `type`. Campos declarados e índices numéricos são preservados; chaves JSON extras são informadas pelo caminho do objeto pai (`body`, por exemplo), sem repetir o nome fornecido pelo cliente, valores ou contexto do validador.
 - Respostas incluem `X-Request-ID` UUID gerado pela API para correlação com logs de atividade; um header de mesmo nome recebido do cliente é substituído. Não é credencial ou ID de sessão.
 - Recursos de outro proprietário retornam 404. Dados de sessão/hash nunca integram DTOs públicos.
 - Mutações do navegador enviam `X-Vigil-Request: browser` e Origin autorizado. Depois do login também enviam `X-CSRF-Token`.
@@ -46,6 +47,8 @@ Probes fora do prefixo: `GET /health/live` e `GET /health/ready`. Liveness não 
 
 Checks/métricas aceitam `period=24h|7d|30d` (default 24h), ou `from` e `to` juntos com timezone explícito. Janela semiaberta `[from,to)`, dentro dos últimos 30 dias. Incidentes aceitam também `90d` (default 30d), `state=all|open|closed` e `monitor_id` opcional; incluem incidentes que se sobrepõem à janela, inclusive abertos iniciados antes dela. Listas usam `limit`/`offset`.
 
+Nas quatro rotas privadas, `from`/`to` devem ser datas ISO 8601; valores epoch numéricos em segundos/milissegundos são rejeitados com422, sem inferir UTC. Offsets válidos e `Z` são normalizados para UTC; regras de timezone, retenção e intervalo continuam obrigatórias. Incidentes públicos usam `period`, sem parâmetros explícitos `from`/`to`.
+
 Métricas retornam `from`, `to`, `computed_at`, `success_count`, `failure_count`, `sample_count`, `latency_sample_count`, `uptime_percent`, `average_latency_ms`, `p95_latency_ms`, `excluded_count`, `cancelled_count`, `pending_count`, `skipped_slots`, `health_status`, `data_complete`, `freshness_counts`, `bucket_seconds` e `series`.
 
 - Sem ciclos avaliados: uptime/média/p95 nulos e contagens zero. Expired/exhausted são exclusões, não falhas do alvo; cancelled é separado.
@@ -58,6 +61,21 @@ Métricas retornam `from`, `to`, `computed_at`, `success_count`, `failure_count`
 Check privado contém IDs, versão, timestamps, outcome, status HTTP, latência, duração do ciclo/fila, quantidade e resumo de tentativas, código sanitizado de erro, saúde e motivo de degradação. Incidente privado contém IDs/monitor_name, timestamps, end_reason, cause_code, threshold e referências de evidência. Nenhuma rota permite acesso cruzado entre proprietários.
 
 `duration_ms` no resumo de tentativa pode ser nulo se não foi registrado; duração total do ciclo continua separada. Campos desconhecidos do JSON de tentativa não são expostos pelo DTO.
+
+## Falhas do processamento — contrato em implementação
+
+`GET /projects/{id}/jobs` será uma leitura privada de jobs terminais, separada de incidentes e de falhas do endpoint. A implementação da API e da interface está em andamento; esta seção registra o contrato acordado, sem declarar integração física concluída.
+
+- `status=all|exhausted|expired`, default `all`, inclui somente exhausted e expired. `monitor_id` é opcional; monitores pausados entram, arquivados não. Projeto/monitor alheio, arquivado ou inexistente retorna 404.
+- `period=24h|7d|30d`, default 24h, ou `from`/`to` ISO com timezone explícito. Janela `[from,to)` sobre `scheduled_at`, dentro dos últimos 30 dias; reutiliza a validação das observações, inclusive rejeição de epoch.
+- `limit=20` por padrão, máximo 100; `offset` entre 0 e 9223372036854775807 (inteiro representável em BIGINT). Valores superiores retornam 422 sanitizado; esse teto não limita o custo da consulta. Ordem `scheduled_at DESC, id DESC`. Contagem e itens usam a mesma população no snapshot da resposta.
+- Envelope exato: `items`, `total`, `from`, `to`, `computed_at`, `retention_days` (30). Item: `job_id`, `monitor_id`, `config_version`, `status`, `scheduled_at`, `finished_at`, `execution_count`, `error_code`.
+- Datas são UTC e `finished_at` não é nulo. `execution_count` conta claims do worker (0–3), não tentativas HTTP. Códigos permitidos: `internal_error`, `execution_crashed`, `pool_exhausted`, `blocked_destination`, `database_error`, `insufficient_budget`, `deadline_exceeded`, `execution_limit`; desconhecidos retornam null.
+- A projeção exclui URL, configuração, credenciais, lease, consumer e erro bruto. Não há publicação, replay, retry, ACK ou mutação nesta rota; ela funciona com os gates de execução desligados.
+
+Autenticação/atividade termina antes da leitura REPEATABLE READ/READ ONLY; proprietário e recursos são conferidos dentro desse snapshot. Alterações posteriores de autorização podem não invalidar uma resposta já em curso. `computed_at` é horário de cálculo, não token de snapshot.
+
+A retenção remove jobs elegíveis por `finished_at`; a janela consultada usa `scheduled_at`. Uma lista vazia não comprova cobertura de monitoramento ou execução da retenção. O snapshot estabiliza uma resposta, sem garantir paginação consistente entre requests. COUNT e OFFSET altos podem exigir trabalho além do tamanho da página; escolha de índices e custo ainda dependem de planos PostgreSQL com volume representativo.
 
 ## Status pública
 

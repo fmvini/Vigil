@@ -35,7 +35,11 @@ class Settings(BaseSettings):
         if not self.allowed_origins:
             raise ValueError("allowed_origins must not be empty")
         for origin in self.allowed_origins:
-            parsed = urlsplit(origin)
+            try:
+                parsed = urlsplit(origin)
+                port = parsed.port  # urlsplit alone does not validate an explicit port.
+            except ValueError:
+                raise ValueError("allowed_origins must contain exact HTTP(S) origins") from None
             if (
                 parsed.scheme not in {"http", "https"}
                 or not parsed.hostname
@@ -45,6 +49,8 @@ class Settings(BaseSettings):
                 or parsed.query
                 or parsed.fragment
                 or "*" in origin
+                or parsed.netloc.endswith(":")
+                or (port is not None and not 1 <= port <= 65535)
             ):
                 raise ValueError("allowed_origins must contain exact HTTP(S) origins")
             if self.environment == "prod" and parsed.scheme != "https":

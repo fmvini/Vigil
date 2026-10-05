@@ -35,6 +35,31 @@ describe('contrato HTTP e sessão', () => {
     const error = new ApiError(422, 'validation_error', 'Request validation failed', [{ field: 'body.password', type: 'string_too_short' }]);
     expect(errorMessage(error)).toBe('Revise os campos: senha.');
   });
+  it.each([
+    [401, 'invalid_credentials', 'E-mail ou senha inválidos. Confira os dados e tente novamente.'],
+    [401, 'unauthenticated', 'Entre novamente para continuar. Sua sessão pode ter expirado.'],
+    [403, 'csrf_invalid', 'Não foi possível confirmar a segurança desta ação. Atualize a página e tente novamente.'],
+    [403, 'origin_forbidden', 'Não foi possível autorizar esta página. Abra o Vigil pelo endereço habitual e tente novamente.'],
+    [403, 'browser_request_required', 'Não foi possível confirmar esta ação. Atualize a página e tente novamente.'],
+    [415, 'json_required', 'Não foi possível enviar os dados. Atualize a página e tente novamente.'],
+    [401, 'http_error', 'Entre novamente para continuar. Sua sessão pode ter expirado.'],
+    [403, 'unknown_protection', 'Não foi possível autorizar esta ação. Atualize a página e tente novamente.'],
+    [409, 'conflict', 'Não foi possível salvar: já existe um cadastro com estes dados.'],
+  ] as const)('traduz proteção/auth %s/%s sem ecoar mensagem ou detalhes privados', (status, code, expected) => {
+    const error = new ApiError(status, code, 'PRIVATE_SERVER_SENTINEL', { email: 'PRIVATE_EMAIL_SENTINEL', token: 'PRIVATE_TOKEN_SENTINEL' });
+    expect(errorMessage(error)).toBe(expected);
+  });
+  it('preserva contrato invalid_credentials de login sem invalidar sessão por callback', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ error: { code: 'invalid_credentials', message: 'Invalid email or password', details: null } }, 401)));
+    const api = new ApiClient(); const expired = vi.fn(); api.onUnauthorized = expired;
+    let caught: unknown;
+    try { await api.request('/auth/login', 'POST', { email: 'tester@example.com', password: 'incorrect' }); }
+    catch (error) { caught = error; }
+    expect(caught).toBeInstanceOf(ApiError);
+    expect(caught).toMatchObject({ status: 401, code: 'invalid_credentials', message: 'Invalid email or password' });
+    expect(errorMessage(caught)).toBe('E-mail ou senha inválidos. Confira os dados e tente novamente.');
+    expect(expired).not.toHaveBeenCalled();
+  });
   it('não invalida sessão por 401 de leitura cancelada ou de sessão anterior', async () => {
     let resolve: (response: Response) => void = () => {};
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(done => { resolve = done; })));

@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.api.auth import router as auth_router
 from app.api.errors import ApiError, install_handlers
 from app.api.events import router as events_router
+from app.api.jobs import router as jobs_router
 from app.api.observations import router as observations_router
 from app.api.resources import router as resource_router
 from app.config import Settings
@@ -51,6 +52,7 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(resource_router, prefix="/api/v1")
     app.include_router(observations_router, prefix="/api/v1")
+    app.include_router(jobs_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
 
     @app.middleware("http")
@@ -78,7 +80,7 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     # FastAPI's included routers may preserve the original APIRoute in scope.
     # Match declared route identities rather than reading raw paths or private internals.
     routes = {id(route): route.path for route in app.routes if hasattr(route, "path")}
-    for router in (auth_router, resource_router, observations_router, events_router):
+    for router in (auth_router, resource_router, observations_router, jobs_router, events_router):
         routes.update({id(route): "/api/v1" + route.path for route in router.routes})
     app.add_middleware(RequestActivityMiddleware, route_templates=routes)
     return app

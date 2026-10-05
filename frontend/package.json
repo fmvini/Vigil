@@ -12,6 +12,9 @@
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:live": "node scripts/live-smoke.mjs",
     "test:observations": "node scripts/observations-smoke.mjs",
+    "test:latency": "node scripts/live-latency-smoke.mjs",
+    "test:latency:unit": "node --test --test-isolation=none scripts/live-latency-unit.mjs",
+    "test:latency:observer": "node --test scripts/live-latency-observer-browser.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

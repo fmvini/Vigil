@@ -26,6 +26,8 @@ O override é opcional e restrito ao build. O backend combina a CA temporariamen
 
 ## Verificação
 
+`-RequireIntegration` verifica primeiro acesso ao daemon Docker. Docker Desktop aberto não basta se o terminal recebe `permission denied` no pipe. A recusa ocorre antes dos ensaios descartáveis; ajustar as permissões da sessão é uma operação do ambiente, sem relaxar TLS, testes ou gates. Commits locais exigem escrita em `.git`; nenhum push é automático.
+
 Após instalar dependências, execute na raiz:
 
 ```powershell
@@ -60,6 +62,31 @@ Nesta sessão o Avast substituiu o certificado do socket local por uma cadeia em
 Na sessão Windows de 2026-10-04, uma consulta de catálogo do SQLAlchemy ficou em `IPC/MessageQueueInternal` com plano paralelo. O cluster local recebeu `ALTER ROLE vigil IN DATABASE vigil SET max_parallel_workers_per_gather=0`; novas conexões dessa combinação passaram a usar plano serial, e a consulta terminou em 0,105s. A configuração também vale para novos pools API dessa role/banco; outras bases e conexões já abertas não mudaram. É um ajuste do cluster local, não uma migration ou requisito de produção. Para reverter quando o ambiente suportar paralelismo, usar `ALTER ROLE vigil IN DATABASE vigil RESET max_parallel_workers_per_gather`. A causa exata do bloqueio de IPC não foi comprovada; a consulta anterior PID 1968 foi preservada sem sinais e continua pendente de diagnóstico operacional.
 
 Para reproduzir o smoke com API/Vite/PostgreSQL ativos e Edge instalado, executar em `frontend/`: `npm.cmd run test:browser` e `npm.cmd run test:live`. Criam contas/projetos locais de QA. O segundo valida SSE e consultas REST reais, reconciliação após mutação externa à aba, snapshot periódico e revogação. Relatórios/capturas ficam em `.impeccable/review/`, excluídos de Git/Docker.
+
+## Campanha de carga QA e coleta de atualização
+
+O runner `scripts/pipeline_load_check.py` prepara PostgreSQL17.11, Redis7.4.11 e worker/TLS em rede internal UUID própria, sem portas publicadas ou volumes persistentes. Requer imagem `vigil-worker-egress:qa` construída pelo ensaio egress e Docker acessível. Código/testes/CA são montados readonly; instalação do firewall é seguida de UID/GID10001/caps0. Gates compartilhados permanecem false e nenhum endpoint externo é consultado.
+
+```powershell
+$env:UV_CACHE_DIR = (Resolve-Path '.cache/uv').Path
+uv run --project backend --system-certs --frozen python scripts/pipeline_load_check.py --jobs 100 --duration-seconds 60
+```
+
+Relatório privado: `.cache/pipeline-load/<UUID>/report.json`. Exit0 exige contagens completas, commit visível por conexão PostgreSQL distinta antes do XACK, ordem/13 medições completas, backlog final zero e cleanup confirmado. Quantis são interpolados. CPU Docker é percentual por CPU lógico; memória é working set amostrado do container, incluindo setup e servidor TLS. RSS/CPU do helper têm escopo separado. Callback50 não significa50 HTTP simultâneos: limite por host continua5. Transação de agenda pode ser repetida por job do lote; percentis de fases não devem ser somados. Metadata da fixture não comprova migration/head. Esta campanha atual ainda aguarda execução física autorizada; testes locais não provam capacidade/RNF007/RNF008.
+
+Para coleta **separada** no navegador, somente após readiness e janela liberada pelo Maestro:
+
+```powershell
+$env:VIGIL_LATENCY_ALLOW_RUN = '1'
+$env:VIGIL_UI_URL = 'http://127.0.0.1:8080'
+npm.cmd run test:latency --prefix frontend
+```
+
+Cria owner/projeto privado vazio exclusivo, sem monitores/checks; prepara240 REST e25 PATCH-start→DOM em desktop/mobile. CDP observa EventSource e GET do produto, usando requestId/revisão/nome. PATCH-start→DOM é limite superior ao trecho após commit, não cronômetro de commit; polling pode tornar causalidade ambígua. Quantis nearest-rank não são os quantis interpolados da campanha. Archive/logout/revogação confirmam cleanup no escopo API, conservando owner/projeto arquivado e sessão revogada. Relatório privado `frontend/.impeccable/review/live-latency/<UUID>/report.json`; nenhum resultado físico do produto foi alegado na revisão local desta unidade. `test:latency:unit` e `test:latency:observer` verificam tooling; o segundo usa fixture Edge sintética, sem capacidade/latência do produto.
+
+## Auditoria offline de evidências da retenção
+
+De `backend/`, execute `uv run --system-certs --frozen python -m app.db.audit_retention_contract`. Não lê DSN runtime nem conecta ao banco. O JSON compara somente nullable/alvo/SET NULL das duas evidências de Incident e seus índices declarados com o SQL offline Alembic. Recusa ALTER/DROP conservadoramente. Candidato de índice não demonstra uso pelo planner ou ganho; catálogo, SET NULL real e planos dependem do ensaio em [RETENTION_QA_CONTRACT](../backend/app/db/RETENTION_QA_CONTRACT.md). Models/migrations atuais permanecem preservados.
 
 ## Smoke de observações com dados sintéticos
 

@@ -127,6 +127,23 @@ async def test_unauthenticated_registration_protection_and_safe_validation(clien
     assert "secret" not in result.text and "bad-email" not in result.text
 
 
+@pytest.mark.parametrize("endpoint", ["register", "login"])
+async def test_validation_does_not_echo_unknown_json_field_names(client, endpoint):
+    private_key = "private-url-token-password-sentinel"
+    result = await client.post(
+        f"/api/v1/auth/{endpoint}",
+        json={"email": "bad-email", "password": "secret", private_key: "private-value"},
+    )
+    assert result.status_code == 422
+    error = result.json()["error"]
+    assert error["code"] == "validation_error"
+    assert private_key not in result.text
+    assert "private-value" not in result.text and "secret" not in result.text
+    assert {"field": "body", "type": "extra_forbidden"} in error["details"]
+    # Declared fields remain stable for frontend validation labels.
+    assert {"field": "body.password", "type": "string_too_short"} in error["details"]
+
+
 async def test_csrf_token_is_bound_to_session(authenticated, api_app):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=api_app),

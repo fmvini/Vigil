@@ -14,12 +14,17 @@ export function errorMessage(error: unknown): string {
       const fields = Array.isArray(error.details) ? error.details.map(detail => labels[String(detail?.field).split('.').at(-1) ?? '']).filter(Boolean) : [];
       return fields.length ? `Revise os campos: ${[...new Set(fields)].join(', ')}.` : 'Revise a configuração informada. A API rejeitou os valores enviados.';
     }
-    if (error.code === 'unauthenticated') return 'E-mail ou senha inválidos, ou sua sessão expirou. Tente entrar novamente.';
+    if (error.code === 'invalid_credentials') return 'E-mail ou senha inválidos. Confira os dados e tente novamente.';
+    if (error.code === 'unauthenticated' || error.status === 401) return 'Entre novamente para continuar. Sua sessão pode ter expirado.';
+    if (error.code === 'csrf_invalid') return 'Não foi possível confirmar a segurança desta ação. Atualize a página e tente novamente.';
+    if (error.code === 'origin_forbidden') return 'Não foi possível autorizar esta página. Abra o Vigil pelo endereço habitual e tente novamente.';
+    if (error.code === 'browser_request_required') return 'Não foi possível confirmar esta ação. Atualize a página e tente novamente.';
+    if (error.code === 'json_required') return 'Não foi possível enviar os dados. Atualize a página e tente novamente.';
     if (error.code === 'quota_exceeded') return 'O limite de projetos ou monitores foi atingido. Arquive um item antes de criar outro.';
     if (error.code === 'not_found') return 'Este item não está disponível. Atualize a lista e tente novamente.';
     if (error.code === 'conflict') return 'Não foi possível salvar: já existe um cadastro com estes dados.';
     if (error.code === 'database_unavailable' || error.status >= 500) return 'O serviço está temporariamente indisponível. Tente novamente em instantes.';
-    if (error.status === 403) return `${error.message} Atualize a página para renovar a sessão e tente novamente.`;
+    if (error.status === 403) return 'Não foi possível autorizar esta ação. Atualize a página e tente novamente.';
     return error.message;
   }
   return 'Não foi possível conectar ao Vigil. Verifique sua conexão e tente novamente.';

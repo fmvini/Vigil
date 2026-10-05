@@ -1,8 +1,10 @@
 # Vigil
 
-Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil permitirá cadastrar endpoints, acompanhar disponibilidade e latência, identificar incidentes e publicar uma página de status por projeto.
+Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadastro de endpoints, histórico de disponibilidade/latência, incidentes e página pública de status por projeto. Execução externa de checks permanece opt-in.
 
-**Status atual: desenvolvimento funcional em 2026-10-04.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 foram validados com integrações reais controladas. Firewall de worker tem perfil opt-in e prova física em namespace isolado; checks externos permanecem desabilitados até validar implantação e carga. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limitações.
+**Status atual: desenvolvimento funcional em 2026-10-05.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+
+A revisão atual corrigiu sanitização de validação, formatos das janelas, portas de origem e mensagens de login. O dashboard ganhou modo de sincronização acessível e filtros de qualidade combinados com busca. A leitura privada de falhas do processamento está em implementação. Campanha de carga e coleta quantitativa do produto aguardam execução física; este terminal não acessa o pipe Docker nem escreve em `.git`. Checks externos permanecem desabilitados. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
 
 ## Objetivo
 
@@ -20,7 +22,7 @@ Oferecer monitoramento útil para desenvolvedores e pequenas equipes, demonstran
 - Dashboard atualizado por Server-Sent Events (SSE).
 - Página pública de status opcional, sem exposição de URLs ou dados privados.
 
-## Arquitetura proposta
+## Arquitetura
 
 ```mermaid
 flowchart LR
@@ -36,22 +38,22 @@ flowchart LR
     API -. SSE .-> UI
 ```
 
-API, scheduler e workers compartilharão um backend modular, executado em processos separados. PostgreSQL será a fonte de verdade; Redis transportará jobs e sinais de atualização. Jobs terão identidade persistida para tolerar reentregas sem duplicar métricas ou incidentes.
+API, scheduler e workers compartilham um backend modular e executam em processos separados. PostgreSQL é a fonte de verdade; Redis transporta jobs e sinais de atualização. Jobs têm identidade persistida para tolerar reentregas sem duplicar métricas ou incidentes. Scheduler e workers dependem da ativação explícita dos gates de execução.
 
-## Stack planejada
+## Stack
 
 | Área | Escolha |
 | --- | --- |
 | Frontend | React, TypeScript, Vite |
 | API | Python, FastAPI, Pydantic |
-| Persistência | PostgreSQL, SQLAlchemy assíncrono, asyncpg; Alembic na implementação |
+| Persistência | PostgreSQL, SQLAlchemy assíncrono, asyncpg e Alembic |
 | Monitoramento | asyncio, HTTPX, Taskiq com taskiq-redis/RedisStreamBroker |
 | Tempo real | SSE e Redis Pub/Sub; consultas REST para ressincronização |
 | Autenticação | Sessões opacas em cookie e hash de senha Argon2id |
-| Operação | Docker/Compose planejados; logs estruturados e métricas operacionais |
-| Testes | pytest e testes de integração; testes de frontend e navegador nas fases correspondentes |
+| Operação | Docker/Compose, logs estruturados e diagnóstico operacional |
+| Testes | pytest, Vitest, testes de integração e navegador com Playwright/Edge |
 
-A integração da fila e do transporte HTTP seguro será validada antes de habilitar o pipeline. Dependências Python e JavaScript são registradas nos manifests/lockfiles dos respectivos diretórios.
+A integração da fila e do transporte HTTP seguro exige validação no ambiente alvo antes de habilitar o pipeline. Dependências Python e JavaScript são registradas nos manifests/lockfiles dos respectivos diretórios.
 
 ## Documentação
 

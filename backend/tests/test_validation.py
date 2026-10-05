@@ -131,3 +131,40 @@ def test_production_config_rejects_insecure_origins_and_defaults():
         allowed_origins=["https://app.test"],
     )
     assert valid.cookie_secure and valid.cookie_name == "__Host-vigil_session"
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://app.test:abc",
+        "https://app.test:65536",
+        "https://app.test:0",
+        "https://app.test:",
+        "http://[::1]:abc",
+        "http://[::1]:65536",
+        "http://[::1]:0",
+        "http://[::1]:",
+        "http://[::1]suffix:80",
+    ],
+)
+def test_origin_rejects_invalid_port_or_authority(origin):
+    with pytest.raises(ValidationError, match="exact HTTP"):
+        Settings(allowed_origins=[origin], _env_file=None)
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://[::1]:5173",
+        "http://[::1]",
+        "https://app.test:1",
+        "https://[2001:db8::1]:65535",
+        "https://App.Test:443",
+        "https://app.test",
+    ],
+)
+def test_origin_valid_ports_local_ipv6_and_spelling_are_preserved(origin):
+    settings = Settings(allowed_origins=[origin], _env_file=None)
+    assert settings.allowed_origins == [origin]

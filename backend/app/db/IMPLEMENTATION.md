@@ -1,5 +1,63 @@
 # Persistência Vigil — 2026-10-04
 
+## 2026-10-05 — Seed QA recusa diretório inválido antes de acessar banco
+
+### Implementado
+- Movida a criação/validação do diretório pai do manifesto para antes de `create_engine` em `run_seed`. Um pai que é arquivo ou cuja criação falha é recusado antes de conexão/transação, evitando commits de fixture para esse erro determinístico.
+- Adicionada regressão usando `pyproject.toml` como pai inválido, sem temporários/PG; a criação de engine é proibida. Provas controladas de erro/CancelledError confirmam saída da transação por rollback, dispose e ausência de escrita do manifesto.
+- Registrado limite estrutural das FKs simples de evidência no documento local: existência do resultado é protegida no schema; alinhamento ao monitor é garantido por finalize/seed. Nenhuma escrita pública de IDs de evidência foi encontrada com Backend.
+
+### Arquivos principais alterados
+- `backend/app/db/seed_observations_qa.py`
+- `backend/tests/test_db_qa_seed_preflight.py`
+- `backend/app/db/RETENTION_QA_CONTRACT.md`
+- `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Correção restrita à ordem de validação do filesystem, sem alterar models/migrations/retention/Backend ou o conteúdo e open exclusivo do manifesto.
+- Reprodução anterior usou FileExistsError real e transações/seed controlados: engine → seed → commit → verificação → commit → erro de diretório → dispose. Não é prova de commit/rollback em servidor PostgreSQL.
+
+### Estado atual
+- **38 passed, 2 skipped, em 0.59s** em `test_db_qa_seed_preflight.py`, `test_db_qa_seed.py`, `test_db_retention_contract.py` e `test_db_schema.py`; skips são os dois testes reais PG do seed, sem URL. Ruff check/format dos arquivos Python alterados aprovados. Nenhum seed real/PG18/runtime foi acessado; sem staging/commit/push.
+- Auditoria da integridade anterior encontrou 69 cláusulas metadata no DDL offline inicial (9 FKs, 47 CHECKs, 6 UNIQUE, 7 PK), sem cláusulas ausentes. SQLite com FK=1 rejeitou 15 casos inválidos de identidade/duplicação/leases/datas/resposta e comprovou SET NULL/rollback em memória.
+- SQL direto aceita evidência de outro monitor, failure sem error_code e duração infinita; finalize/seed garantem alinhamento e `_validate_cycle` rejeitou os dois últimos. São limites de defesa no schema, sem bug API alcançável demonstrado.
+- Limite conhecido permanece: falha/cancelamento depois do primeiro commit, inclusive na verificação ou abertura/escrita do manifesto, pode deixar owner QA isolado sem manifesto. Não existe atomicidade entre arquivo e PostgreSQL; esta correção cobre somente falhas de diretório antes de conexão.
+
+### Próximos passos
+- Maestro revisa o fix, registra `docs/DEVELOPMENT_LOG.md` e centraliza Git segundo a regra atual de commits apenas feat/fix. Banco não contorna o bloqueio Git.
+- Quando houver PG17 seguro disponível, repetir os testes reais do seed em schema UUID/migrations próprios, sem novo seed em public ou alteração do manifesto já revisado.
+- A hipótese de índices de evidência continua pendente dos planos reais previstos em `RETENTION_QA_CONTRACT.md`; não criar migration/otimização especulativa.
+
+## 2026-10-05 — Auditoria offline das FKs de evidência e contrato do ensaio
+
+### Implementado
+- Tooling `audit_retention_contract.py` compara somente as duas FKs de evidência e os índices declarados de `incidents` com o SQL offline do head Alembic real. CLI JSON usa `retention_contract_matches_migration` e `scope=incident_evidence_fks_and_indexes_offline`; nenhuma URL runtime é lida e nenhuma conexão é aberta.
+- Regressões detectam drift de nulabilidade, ação DELETE, alvo FK e índice apenas na metadata. Classificação de candidatos B-tree respeita primeira coluna/método; ALTER/DROP é recusado conservadoramente. O teste do CLI proíbe conexões síncronas/assíncronas e fornece URLs runtime/teste inválidas.
+- Registrado contrato de ensaio antes/depois em PG17 descartável, com migration real, queries do serviço existente, fixture seletiva, EXPLAIN sem ANALYZE e testes de integridade/rollback antes de propor migration.
+
+### Arquivos principais alterados
+- `backend/app/db/audit_retention_contract.py`
+- `backend/tests/test_db_retention_contract.py`
+- `backend/app/db/RETENTION_QA_CONTRACT.md`
+- `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Mantidos models, migration inicial e serviço/testes Backend de retenção. Não criar otimização especulativa antes de corroborar a hipótese com planos PG17.
+- Auditoria delimitada ao contrato de evidências/índices declarados, não à paridade global do schema. Parser offline não substitui catálogo e falha conservadoramente em ALTER/DROP.
+- Um candidato de índice não prova aplicabilidade do predicado ou uso pelo planner. Nenhum ganho de performance foi alegado; staging/commit/documentação raiz seguem com Maestro.
+
+### Estado atual
+- **24 passed, zero skips, em 0.53s**: `tests/test_db_retention_contract.py` e `tests/test_db_schema.py`, sem cache/pyc. Ruff check e format check aprovados; CLI emitiu JSON com head `0001_initial`, contrato e índices coerentes e `postgresql_executed=false`.
+- Achado factual: ambas as evidências são nullable e FK para `check_results.id` com SET NULL; nenhuma possui candidato B-tree declarado com a coluna na primeira posição na metadata ou migration inicial.
+- Revisão helper de carga Backend: 34 passed, quatro guardas PG17 skipped por ausência de URL e um Redis deselected; Ruff aprovado. Contrato QA é isolado/cooperativo, metadata não valida migrations, verificação por ACK e sampler adicionam overhead e um projeto serializa locks. Guardas novas não foram executadas no PostgreSQL.
+- PG17 indisponível: inspeção passiva não encontrou listener55433 nem instalação local17; nenhuma conexão/alteração PG18/runtime. Docker aberto pelo usuário posteriormente, mas pipe negado para Maestro, conforme coordenação. Não foi iniciado ensaio nem houve stage/commit/push.
+- Limite: auditoria não comprova execução de migration, catálogo, comportamento SET NULL, planos, locks, seletividade real ou custo de retenção.
+
+### Próximos passos
+- Maestro revisa a unidade local, registra progresso em `docs/DEVELOPMENT_LOG.md` e centraliza Git; Banco não disputa staging.
+- Quando houver PG17 descartável acessível, executar os sete passos de `backend/app/db/RETENTION_QA_CONTRACT.md`, preservando serviços/dados de runtime.
+- Coletar baseline das queries reais de evidência e testar candidatos somente no schema QA. Somente com evidência corroborada, criar migration aditiva/metadata e `test_db*` de upgrade/downgrade/catálogo/SET NULL/rollback; repetir `test_retention.py` sem alterar o contrato do serviço.
+
 ## 2026-10-04 — Regressão do tooling QA e fechamento da validação PG17
 
 ### Implementado

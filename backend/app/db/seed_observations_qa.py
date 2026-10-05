@@ -468,6 +468,8 @@ async def verify_fixture(db, manifest):
 
 
 async def run_seed(url, manifest_path):
+    # A deterministic parent-path failure must not leave committed QA rows.
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(url)
     try:
         async with create_session_factory(engine).begin() as db:
@@ -481,7 +483,6 @@ async def run_seed(url, manifest_path):
             manifest["database"].update(host="127.0.0.1", port=55433, server_version_num=version)
         async with create_session_factory(engine).begin() as db:
             await verify_fixture(db, manifest)
-        manifest_path.parent.mkdir(parents=True, exist_ok=True)
         with manifest_path.open("x", encoding="utf-8") as output:
             json.dump(manifest, output, ensure_ascii=False, indent=2)
             output.write("\n")

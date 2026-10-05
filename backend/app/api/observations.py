@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, BeforeValidator, ConfigDict
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,23 @@ from app.services import observations as service
 from app.services.resources import owned_monitor, owned_project
 
 router = APIRouter(tags=["observations"])
+
+
+def require_iso_timestamp(value):
+    # Pydantic also accepts numeric epoch strings, silently supplying UTC. The
+    # observation API requires ISO input; timezone/window rules stay in service.
+    if isinstance(value, datetime):
+        return value
+    if not isinstance(value, str) or value.lstrip("+-").replace(".", "", 1).isdigit():
+        raise ValueError("Window timestamps must use ISO 8601")
+    try:
+        datetime.fromisoformat(value)
+    except ValueError:
+        raise ValueError("Window timestamps must use ISO 8601") from None
+    return value
+
+
+IsoTimestamp = Annotated[datetime, BeforeValidator(require_iso_timestamp)]
 
 
 async def observation_identity(request: Request) -> Identity:
@@ -95,8 +112,8 @@ async def checks(
     db: ObservationDB,
     auth: ObservationAuth,
     period: Literal["24h", "7d", "30d"] = "24h",
-    from_: datetime | None = Query(None, alias="from"),
-    to: datetime | None = None,
+    from_: IsoTimestamp | None = Query(None, alias="from"),
+    to: IsoTimestamp | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
@@ -126,8 +143,8 @@ async def monitor_metrics(
     db: ObservationDB,
     auth: ObservationAuth,
     period: Literal["24h", "7d", "30d"] = "24h",
-    from_: datetime | None = Query(None, alias="from"),
-    to: datetime | None = None,
+    from_: IsoTimestamp | None = Query(None, alias="from"),
+    to: IsoTimestamp | None = None,
 ):
     _, monitor = await owned_monitor(db, auth.user.id, monitor_id)
     return await service.metrics(db, [monitor], service.observation_window(period, from_, to))
@@ -139,8 +156,8 @@ async def project_metrics(
     db: ObservationDB,
     auth: ObservationAuth,
     period: Literal["24h", "7d", "30d"] = "24h",
-    from_: datetime | None = Query(None, alias="from"),
-    to: datetime | None = None,
+    from_: IsoTimestamp | None = Query(None, alias="from"),
+    to: IsoTimestamp | None = None,
 ):
     await owned_project(db, auth.user.id, project_id)
     monitors = (
@@ -180,8 +197,8 @@ async def incidents(
     monitor_id: UUID | None = None,
     state: Literal["all", "open", "closed"] = "all",
     period: Literal["24h", "7d", "30d", "90d"] = "30d",
-    from_: datetime | None = Query(None, alias="from"),
-    to: datetime | None = None,
+    from_: IsoTimestamp | None = Query(None, alias="from"),
+    to: IsoTimestamp | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):

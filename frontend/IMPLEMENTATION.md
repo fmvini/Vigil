@@ -1,5 +1,46 @@
 # Implementação do frontend Vigil
 
+## 2026-10-05 — Plano: contrato privado de falhas do processamento
+
+- `JOBS_UI_CONTRACT.md` registra DTO exato, oito códigos/labels estáticos, claims técnicos distintos de retriesHTTP, janela por scheduled_at e retenção por finished_at/eligibilidade; sem inferência de cobertura.
+- Seção futura será componente novo, com App limitado a import/mount, leitura ao expandir, filtros/paginação e mensagens separadas dos incidentes/saúde do alvo. Null/código desconhecido vira Não informado, sem fallback raw.
+- Estado: somente contrato/usabilidade revisados e enviados ao Backend. Nenhuma UI/consulta jobs implementada; aguardar freeze das fontes e liberação para consumo antes de iniciar feat. Auth/sync/filtros permanecem estáveis; último baseline64 Vitest/TypeScript/build e visual sintético próprios.
+
+## 2026-10-05 — Feat: filtro de qualidade combinado com busca
+
+- `src/App.tsx` oferece Todos/Atualizados/Desatualizados/Sem dados/Pausados e aplica AND com busca nome/URL no snapshot completo do projeto. Qualidade usa `currentFreshness(m, now)` com clock15s existente, nunca última saúde ou somente freshness DTO já envelhecido.
+- Busca/qualidade reiniciam ao trocar projeto (incluindo seleção automática); contagem X de Y monitores fica fora de aria-live. Limpar filtros restaura ambos e devolve foco à busca. Projeto vazio mantém onboarding; zero correspondências filtradas explica recuperação. Pause/resume e demais ações/contratos/transporte não mudam.
+- `src/styles.css` usa seletor nativo, busca/select na mesma linha desktop, empilhados em mobile e alvos44px. Nenhum novo endpoint/dependência ou alteração nos arquivos do auth fix/sync hook.
+- `src/test/MonitorFilters.test.tsx`: seis casos cobrem todas as qualidades, saúde histórica independente, freshness envelhecido, AND nome/URL/case, contagem/foco/clear, reset por projeto, tick15s sem fetch extra, pausa/retomada e projeto vazio. Regressão final64 passed; TypeScript/build e whitespace aprovados. Corridas de montagem e conflito fake-timers/user-event foram corrigidos somente nas esperas/interações dos testes, sem ampliar prazos.
+- Edge154/build real com API sintética loopback própria: desktop1440/mobile390, seis capturas Todos/Pausados/zero resultado, todas as opções, limpeza por teclado/foco e troca de projeto passaram sem overflow/errors. Mobile input46px/select44px/clear44px; contagem fora de live region. Evidências `.impeccable/review/monitor-filters/report.json`/PNGs; detector somente advisories de tokens reutilizados do design existente.
+- Sem smoke API real/8080, seed QA, stage/commit/deploy. Unidade feat inclui testes; Maestro centraliza integração e DEVELOPMENT_LOG global.
+- Próximos passos: conferir filtros na UI/API reais após readiness. Novo incremento autorizado de jobs exige DTO exato de Backend antes de consumir `/projects/{id}/jobs`; planejar seção privada separada de incidentes, sem retry/mutação ou promessa de cobertura por lista vazia/retention30d.
+
+## 2026-10-05 — Fix: mensagens de autenticação/proteção em português
+
+- `src/api.ts` traduz `invalid_credentials` para mensagem genérica de e-mail/senha inválidos, sem indicar qual dado falhou. `unauthenticated`, `csrf_invalid`, `origin_forbidden`, `browser_request_required`, `json_required` e fallbacks401/403 usam orientação ptBR estática, sem echo de message/details do servidor. Conflict/validação já traduzidos foram preservados.
+- Transporte, objetos ApiError, callbacks401, cookies/CSRF e backend não mudaram. `src/test/api.test.ts` inclui nove casos de códigos/status com sentinelas privadas e contrato HTTP401 de login sem callback de revogação; `src/test/AuthErrors.test.tsx` verifica alerta de login em português, possibilidade de retentar e ausência de dados privados.
+- Validação final: 58 testes Vitest passaram, TypeScript/Vite build e `git diff --check -- frontend` aprovados. Tooling SSE anteriormente validado mantém Node7/Edge1; nenhum teste produto8080, seed QA ou runtime compartilhado nesta sessão. Testes novos acompanham o fix na integração, sem unidade/commit separado de testes; staging/commits centralizados por Maestro.
+- Limite: tradução cobre códigos conhecidos de auth/proteção e status401/403; outros erros400/422 não reconhecidos mantêm comportamento anterior. Formulário foi validado com transporte isolado no teste, sem API real.
+- Proposta de próximo incremento (aguarda alinhamento antes de implementar): botão Limpar busca e contagem visível de resultados na lista de monitores. Filtragem apenas sobre o snapshot atual, sem prometer busca global ou dados novos; validar recuperação de zero resultados, teclado/foco no campo, mudança de projeto e mobile390. Campanha produto/SSE segue dependente de readiness8080.
+
+## 2026-10-05 — Unidade 1: tooling de latência SSE preparado
+
+- `scripts/live-latency-smoke.mjs` e `package.json` concluem o smoke separado: janela explícita `VIGIL_LATENCY_ALLOW_RUN=1`, origem HTTP loopback raiz e readiness antes de cadastro. Owner/projeto privado exclusivos, zero monitores/checks, archive/logout com guardas de identidade/revisão e prova de revogação do token antigo; owner e arquivo permanecem, sem purge/seed QA.
+- Relatório v2 privado em `.impeccable/review/live-latency/<UUID>/report.json`, caminho independente do cwd. Planeja 240 REST e 25 atualizações medidas em desktop1440/mobile390; exclui 24 warmups REST/4 PATCH, resume p50/p95/p99 nearest-rank e registra falhas/limites.
+- Observador passivo `scripts/live-latency-observer.mjs` correlaciona body de GET de produto pelo requestId CDP exato, revisão/nome e início posterior ao SSE nativo. Leituras marcadas de medição não provam reconciliação. PATCH→DOM é limite superior da parcela após commit; SSE→início do GET usa somente clock CDP. Não mede commit exato ou causalidade exclusiva de SSE: polling/periodic continuam habilitados.
+- `npm run test:latency:unit`: 7 testes passaram em Node24.16 dentro do sandbox, sem subprocessos, com `--test-isolation=none`. `npm run test:latency:observer`: 1 teste passou em Edge154 real contra servidor HTTP/SSE sintético próprio; navegador exigiu execução escalada por spawn EPERM. Nomes sem `.test` evitam descoberta acidental pelo Vitest.
+- **Produto8080 não foi testado nesta unidade**: readiness ainda não confirmado. O teste Edge prova o observador; nenhuma latência sintética foi incorporada ao relatório de produto/carga, nenhum runtime ou seed alheio foi modificado.
+- Continuidade: Maestro confirma readiness/janela, executa smoke com as variáveis acima e integra o JSON como evidência separada do ensaio Taskiq. Amostra pequena/projeto vazio não demonstra capacidade, SLA ou latência de jobs.
+
+## 2026-10-05 — Unidade 2: modo de sincronização e consulta confirmada
+
+- `src/App.tsx` mostra modo de conexão em `role=status`, explica polling30s/ação Atualizar e espera da consulta durante edição/confirmação/mutação. Última consulta dos monitores vem exclusivamente de REST bem-sucedido, preservada após falha e reiniciada ao trocar projeto; não representa horário/saúde de check.
+- Timestamp fica fora da live region, sem anúncio por tick ou animação. `src/styles.css` adapta a composição em mobile. Horário duplicado na busca foi removido; transporte, SSE/retry/polling e contratos da API permanecem.
+- `src/test/SyncStatus.test.tsx`: 3 testes de conexão/erro/reabertura, horário preservado em falha e atualizado em sucesso, espera durante edição e troca de projeto. Regressão final: 47 testes passaram; `npm run build` passou TypeScript/Vite.
+- Edge154 com build local/API sintética própria: desktop1440/mobile390 em conectado/fallback e edição mobile, seis estados sem overflow, timestamp fora de aria-live, sem animação/errors. Evidências privadas `.impeccable/review/sync-ux/report.json` e PNGs; não é smoke da API real nem ensaio de latência. Detector Impeccable apontou apenas advisories de tokens preexistentes; PRODUCT.md tem schema legado, atualização via `init` fica para solicitação específica.
+- Sem staging/commit/deploy. Maestro centraliza documentação global e integração. Próximo passo: verificar esta UX no smoke real após readiness8080, mantendo owner/projeto exclusivos e guardas do tooling.
+
 ## 2026-10-04 — Proxy acompanha mudança de IP da API
 
 - Infra `nginx.conf` usa upstream com zone, server resolve e resolver Docker127.0.0.11/valid5s/timeout2s. `/api/` e `/health/` acompanham DNS sem reload/restart; headers, URI e SSE sem buffering preservados.

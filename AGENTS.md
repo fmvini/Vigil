@@ -3,6 +3,7 @@
 ## Git
 
 - Faça commit local a cada unidade relevante e coerente de funcionalidade, correção, refatoração, configuração ou etapa concluída.
+- Preferência atual do usuário (2026-10-05): concentre commits em features e fixes, sem commits exclusivos de testes. Testes que validam a unidade podem acompanhar seu commit.
 - Antes de commitar, revise `git diff`, rode os testes existentes e adicione somente os arquivos relevantes explicitamente.
 - Não commite código quebrado, sem verificação ou com erros de sintaxe. Não execute push sem pedido explícito do usuário.
 - Mensagem: `<tipo>: <resumo claro em até aproximadamente 70 caracteres>`, linha em branco e bullets descrevendo mudança, motivação e impacto. Tipos: feat, fix, refactor, docs, test, chore.
