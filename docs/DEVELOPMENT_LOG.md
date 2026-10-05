@@ -1,5 +1,34 @@
 # Registro de desenvolvimento
 
+## 2026-10-05 — Verificação obrigatória de jobs e provas QA reais
+
+### Implementado
+- `verify.ps1 -RequireIntegration` exige testes PostgreSQL de jobs no JUnit; omissão ou skip real recusa a verificação. Skips exclusivos de SQLite continuam permitidos.
+- API e seção Falhas do processamento do Vigil concluídas no código integrado anteriormente; contrato documentado como implementado, com projeção sanitizada, filtros e paginação somente leitura.
+- Regra de commits atualizada no AGENTS: unidade concluída agrupa implementação/testes/docs, sem commits de testes ou log automáticos.
+
+### Arquivos principais alterados
+- `scripts/verify.ps1`, `AGENTS.md`
+- `docs/API.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`, `frontend/JOBS_UI_CONTRACT.md`
+
+### Decisões técnicas
+- Verificação deve comprovar execução dos jobs PG, além de receber uma URL. Quatro cenários controlados do bloco PowerShell validaram presença, omissão, skip PG e skip SQLite; AST sem erros. Não foi executado o comando verify completo nesta etapa.
+- Serviços QA exclusivos usam UUID/labels/IDs, limites, tmpfs e mounts readonly. Docker/Git voltaram a funcionar via revisão de permissões; bloqueios descritos nas entradas anteriores são históricos. Nenhum serviço PG18 ou gate compartilhado foi alterado.
+- Campanha de carga e testes migrations/jobs são ensaios distintos: helper usa metadata; migrations reais são exercitadas em fixtures próprias. Nenhum índice especulativo ou alegação de plano/paridade global.
+
+### Estado atual
+- Backend QA token `2c11a939f92546d0aeeae1f50bd7dac1`:52 passed/zero skips em5,416s (sete jobsPG, quatro namespacePG, um Redis,40 casos puros/controlados), sete SQLite deselected. Provas RR/RO/UPDATE25006 e COUNT/página durante commit de writer distinto passaram. Migrations:29 passed/zero skips em13,427s; head0001_initial/base, tipos/UTC, constraints, identidade composta, SET NULL das duas evidências e concorrência.
+- Banco revisou JUnits, log, hashes e limpeza: schemas/keys vazios antes/depois, sete fontes inalteradas; três containers, rede e imagem QA exclusivos removidos e ausência confirmada. Artefatos privados em `.cache/verification/backend-qa-2c11a939f92546d0aeeae1f50bd7dac1/`.
+- Carga Taskiq/PG17/Redis/TLS: baseline100/60s e rajada100/0s com contagens completas, zero erros,13 métricas×100 amostras, commit por PID distinto antes do ACK e cleanup confirmado. Agenda commit→XACK p95:99,31ms baseline/4198,21ms rajada; máximos callbacks/HTTP1/1 e15/4. Relatórios `.cache/pipeline-load/31315bf2092c4c75923cfa9c98769b9b/` e `2d39277258f64df6b1e2a9f5aacb9a86/`. Limite50 não foi saturado; um projeto serializa locks e observadores adicionam overhead. Sem SLA/capacidade sustentada.
+- UI jobs:72 Vitest/zero skips, build e seis estados Edge desktop/mobile passaram com API sintética; não prova integração dessa seção com PG real. APIjobs continua usando fixture metadata separada da fixture Alembic; nenhum EXPLAIN/volume de histórico medido.
+- Coleta UI/API real `29b74cc0-09f0-406a-a5bf-232df865f8c6`:240 REST+25 PATCH medidos passed/errors0, correlacionando SSE nativo/revisão/GET posterior por requestId CDP/DOM. PATCH-start→DOM p95=264,30ms; SSE→GET p95=216,70ms. Build e52dd02/PG170011/head0001_initial/Redis, owner/projeto privado vazio e gates false; uma API não prova fanout. Cleanup API archive/logout/token antigo confirmado; depois containers e duas redes próprias removidos. API/PG/Redis internos, bridge adicional exclusiva do web para loopback. Dois preflights anteriores de binding foram limpos antes de criar conta. Evidências `.cache/verification/ui-real-e481d12e845740a58c5f8f0833bc2e08/` e `frontend/.impeccable/review/live-latency/<UUID>/report.json`. Quantis nearest-rank, polling mantido, sem tempo exato commit→DOM/SLA.
+- Frontend aprovou revisão readonly da coleta real e recalculou todos os quantis/contagens independentemente. O JSONv2 guarda flags/deltas, sem requestIds e timestamps CDP brutos: reconstrução independente de cada pareamento exige mais evidência; a revisão também conferiu fontes do observador. Sem sobreposição periódica observada não significa causalidade exclusiva.
+
+### Próximos passos
+- Integrar prova de leitura da seção jobs no navegador contra schema Alembic real em nova janela QA exclusiva; a coleta concluída mede projeto vazio/REST/SSE, com jobs fechado.
+- Antes de otimizar histórico ou retenção, executar o contrato de planos PG17 com volume representativo em `backend/app/db/RETENTION_QA_CONTRACT.md`; não inferir ganho dos índices candidatos.
+- Executar verify completo obrigatório em janela isolada com todas as dependências; esta etapa não substitui provas de fanout/réplicas/firewall/recovery do restante da suíte.
+
 ## 2026-10-05 — Logo de olho e favicons do Vigil
 
 ### Implementado

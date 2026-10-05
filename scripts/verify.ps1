@@ -65,7 +65,7 @@ try {
         if (!@($integrationTests | Where-Object { $_.classname -match 'test_db_postgresql' }).Count) {
             throw 'Testes reais PostgreSQL ausentes no relatorio backend.'
         }
-        foreach ($module in @('test_broker_integration', 'test_events_redis', 'test_events_tcp', 'test_transport_sockets', 'test_worker_process_recovery', 'test_api_replicas', 'test_pipeline_load', 'test_pipeline_status', 'test_scheduler_heartbeat')) {
+        foreach ($module in @('test_broker_integration', 'test_events_redis', 'test_events_tcp', 'test_transport_sockets', 'test_worker_process_recovery', 'test_api_replicas', 'test_pipeline_load', 'test_pipeline_status', 'test_scheduler_heartbeat', 'test_operational_jobs')) {
             if (!@($integrationTests | Where-Object { $_.classname -match $module }).Count) {
                 throw "Testes de integracao ausentes no relatorio backend: $module"
             }

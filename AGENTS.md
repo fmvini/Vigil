@@ -3,10 +3,11 @@
 ## Git
 
 - Faça commit local a cada unidade relevante e coerente de funcionalidade, correção, refatoração, configuração ou etapa concluída.
-- Preferência atual do usuário (2026-10-05): concentre commits em features e fixes, sem commits exclusivos de testes. Testes que validam a unidade podem acompanhar seu commit.
+- Regra atual do usuário (2026-10-05): cada commit deve representar uma unidade concluída. Testes e atualização automática do log devem acompanhar a implementação correspondente; nunca gerar commit próprio sem pedido explícito.
 - Antes de commitar, revise `git diff`, rode os testes existentes e adicione somente os arquivos relevantes explicitamente.
 - Não commite código quebrado, sem verificação ou com erros de sintaxe. Não execute push sem pedido explícito do usuário.
-- Mensagem: `<tipo>: <resumo claro em até aproximadamente 70 caracteres>`, linha em branco e bullets descrevendo mudança, motivação e impacto. Tipos: feat, fix, refactor, docs, test, chore.
+- Mensagem: `<tipo>: <resumo claro em até aproximadamente 70 caracteres>`, linha em branco e bullets descrevendo mudança, motivação e impacto. Tipos: feat, fix, refactor, docs, chore. Não usar test automaticamente.
+- Não commitar hipóteses de debugging, alterações temporárias, progresso intermediário ou ajustes isolados de testes/formatação. Agrupar backend/frontend/testes/docs quando fazem parte da mesma funcionalidade.
 - Pergunte antes de executar `git init` se não houver repositório. Neste projeto, o usuário autorizou a inicialização local em 2026-10-04.
 - Durante trabalho concorrente no Maestri, Maestro centraliza staging e commits; especialistas entregam arquivos e evidências de testes sem disputar o índice.
 

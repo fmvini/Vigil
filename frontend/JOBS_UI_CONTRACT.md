@@ -1,8 +1,9 @@
-# Contrato planejado — Falhas do processamento do Vigil
+# Contrato — Falhas do processamento do Vigil
 
-Estado: DTO confirmado com Backend/Banco em 2026-10-05; API ainda em implementação.
-A UI não foi implementada nem consome o endpoint. Aguardar freeze das fontes e
-liberação para consumo antes de iniciar a unidade feat.
+Estado: DTO e fontes da API congelados com Backend/Banco em 2026-10-05.
+Componente readonly implementado, com testes/build e revisão visual finais
+aprovados. A API passou em PostgreSQL real; a seção no navegador foi validada
+com transporte sintético, conforme os limites descritos abaixo.
 
 ## Leitura privada
 
@@ -53,7 +54,7 @@ isso não representa prova física de PostgreSQL/índices. A retenção de 30 di
 Não usar o fallback genérico `reason()` que imprime códigos desconhecidos.
 Situações propostas: `exhausted` = Execuções esgotadas; `expired` = Prazo encerrado.
 
-## Composição e validação futuras
+## Composição e validação
 
 - Componente novo independente; `App` limitado a import/mount. Preservar unidades
   estáveis de auth, sincronização e filtro de qualidade.
@@ -72,3 +73,17 @@ Situações propostas: `exhausted` = Execuções esgotadas; `expired` = Prazo en
   trocar projeto/fechar seção e nenhuma leitura enquanto fechada.
 - Verificar teclado e layout desktop/mobile em fixture própria; manter evidência
   sintética separada de integração API/PG real e de qualquer campanha de latência.
+
+Implementação atual: `src/ProcessingFailures.tsx`, CSS próprio e oito regressões
+em `src/test/ProcessingFailures.test.tsx`; `App` contém somente import/mount novo.
+O hook `useResource` já exportado em `Observations.tsx` foi reutilizado sem alteração:
+revisões enquanto uma leitura está pendente agrupam uma nova consulta, sem prometer
+limite de frequência global. Fechar/trocar projeto/remover monitor aborta leituras
+antigas, incluindo proteção dos callbacks401 existentes. Monitor removido reinicia
+Todos/offset0. Validação central final:72 Vitest passed/zero skips e build aprovado
+após CSS44px, UUID da fixture e mounts Brand. Edge verificou seis estados lista/vazio/
+erro em1440/390, sem overflow/erros e controles44px; relatório
+`.impeccable/review/processing-failures/report.json` passed. A API congelada foi
+validada separadamente por sete casos PG reais, incluindo RR/RO e COUNT/página
+durante commits concorrentes, no QA Backend descartável. As capturas da seção
+usam API sintética: não demonstram integração da seção no navegador com PG real.

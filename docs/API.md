@@ -62,9 +62,9 @@ Check privado contém IDs, versão, timestamps, outcome, status HTTP, latência,
 
 `duration_ms` no resumo de tentativa pode ser nulo se não foi registrado; duração total do ciclo continua separada. Campos desconhecidos do JSON de tentativa não são expostos pelo DTO.
 
-## Falhas do processamento — contrato em implementação
+## Falhas do processamento
 
-`GET /projects/{id}/jobs` será uma leitura privada de jobs terminais, separada de incidentes e de falhas do endpoint. A implementação da API e da interface está em andamento; esta seção registra o contrato acordado, sem declarar integração física concluída.
+`GET /projects/{id}/jobs` oferece leitura privada de jobs terminais, separada de incidentes e de falhas do endpoint. A interface consulta somente ao expandir a seção Falhas do processamento do Vigil. API e componente estão implementados; as provas PostgreSQL 17 de leitura e migrations são registradas em [OPERATIONS](OPERATIONS.md), separadas dos ensaios visuais com API sintética.
 
 - `status=all|exhausted|expired`, default `all`, inclui somente exhausted e expired. `monitor_id` é opcional; monitores pausados entram, arquivados não. Projeto/monitor alheio, arquivado ou inexistente retorna 404.
 - `period=24h|7d|30d`, default 24h, ou `from`/`to` ISO com timezone explícito. Janela `[from,to)` sobre `scheduled_at`, dentro dos últimos 30 dias; reutiliza a validação das observações, inclusive rejeição de epoch.
