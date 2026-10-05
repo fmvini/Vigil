@@ -74,6 +74,10 @@ try {
         if ($snapshotTests.Count -ne 2 -or @($snapshotTests | Where-Object { $_.SelectSingleNode('skipped') }).Count) {
             throw 'Provas obrigatorias de conteudo/snapshot PostgreSQL do tooling ausentes ou ignoradas.'
         }
+        $browserTests = @($toolingReport.SelectNodes('//testcase') | Where-Object { $_.name -eq 'test_real_native_browser_reconnect_recovers_gap_and_replacement' })
+        if ($browserTests.Count -ne 1 -or @($browserTests | Where-Object { $_.SelectSingleNode('skipped') }).Count) {
+            throw 'Prova obrigatoria de reconexao EventSource no navegador ausente ou ignorada (Node/Playwright/Edge requeridos).'
+        }
         uv run --system-certs --frozen python ../scripts/egress_check.py --build
         Assert-CommandSuccess 'Firewall fisico IPv4/IPv6 e privilegios do worker'
     }

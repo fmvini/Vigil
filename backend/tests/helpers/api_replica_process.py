@@ -10,6 +10,7 @@ import socket
 import sys
 import traceback
 from pathlib import Path
+from urllib.parse import urlsplit
 from uuid import UUID
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -45,13 +46,21 @@ class ErrorProbe(logging.Handler):
             self.unexpected += 1
 
 
-async def run(schema, socket_buffer_bytes=0):
+async def run(schema, socket_buffer_bytes=0, browser_origin=None):
     assert re.fullmatch(r"vigil_test_[a-f0-9]{32}", schema)
     assert socket_buffer_bytes == 0 or 1024 <= socket_buffer_bytes <= 65536
+    origins = ["http://vigil-qa.test"]
+    if browser_origin is not None:
+        target = urlsplit(browser_origin)
+        assert target.scheme == "http" and target.hostname == "127.0.0.1"
+        assert target.port is not None and target.port >= 1024
+        assert not target.username and not target.password and not target.path
+        assert not target.query and not target.fragment
+        origins.append(browser_origin)
     settings = Settings(
         database_url=os.environ["VIGIL_TEST_DATABASE_URL"],
         redis_url=os.environ["VIGIL_TEST_REDIS_URL"],
-        allowed_origins=["http://vigil-qa.test"],
+        allowed_origins=origins,
         environment="dev",
         pipeline_enabled=False,
         monitoring_network_enabled=False,
@@ -143,5 +152,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--schema", required=True)
     parser.add_argument("--socket-buffer-bytes", type=int, default=0)
+    parser.add_argument("--browser-origin")
     args = parser.parse_args()
-    asyncio.run(run(args.schema, args.socket_buffer_bytes))
+    asyncio.run(run(args.schema, args.socket_buffer_bytes, args.browser_origin))

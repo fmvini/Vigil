@@ -14,6 +14,9 @@ export function useLiveUpdates(projectId: string, onRefresh: () => void, onProje
     let refreshPending = false;
     let projectsPending = false;
     let debounce: ReturnType<typeof setTimeout> | undefined;
+    let reconnect: ReturnType<typeof setTimeout> | undefined;
+    let reconnectAttempts = 0;
+    let revoked = false;
     let sessionProbe: AbortController | undefined;
     const drain = () => {
       if (!alive || callbacks.current.blocked) return;
@@ -34,25 +37,43 @@ export function useLiveUpdates(projectId: string, onRefresh: () => void, onProje
       }, 200);
     };
     let source: EventSource | null = null;
-    try { if (typeof EventSource !== 'undefined') source = new EventSource('/api/v1/events'); } catch { /* REST polling remains available. */ }
-    if (source) {
+    const retryClosed = () => {
+      if (!alive || revoked || reconnect || typeof EventSource === 'undefined') return;
+      const delay = Math.min(2000 * 2 ** Math.min(reconnectAttempts++, 4), 30000);
+      reconnect = setTimeout(() => { reconnect = undefined; connect(); }, delay);
+    };
+    const connect = () => {
+      if (!alive || revoked || typeof EventSource === 'undefined') return;
+      sessionProbe?.abort();
+      source?.close(); source = null;
+      try { source = new EventSource('/api/v1/events'); }
+      catch { retryClosed(); return; }
       const stream = source;
-      stream.onopen = () => { if (alive) { setConnected(true); invalidate(); } };
+      const current = () => alive && source === stream && !revoked;
+      stream.onopen = () => {
+        if (!current()) return;
+        clearTimeout(reconnect); reconnect = undefined; reconnectAttempts = 0;
+        setConnected(true); invalidate();
+      };
       stream.onerror = () => {
-        if (!alive) return;
+        if (!current()) return;
         setConnected(false); sessionProbe?.abort(); sessionProbe = new AbortController();
+        // CONNECTING already has native retries. HTTP errors can leave the
+        // native source CLOSED permanently; recreate only that terminal state.
+        if (stream.readyState === EventSource.CLOSED) retryClosed();
         const probe = sessionProbe;
         api.request<Session>('/auth/me', 'GET', undefined, probe.signal).then(session => {
-          if (alive && !probe.signal.aborted) api.setCsrfToken(session.csrf_token);
+          if (current() && !probe.signal.aborted) api.setCsrfToken(session.csrf_token);
         }).catch(error => {
-          if (alive && !probe.signal.aborted && error instanceof ApiError && error.status === 401) {
+          if (current() && !probe.signal.aborted && error instanceof ApiError && error.status === 401) {
+            revoked = true; clearTimeout(reconnect); reconnect = undefined;
             stream.close(); api.setCsrfToken(null); api.onUnauthorized?.();
           }
         });
       };
-      stream.addEventListener('snapshot.required', () => invalidate());
+      stream.addEventListener('snapshot.required', () => { if (current()) invalidate(); });
       const signal = (event: Event) => {
-        if (!alive) return;
+        if (!current()) return;
         try {
           const payload = JSON.parse((event as MessageEvent).data);
           if (typeof payload?.project_id !== 'string') { invalidate(); return; }
@@ -60,14 +81,15 @@ export function useLiveUpdates(projectId: string, onRefresh: () => void, onProje
           else if (event.type === 'project.updated') invalidate(true);
         } catch { invalidate(); }
       };
-      for (const kind of ['project.updated', 'monitor.updated', 'incident.opened', 'incident.closed']) source.addEventListener(kind, signal);
-    }
+      for (const kind of ['project.updated', 'monitor.updated', 'incident.opened', 'incident.closed']) stream.addEventListener(kind, signal);
+    };
+    connect();
     // Also catches silent streams and unavailable EventSource implementations.
     const fallback = setInterval(() => invalidate(), 30000);
     const visible = () => { if (document.visibilityState === 'visible') invalidate(); };
     document.addEventListener('visibilitychange', visible);
     return () => {
-      alive = false; source?.close(); sessionProbe?.abort(); clearInterval(fallback); clearTimeout(debounce);
+      alive = false; source?.close(); sessionProbe?.abort(); clearInterval(fallback); clearTimeout(debounce); clearTimeout(reconnect);
       flush.current = () => {};
       document.removeEventListener('visibilitychange', visible);
     };

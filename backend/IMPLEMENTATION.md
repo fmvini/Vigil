@@ -1,5 +1,11 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Helper de API para recuperação no navegador
+
+- Helper de réplica aceita origin adicional exclusivamente HTTP/127.0.0.1/porta alta, sem path/query/credenciais, para UI/proxy QA efêmeros. A origin é preservada na substituição da API filha.
+- Ensaio operacional `scripts/tests/test_api_browser_reconnect.py` usa duas APIs próprias, schema PG17 UUID e Redis, encerrando somente processos que criou. Nenhuma alteração no contrato, configurações ou gates do backend de produto.
+- Edge comprovou recuperação por REST após 503 e fanout na substituta em 21,22s. Cleanup fecha UI/readers antes dos filhos e schema; erros inesperados/stderr continuam falhando. Central aprovada: 389 backend/14 skips apenas SQLite, 77 tooling e 44 frontend, zero skips obrigatórios.
+
 ## 2026-10-04 — Queda, reconexão e substituição de réplica API
 
 - Novo caso em `tests/test_api_replicas.py` encerra abruptamente somente uma API filha própria. A réplica sobrevivente mantém SSE/REST e confirma um commit enquanto o stream antigo está perdido.

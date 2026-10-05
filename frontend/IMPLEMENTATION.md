@@ -1,5 +1,14 @@
 # Implementação do frontend Vigil
 
+## 2026-10-04 — Recuperação do EventSource após HTTP temporário
+
+- Ensaio real no Edge reproduziu stream permanentemente CLOSED após 503 do proxy QA. `src/live.ts` recria fontes terminais com esperas de 2/4/8/16/30s, limitadas a 30s e reiniciadas após conexão; fontes CONNECTING mantêm seu retry nativo.
+- Identidade da fonte e cancelamento do probe impedem callbacks/401 antigos de afetar a substituta. 401 confirmado cancela retry e fecha o stream; unmount/logout cancela todos os timers. REST permanece autoridade e polling de 30s permanece ativo.
+- `scripts/reconnect-browser-process.mjs` serve fontes atuais via Vite/proxy exclusivos e observa EventSource nativo sem mocks HTTP. Python coordena duas APIs próprias com schema PG17 UUID, crash, commit durante a queda, recuperação, substituição e logout. Credenciais/CSRF ficam somente em memória.
+- Ensaio corrigido passou em 21,22s: revisão 1 recuperada pelo REST, revisão 2 recebida via Redis na substituta, logout sem novos streams e `errors=[]`. Falhas 503/transporte deliberadas são registradas separadamente e correlacionadas ao proxy próprio. Evidências privadas em `.impeccable/review/reconnect-{before-fix,smoke}.json`.
+- Regressão central aprovada: 389 backend/14 skips apenas SQLite, 77 tooling e 44 frontend; Ruff/TypeScript/build/Compose aprovados. Prova firewall/TLS/NDP passou com cleanup confirmado. Limites: Edge local, proxy sintético de failover, sem balanceador produtivo/múltiplos hosts ou recuperação de infraestrutura inteira. Gates false.
+- Container web atualizado isoladamente; `test:live` no Edge8080 passou com connected/project.updated/periodic, reconciliação REST e revogação, sem erros inesperados. API/PG/Redis preservados.
+
 ## 2026-10-04 — Smoke de observações preenchidas no Compose
 
 - `npm.cmd run test:observations` usa Playwright/Edge e manifesto privado produzido pelo seed PostgreSQL 17. O teste não cria dados, simula REST ou acessa URLs de monitores.

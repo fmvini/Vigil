@@ -1,5 +1,30 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — SSE retoma após falha HTTP temporária no navegador
+
+### Implementado
+- Corrigida fonte EventSource permanentemente CLOSED após HTTP503: recriação com espera 2/4/8/16/30s, limitada a 30s e reiniciada na abertura. CONNECTING preserva retry nativo.
+- Identidade da fonte/cancelamento de probe descartam callbacks e 401 antigos; revogação confirmada/unmount cancelam retry. REST/polling permanecem autoridade.
+- Ensaio Edge do produto com Vite/proxy/APIs exclusivos, PG17 UUID e Redis reais: crash, commit durante gap, recuperação por REST, nova réplica/fanout e logout. Verificação obrigatória recusa caso ausente/skip.
+
+### Arquivos principais alterados
+- `frontend/src/live.ts`, `frontend/src/test/live.test.tsx`, `frontend/scripts/reconnect-browser-process.mjs`, `frontend/IMPLEMENTATION.md`
+- `backend/tests/helpers/api_replica_process.py`, `backend/tests/test_api_replicas.py`, `backend/IMPLEMENTATION.md`
+- `scripts/tests/test_api_browser_reconnect.py`, `scripts/verify.ps1`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Navegador falhou antes do ajuste em restore, com readyState=2 e sem fonte substituta. O comportamento terminal HTTP é previsto no HTML Standard; polling sozinho não recuperava o indicador/conexão SSE.
+- Proxy troca somente seu upstream e só encerra streams próprios. Senhas/cookies/CSRF ficam na memória; 503/transporte deliberados são correlacionados ao proxy e separados de erros inesperados.
+- Origin adicional do helper é estritamente HTTP/127.0.0.1/porta alta, sem path/credenciais/query; configuração/contrato backend de produto não mudou.
+
+### Estado atual
+- Edge corrigido passed em 21,22s: revisão 1 via REST, revisão 2 via SSE da substituta, logout sem retry e errors=[]. Relatórios privados `frontend/.impeccable/review/reconnect-{before-fix,smoke}.json`.
+- Central final: 389 backend/14 skips apenas SQLite em 257,42s, 77 tooling e 44 frontend; Ruff/TypeScript/build/Compose/whitespace aprovados, zero skips obrigatórios. Firewall/TLS/NDP/cleanup confirmados em `.cache/egress-qa/bf151de5cbf34447aea19b3ae2e1a53f/report.json`.
+- Web local reconstruído/atualizado isoladamente; smoke EventSource no Edge8080 passou com connected/project.updated/periodic, REST e revogação, errors=[]. API/PG17/Redis permaneceram ativos. Gates false, PG18 preservado. Limites: Edge/proxy QA local, sem balanceador produtivo/failover de host ou SLA.
+
+### Próximos passos
+- Avançar observabilidade mínima de requisições/jobs, com logs estruturados e campos sanitizados; métricas/heartbeats de pipeline continuam pendentes.
+
 ## 2026-10-04 — Recuperação de stream após crash e substituição de API
 
 ### Implementado

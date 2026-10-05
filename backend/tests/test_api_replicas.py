@@ -24,15 +24,17 @@ HEADERS = {"Origin": "http://vigil-qa.test", "X-Vigil-Request": "browser"}
 
 
 class Replica:
-    def __init__(self, process, port, schema, socket_buffer_bytes=0):
+    def __init__(self, process, port, schema, socket_buffer_bytes=0, browser_origin=None):
         self.process, self.base = process, f"http://127.0.0.1:{port}"
         self.lock = asyncio.Lock()
         self.expected_send_timeouts = 0
         self.schema, self.socket_buffer_bytes = schema, socket_buffer_bytes
         self.crashed = False
+        self.browser_origin = browser_origin
 
     @classmethod
-    async def start(cls, schema, *, socket_buffer_bytes=0):
+    async def start(cls, schema, *, socket_buffer_bytes=0, browser_origin=None):
+        extra = ["--browser-origin", browser_origin] if browser_origin is not None else []
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             "-u",
@@ -41,6 +43,7 @@ class Replica:
             schema,
             "--socket-buffer-bytes",
             str(socket_buffer_bytes),
+            *extra,
             env={
                 **os.environ,
                 "VIGIL_PIPELINE_ENABLED": "false",
@@ -50,7 +53,7 @@ class Replica:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        replica = cls(process, 0, schema, socket_buffer_bytes)
+        replica = cls(process, 0, schema, socket_buffer_bytes, browser_origin)
         try:
             line = await asyncio.wait_for(process.stdout.readline(), 20)
             assert line, "Own replica exited before startup"
@@ -97,7 +100,9 @@ class Replica:
     async def restart(self):
         assert self.crashed and self.process.returncode is not None
         replacement = await type(self).start(
-            self.schema, socket_buffer_bytes=self.socket_buffer_bytes
+            self.schema,
+            socket_buffer_bytes=self.socket_buffer_bytes,
+            browser_origin=self.browser_origin,
         )
         self.process, self.base, self.crashed = replacement.process, replacement.base, False
 

@@ -6,6 +6,8 @@ import { json } from './fixtures';
 
 class FakeSource extends EventTarget {
   static instances: FakeSource[] = [];
+  static CONNECTING = 0; static OPEN = 1; static CLOSED = 2;
+  readyState = FakeSource.OPEN;
   onopen?: () => void; onerror?: () => void; close = vi.fn();
   constructor(public url: string) { super(); FakeSource.instances.push(this); }
 }
@@ -83,4 +85,65 @@ it('cancela probes antigos e ignora 401 recebido depois do unmount', async () =>
   act(() => { FakeSource.instances[0].onerror?.(); FakeSource.instances[0].onerror?.(); });
   expect(signals[0].aborted).toBe(true); view.unmount(); expect(signals[1].aborted).toBe(true);
   await act(async () => { completions.forEach(resolve => resolve(json({}, 401))); }); expect(expired).not.toHaveBeenCalled();
+});
+
+it('recria somente fontes CLOSED com espera limitada e reinicia a espera após abrir', async () => {
+  vi.useFakeTimers(); vi.stubGlobal('EventSource', FakeSource);
+  vi.stubGlobal('fetch', vi.fn(async () => json({ csrf_token: 'qa' })));
+  const view = renderHook(() => useLiveUpdates('p1', vi.fn(), vi.fn()));
+  const first = FakeSource.instances[0];
+  first.readyState = FakeSource.CONNECTING;
+  await act(async () => { first.onerror?.(); await vi.advanceTimersByTimeAsync(2500); });
+  expect(FakeSource.instances).toHaveLength(1);
+  for (const delay of [2000, 4000, 8000, 16000, 30000, 30000]) {
+    const source = FakeSource.instances.at(-1)!; source.readyState = FakeSource.CLOSED;
+    const count = FakeSource.instances.length;
+    await act(async () => { source.onerror?.(); source.onerror?.(); await vi.advanceTimersByTimeAsync(delay - 1); });
+    expect(FakeSource.instances).toHaveLength(count);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(FakeSource.instances).toHaveLength(count + 1); expect(source.close).toHaveBeenCalledOnce();
+  }
+  const recovered = FakeSource.instances.at(-1)!;
+  act(() => recovered.onopen?.()); expect(view.result.current).toBe(true);
+  recovered.readyState = FakeSource.CLOSED;
+  await act(async () => { recovered.onerror?.(); await vi.advanceTimersByTimeAsync(1999); });
+  expect(FakeSource.instances).toHaveLength(7);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); }); expect(FakeSource.instances).toHaveLength(8);
+  const last = FakeSource.instances.at(-1)!; last.readyState = FakeSource.CLOSED;
+  act(() => last.onerror?.()); view.unmount();
+  await vi.advanceTimersByTimeAsync(60000); expect(FakeSource.instances).toHaveLength(8);
+});
+
+it('401 cancela a recriação de uma fonte CLOSED', async () => {
+  vi.useFakeTimers(); vi.stubGlobal('EventSource', FakeSource);
+  vi.stubGlobal('fetch', vi.fn(async () => json({}, 401)));
+  const expired = vi.fn(); api.onUnauthorized = expired;
+  const view = renderHook(() => useLiveUpdates('p1', vi.fn(), vi.fn()));
+  const source = FakeSource.instances[0]; source.readyState = FakeSource.CLOSED;
+  await act(async () => { source.onerror?.(); await vi.advanceTimersByTimeAsync(60000); });
+  expect(expired).toHaveBeenCalledOnce(); expect(FakeSource.instances).toHaveLength(1);
+  expect(source.close).toHaveBeenCalledOnce(); view.unmount();
+});
+
+it('descarta callbacks e 401 atrasado da fonte substituída', async () => {
+  vi.useFakeTimers(); vi.stubGlobal('EventSource', FakeSource);
+  let complete!: (response: Response) => void; let probe!: AbortSignal;
+  vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => {
+    probe = init.signal as AbortSignal; return new Promise<Response>(resolve => { complete = resolve; });
+  }));
+  const refresh = vi.fn(), expired = vi.fn(); api.onUnauthorized = expired;
+  const view = renderHook(() => useLiveUpdates('p1', refresh, vi.fn()));
+  const old = FakeSource.instances[0]; old.readyState = FakeSource.CLOSED;
+  await act(async () => { old.onerror?.(); await vi.advanceTimersByTimeAsync(2000); });
+  expect(probe.aborted).toBe(true);
+  await act(async () => {
+    old.onopen?.(); old.onerror?.();
+    old.dispatchEvent(new MessageEvent('snapshot.required', { data: '{}' }));
+    complete(json({}, 401)); await vi.advanceTimersByTimeAsync(200);
+  });
+  expect(expired).not.toHaveBeenCalled(); expect(refresh).not.toHaveBeenCalled();
+  expect(view.result.current).toBe(false); expect(FakeSource.instances).toHaveLength(2);
+  act(() => FakeSource.instances[1].onopen?.());
+  await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+  expect(refresh).toHaveBeenCalledOnce(); expect(view.result.current).toBe(true); view.unmount();
 });
