@@ -1,5 +1,15 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Heartbeat persistido de ticks do scheduler
+
+- `app/monitoring/heartbeat.py` grava tentativa/outcome/duração e último sucesso/counts em hash por identidade de stream/group, via script Lua atômico com clock Redis e TTL120s. Erro preserva sucesso anterior; leitura atômica readonly não renova TTL.
+- `app.monitoring.run` integra callback após tick/publicação; observação tem prazo1s e client sem retry. Falha sanitizada/timeout não impede próximos ticks; cancelamento externo propaga. Gate false não cria cliente nem engine.
+- CLI status observa heartbeat como terceira fonte independente: fresh até5s, stale, tick_failed, missing e clock_skew, com idades null quando desconhecidas/futuras. Schema/TTL inválidos ficam partial com código sanitizado. Não confunde consumers registrados com heartbeat.
+- Direcionada inicial28 passed/sem skips; versão integrada46 passed/5 skips apenas SQLite em30,62s. Primeira central teve432 passed/16 skips SQLite e uma falha de admissão TCP na rajada fria de40 conexões da fixture. Dois writers/reader agora reutilizam três sockets em TaskGroup, preservando40 escritas/leituras paralelas e cleanup de tasks.
+- Versão final30 passed sem skips no Windows4,73s/Linux3,89s. Central final:433 backend/16 skips apenas SQLite em245,05s,85 tooling e44 frontend, zero skips obrigatórios; Ruff/TypeScript/build/Compose/whitespace/firewall/TLS/NDP/DNS Nginx aprovados com cleanup confirmado.18 casos heartbeat e12 status executaram. Provas usam somente chaves/streams UUID e schema PG17 próprio, sem checks HTTP ou scheduler compartilhado.
+- CLI final readonly passou também no Linux UID/GID10001/caps removidas: fila e heartbeat ausentes com gates false. API não foi reiniciada nesta unidade; diagnóstico foi executado a partir dos fontes atuais montados readonly.
+- Limites: um último tick agregado por par stream/group, não saúde por processo/worker; deadline de telemetria pode somar1s ao ciclo. Não há exporter/histogramas/carga/SLA; RNF010 continua parcial. Gates runtime false e PG18 preservado.
+
 ## 2026-10-04 — Snapshot operacional privado e read-only
 
 - `python -m app.monitoring.status` agrega jobs abertos/pendentes temporais/publicação/retry/leases e suas idades usando PostgreSQL REPEATABLE READ/READ ONLY e timeouts locais. Não importa tasks, executa HTTP, altera jobs ou gates.

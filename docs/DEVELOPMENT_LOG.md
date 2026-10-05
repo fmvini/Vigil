@@ -1,5 +1,34 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Heartbeat persistido de ticks concluídos
+
+### Implementado
+- Scheduler/publicador observa ticks após commit/publicação e grava hash por stream/group com clock Redis e TTL120s em script atômico. Falha preserva último sucesso/counts.
+- Telemetria tem prazo1s, client sem retry e erro JSON sanitizado sem impedir próximos ticks. Cancelamento externo propaga; gate false não cria cliente.
+- Diagnóstico readonly observa terceira fonte: last_success/attempt ages, TTL, duração/counts e estados fresh/stale/tick_failed/missing/clock_skew; não inicializa nem renova chave.
+
+### Arquivos principais alterados
+- `backend/app/monitoring/heartbeat.py`, `backend/app/monitoring/publisher.py`, `backend/app/monitoring/run.py`, `backend/app/monitoring/status.py`, `backend/app/observability.py`
+- `backend/tests/test_scheduler_heartbeat.py`, `backend/tests/test_pipeline_status.py`, `backend/IMPLEMENTATION.md`
+- `scripts/verify.ps1`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Identidade JSON stream/group hash SHA256 evita colisão por delimitadores e nomes privados no relatório. Chave única agrega schedulers desse par, sem criar labels por processo.
+- TIME do servidor evita comparar relógios de aplicação; timestamps futuros ficam clock_skew/idade null. Fresh significa último sucesso até5s, não liveness da API; ausência após TTL não inventa sucesso.
+- Contagens são do último sucesso completo. Tentativa com falha conserva esse histórico e renova TTL; erro de observação não altera persistência do pipeline nem gates.
+
+### Estado atual
+- Direcionada inicial28 passed/sem skips; integração/regressão46 passed/5 skips apenas SQLite em30,62s. Primeira central:432 passed/16 skips SQLite e um timeout de admissão TCP da fixture na rajada fria de40 conexões Redis. Relatório preservado em `.cache/verification/heartbeat-central-first.xml`.
+- Fixture ajustada para dois writers/reader, três sockets reutilizados e TaskGroup com cleanup;40 escritas/leituras paralelas mantêm prova de atomicidade, sem relaxar prazos do runtime. Final30 passed/sem skips no Windows4,73s/Linux3,89s.
+- Central final aprovada:433 backend/16 skips apenas SQLite em245,05s,85 tooling/20,26s e44 frontend;18 casos heartbeat/12 status, zero skips obrigatórios. Ruff/TypeScript/build/Compose/whitespace/firewall/TLS/NDP/DNS Nginx passaram. Cleanup confirmado em `.cache/egress-qa/fdcbf05f68de4f6092df32584171c4ec/report.json` e `.cache/proxy-qa/12431c42864c423abde9105e488bd631/report.json`.
+- Provas Redis UUID: sucesso→falha conserva último sucesso, TTL expira de verdade, leituras não renovam chave,40 escritas em dois writers com reader paralelo preservam pares atômicos, namespaces distintos não herdam heartbeat e dados inválidos são sanitizados.
+- Prova PG17+Redis confirma publicação já commitada ao observar tick. Entrypoint configurado somente no teste usa schema/fila exclusivos vazios, registra heartbeat sem checks; entrypoint false recusa conexão. Diagnóstico runtime readonly confirmou ausência esperada com gates false.
+- CLI final passou também em Linux sem privilégios/código readonly com fila/heartbeat ausentes e gates false. API não foi reiniciada nesta unidade; fontes foram montados somente no container diagnóstico. Nenhum scheduler/worker compartilhado foi iniciado; PG18 preservado. Limites: agregado por fila/grupo, sem saúde por processo/worker, histórico/exporter/carga/SLA; telemetria em falha pode somar1s ao ciclo.
+
+### Próximos passos
+- Harden cleanup do ensaio egress em `scripts/egress_check.py`: validar rede internal/UUID, todas as interfaces dos containers e endpoints inesperados antes de remover qualquer recurso; preservar recursos divergentes para revisão.
+- Provar carga end-to-end controlada com executor TLS real contra fixtures isoladas e medir atraso/backlog/recursos, mantendo checks externos desligados.
+
 ## 2026-10-04 — Diagnóstico read-only de backlog e leases
 
 ### Implementado

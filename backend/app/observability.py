@@ -22,6 +22,7 @@ EVENTS = frozenset(
         "signal_failed_after_commit",
         "scheduler_tick",
         "scheduler_tick_failed",
+        "scheduler_heartbeat_failed",
     }
 )
 ERROR_CODES = frozenset(

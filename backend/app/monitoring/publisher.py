@@ -9,6 +9,8 @@ from app.db.models import CheckJob
 from app.monitoring.scheduler import scheduler_tick
 from app.observability import activity
 
+HEARTBEAT_TIMEOUT_SECONDS = 1
+
 
 async def publish_pending(factory, publish, *, now=None, limit=100) -> int:
     if not 1 <= limit <= 100:
@@ -57,14 +59,18 @@ async def publish_pending(factory, publish, *, now=None, limit=100) -> int:
     return published
 
 
-async def scheduler_publisher_loop(factory, publish, stop: asyncio.Event, *, tick_seconds=1.0):
+async def scheduler_publisher_loop(
+    factory, publish, stop: asyncio.Event, *, tick_seconds=1.0, heartbeat=None
+):
     if tick_seconds <= 0:
         raise ValueError("tick interval must be positive")
     while not stop.is_set():
         started = time.monotonic()
+        success, scheduled_count, published_count = False, None, None
         try:
             scheduled = await scheduler_tick(factory)
             published = await publish_pending(factory, publish)
+            success, scheduled_count, published_count = True, len(scheduled), published
             activity(
                 "scheduler_tick",
                 component="scheduler",
@@ -79,6 +85,17 @@ async def scheduler_publisher_loop(factory, publish, stop: asyncio.Event, *, tic
                 component="scheduler",
                 duration_ms=(time.monotonic() - started) * 1000,
             )
+        if heartbeat is not None:
+            try:
+                async with asyncio.timeout(HEARTBEAT_TIMEOUT_SECONDS):
+                    await heartbeat(
+                        success=success,
+                        scheduled_count=scheduled_count,
+                        published_count=published_count,
+                        duration_ms=(time.monotonic() - started) * 1000,
+                    )
+            except Exception:
+                activity("scheduler_heartbeat_failed", level=logging.WARNING, component="scheduler")
         try:
             await asyncio.wait_for(stop.wait(), timeout=tick_seconds)
         except TimeoutError:

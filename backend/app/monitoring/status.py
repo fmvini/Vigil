@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.config import Settings
 from app.db.models import CheckJob
 from app.db.session import create_engine
+from app.monitoring.heartbeat import scheduler_key, scheduler_snapshot
 
 PEL_SAMPLE_LIMIT = 100
 RECLAIM_IDLE_MS = 120_000
@@ -129,18 +130,22 @@ async def component_snapshot(operation, error_code):
 
 
 async def snapshot(engine, redis, *, stream, group, pipeline_enabled, network_enabled):
-    database, queue = await asyncio.gather(
+    database, queue, scheduler = await asyncio.gather(
         component_snapshot(database_snapshot(engine), "database_unavailable"),
         component_snapshot(redis_snapshot(redis, stream, group), "redis_unavailable"),
+        component_snapshot(
+            scheduler_snapshot(redis, scheduler_key(stream, group)), "scheduler_unavailable"
+        ),
     )
     return {
-        "status": "ok" if database["status"] == queue["status"] == "ok" else "partial",
+        "status": "ok"
+        if database["status"] == queue["status"] == scheduler["status"] == "ok"
+        else "partial",
         "pipeline_enabled": pipeline_enabled,
         "monitoring_network_enabled": network_enabled,
         "database": database,
         "queue": queue,
-        # No persisted heartbeat exists yet. Queue activity cannot infer tick health.
-        "scheduler": {"heartbeat_state": "not_implemented", "last_tick_age_seconds": None},
+        "scheduler": scheduler,
     }
 
 

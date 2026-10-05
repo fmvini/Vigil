@@ -210,6 +210,11 @@ async def test_partial_snapshot_preserves_other_source_without_leaking_exception
 
     monkeypatch.setattr(status, "database_snapshot", broken if failed == "database" else healthy)
     monkeypatch.setattr(status, "redis_snapshot", broken if failed == "redis" else healthy)
+
+    async def heartbeat(*args, **kwargs):
+        return {"status": "ok", "heartbeat_state": "missing", "last_tick_age_seconds": None}
+
+    monkeypatch.setattr(status, "scheduler_snapshot", heartbeat)
     report = await status.snapshot(
         None,
         None,
