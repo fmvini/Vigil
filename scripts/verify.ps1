@@ -42,7 +42,7 @@ try {
         # must execute: a supplied URL alone is not evidence of coverage.
         $integrationTests = @($report.SelectNodes('//testcase') | Where-Object {
             $_.name -notmatch '\[[^\]]*\bsqlite\b' -and (
-                $_.classname -match '(test_db_postgresql|test_db_qa_seed|test_pipeline_db|test_retention|test_worker|test_publisher|test_broker_integration|test_events_redis|test_events_tcp|test_transport_sockets|test_api_replicas)' -or
+                $_.classname -match '(test_db_postgresql|test_db_qa_seed|test_pipeline_db|test_retention|test_worker|test_publisher|test_broker_integration|test_events_redis|test_events_tcp|test_transport_sockets|test_api_replicas|test_observability)' -or
                 $_.name -match '(\[[^\]]*\bpostgres\b|test_real_redis_)'
             )
         })

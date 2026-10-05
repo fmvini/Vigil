@@ -1,13 +1,13 @@
 import asyncio
 import logging
+import time
 from datetime import timedelta
 
 from sqlalchemy import func, or_, select, update
 
 from app.db.models import CheckJob
 from app.monitoring.scheduler import scheduler_tick
-
-logger = logging.getLogger(__name__)
+from app.observability import activity
 
 
 async def publish_pending(factory, publish, *, now=None, limit=100) -> int:
@@ -61,11 +61,24 @@ async def scheduler_publisher_loop(factory, publish, stop: asyncio.Event, *, tic
     if tick_seconds <= 0:
         raise ValueError("tick interval must be positive")
     while not stop.is_set():
+        started = time.monotonic()
         try:
-            await scheduler_tick(factory)
-            await publish_pending(factory, publish)
+            scheduled = await scheduler_tick(factory)
+            published = await publish_pending(factory, publish)
+            activity(
+                "scheduler_tick",
+                component="scheduler",
+                scheduled_count=len(scheduled),
+                published_count=published,
+                duration_ms=(time.monotonic() - started) * 1000,
+            )
         except Exception:
-            logger.warning("scheduler_publisher_tick_failed")
+            activity(
+                "scheduler_tick_failed",
+                level=logging.WARNING,
+                component="scheduler",
+                duration_ms=(time.monotonic() - started) * 1000,
+            )
         try:
             await asyncio.wait_for(stop.wait(), timeout=tick_seconds)
         except TimeoutError:

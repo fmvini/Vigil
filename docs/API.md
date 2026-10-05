@@ -6,6 +6,7 @@ Base: `/api/v1`. JSON, UUIDs e datas ISO 8601 em UTC. O OpenAPI gerado em `/docs
 
 - Listas retornam `{ "items": [...], "total": 0 }`; paginação por `limit` e `offset`.
 - Erros retornam `{ "error": { "code": "...", "message": "...", "details": null } }`.
+- Respostas incluem `X-Request-ID` UUID gerado pela API para correlação com logs de atividade; um header de mesmo nome recebido do cliente é substituído. Não é credencial ou ID de sessão.
 - Recursos de outro proprietário retornam 404. Dados de sessão/hash nunca integram DTOs públicos.
 - Mutações do navegador enviam `X-Vigil-Request: browser` e Origin autorizado. Depois do login também enviam `X-CSRF-Token`.
 - Frontend e API compartilham origin; em desenvolvimento o Vite encaminha `/api` ao FastAPI.

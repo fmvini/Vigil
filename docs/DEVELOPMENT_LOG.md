@@ -1,5 +1,35 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Correlação HTTP e logs JSON de atividade
+
+### Implementado
+- Middleware ASGI puro gera X-Request-ID e registra tempo até headers/término com template declarado; requests concorrentes não compartilham contexto, SSE não é bufferizado e cancelamento propaga.
+- Formatter limita eventos/fields/códigos, valida UUIDs/números e ignora args/exceções/body/headers/query/URLs/SQL. Sink OSError/ValueError não altera resposta/commit/ACK.
+- Worker registra claim/atraso, finalização após commit, recusa/cancelamento/falha persistente; scheduler registra contagens/duração por tick. CMD API desliga access log Uvicorn com URI/query.
+
+### Arquivos principais alterados
+- `backend/app/observability.py`, `backend/app/main.py`, `backend/app/api/errors.py`
+- `backend/app/monitoring/worker.py`, `backend/app/monitoring/publisher.py`, `backend/app/monitoring/tasks.py`, `backend/app/monitoring/run.py`
+- `backend/tests/test_observability.py`, `backend/tests/helpers/api_replica_process.py`
+- `backend/Dockerfile`, `backend/IMPLEMENTATION.md`, `frontend/scripts/reconnect-browser-process.mjs`, `scripts/tests/test_api_browser_reconnect.py`, `scripts/verify.ps1`
+- `docs/API.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Route é obtida por identidade de rotas de código; desconhecidas ficam unmatched. Isso suporta os routers incluídos da versão FastAPI instalada sem serializar path/query ou depender de APIs privadas.
+- 500 de ServerErrorMiddleware externo conserva o ID pelo handler; SSE que falha após headers conserva status original e outcome=error/cancelled. Duração total de stream não é latência REST.
+- Helper preserva stderr/erros Uvicorn e grava apenas atividade JSON em relatório privado. Prova Edge arma a API própria antes do crash para correlacionar 503/leituras interrompidas exclusivamente à réplica encerrada.
+
+### Estado atual
+- Direcionado: 14 passed/2 skips apenas SQLite em 13,60s. Primeira central: 403 backend/16 skips SQLite em 267,68s; tooling teve 76 passed e uma falha de classificação de ERR_EMPTY_RESPONSE de leitura interrompida durante crash, após recuperar/reconectar/logout com sucesso.
+- Correlação da fixture ajustada para conexões da API declaradamente encerrada, incluindo resposta parcial. Edge passou novamente em 22,31s; central final aprovada: 403 backend/16 skips apenas SQLite em 243,32s, 77 tooling e 44 frontend, zero skips obrigatórios. Ruff/TypeScript/build/Compose/whitespace/egress aprovados; cleanup confirmado em `.cache/egress-qa/892dc1d639654f2da9918069b70aba2f/report.json`.
+- API local reconstruída/atualizada isoladamente. Prova readonly Nginx8080 correlacionou resposta404 e dois eventos JSON, sem sentinel de query/ID recebido nos logs API; CMD sem access log, gates false e CA de build ausente. Relatório `.cache/verification/activity-runtime.json`.
+- Smoke Edge8080 após atualização passou com SSE connected/project.updated/periodic, reconciliação REST e revogação, errors=[]. Web/PG17/Redis e processos PG18 foram preservados.
+- Gates false e PG18 preservado. Limites: atividade por processo; métricas agregadas/heartbeats/exporter pendentes. Logs de frameworks/proxy permanecem independentes deste formatter, sem promessa de sanitização global.
+
+### Próximos passos
+- Implementar snapshot operacional de backlog/PEL/leases e idade de ticks, sem endpoint público nem labels de alta cardinalidade.
+- Provar recuperação do Nginx após mudança real de IP da API em rede QA exclusiva; o proxy atual resolve upstream somente na inicialização.
+
 ## 2026-10-04 — SSE retoma após falha HTTP temporária no navegador
 
 ### Implementado

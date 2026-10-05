@@ -24,9 +24,17 @@ def error_response(status, code, message, details=None):
 
 
 def install_handlers(app):
+    def response(request, status, code, message, details=None):
+        request.state.error_code = code
+        result = error_response(status, code, message, details)
+        # ServerErrorMiddleware lives outside user middleware; correlate its 500 too.
+        if identifier := getattr(request.state, "request_id", None):
+            result.headers["X-Request-ID"] = identifier
+        return result
+
     @app.exception_handler(ApiError)
     async def api_error(request: Request, exc: ApiError):
-        return error_response(exc.status, exc.code, exc.message, exc.details)
+        return response(request, exc.status, exc.code, exc.message, exc.details)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
@@ -34,17 +42,17 @@ def install_handlers(app):
         details = [
             {"field": ".".join(str(x) for x in e["loc"]), "type": e["type"]} for e in exc.errors()
         ]
-        return error_response(422, "validation_error", "Request validation failed", details)
+        return response(request, 422, "validation_error", "Request validation failed", details)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException):
         code = {404: "not_found", 405: "method_not_allowed"}.get(exc.status_code, "http_error")
-        return error_response(exc.status_code, code, str(exc.detail))
+        return response(request, exc.status_code, code, str(exc.detail))
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request: Request, exc: SQLAlchemyError):
-        return error_response(503, "database_unavailable", "Database temporarily unavailable")
+        return response(request, 503, "database_unavailable", "Database temporarily unavailable")
 
     @app.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception):
-        return error_response(500, "internal_error", "Unexpected server error")
+        return response(request, 500, "internal_error", "Unexpected server error")

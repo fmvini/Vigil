@@ -11,6 +11,7 @@ from app.db.session import create_engine, create_session_factory
 from app.monitoring.broker import create_broker
 from app.monitoring.executor import CheckExecutor
 from app.monitoring.worker import process_job
+from app.observability import activity, configure_activity_logging
 
 settings = Settings()
 broker = create_broker(settings)
@@ -23,6 +24,7 @@ async def startup(state: TaskiqState):
         raise RuntimeError(
             "Pipeline/network disabled; complete real Redis and egress validation first"
         )
+    configure_activity_logging()
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     state.engine = create_engine(settings.database_url)
@@ -61,7 +63,12 @@ async def check_task(
         )
     except Exception:
         # No ACK for failed claim/finalize/commit; never log SQL params or remote errors.
-        logger.warning("job_persistence_failed", extra={"job_id": str(identifier)})
+        activity(
+            "job_persistence_failed",
+            level=logging.WARNING,
+            component="worker",
+            job_id=identifier,
+        )
         return
     if should_ack:
         await context.ack()

@@ -5,6 +5,7 @@ import asyncio
 from app.db.session import create_engine, create_session_factory
 from app.monitoring.publisher import scheduler_publisher_loop
 from app.monitoring.tasks import broker, check_task, settings
+from app.observability import configure_activity_logging
 
 
 async def main():
@@ -12,6 +13,7 @@ async def main():
         raise RuntimeError(
             "Pipeline disabled: complete the real Redis ACK/reclaim experiment first"
         )
+    configure_activity_logging()
     engine = create_engine(settings.database_url)
     factory = create_session_factory(engine)
     await broker.startup()

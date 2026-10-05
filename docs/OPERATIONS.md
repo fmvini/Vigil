@@ -165,6 +165,14 @@ O ensaio de NDP usa outra rede internal com prefixo global-unicast QA aleatório
 
 Referências: [rede internal Docker](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal), [iptables/ip6tables](https://www.netfilter.org/projects/iptables/index.html), [reservas IPv6 IANA](https://www.iana.org/assignments/iana-ipv6-special-registry/) e [Neighbor Discovery RFC4861](https://www.rfc-editor.org/rfc/rfc4861.html).
 
+## Logs de atividade
+
+A API e os entrypoints scheduler/worker configuram `vigil.activity` para JSON em stderr. O CMD da API usa `--no-access-log` para evitar a linha Uvicorn com URI/query; use também essa opção ao iniciar Uvicorn nativo. `request_headers` mede até o envio inicial; `request_finished` mede a duração do ASGI, portanto pode durar minutos no SSE e não representa latência REST. Um stream que falha depois dos headers conserva status200 e registra outcome=error/cancelled, em vez de fabricar outro status HTTP. Requisições recebem X-Request-ID UUID gerado no servidor; headers recebidos não determinam a correlação. O campo route vem do template declarado, com unmatched para rotas desconhecidas.
+
+Jobs registram job_id/monitor_id, start_delay_ms no claim e duração/attempt_count/outcome somente depois do commit. job_not_claimed pode indicar estado terminal, lease ocupada ou inelegibilidade; não é contador específico de deduplicação. Scheduler registra scheduled_count/published_count por tick; essas contagens não substituem gauges de backlog/PEL/leases ou histogramas agregados.
+
+Formatter usa allowlist de eventos/fields/códigos e ignora msg arbitrária, args, exc_info, body, headers, URL/query e parâmetros SQL. Um sink fechado/indisponível por OSError/ValueError não impede response/commit/ACK. Helpers QA desviam somente a atividade estruturada para arquivos privados, conservando stderr de erro Uvicorn. Logs de frameworks/terceiros continuam independentes; não há exporter, heartbeat persistido ou backend de logs nesta etapa. Base técnica: [logging Python](https://docs.python.org/3/library/logging.html#logrecord-objects) e [middleware ASGI puro Starlette](https://starlette.dev/middleware/#pure-asgi-middleware).
+
 ## Pipeline
 
 `VIGIL_PIPELINE_ENABLED` e `VIGIL_MONITORING_NETWORK_ENABLED` permanecem `false` por padrão. Antes de habilitar execução externa, validar ACK/reclaim no Redis real, TLS/SNI/IPv6 com sockets reais em ambiente controlado, controles de egress e recuperação operacional.

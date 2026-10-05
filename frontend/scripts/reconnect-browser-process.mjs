@@ -18,7 +18,7 @@ const vite = await createVite({
   logLevel: 'silent', server: { middlewareMode: true, hmr: false, watch: null },
 });
 let target, baseURL, csrf, project, owner, initialConstructors;
-const sockets = new Set(), streams = new Set(), gatewayFailures = new Map();
+const sockets = new Set(), streams = new Set(), gatewayFailures = new Map(), crashedApis = new Set();
 const report = { result: 'running', errors: [], expectedErrors: [], gatewaySseErrors: 0, externalChecks: false };
 
 function ownApi(value) {
@@ -34,7 +34,11 @@ const server = createServer((req, res) => {
     vite.middlewares(req, res, () => { res.writeHead(404).end(); }); return;
   }
   if (!target) { res.writeHead(503).end(); return; }
-  const upstream = upstreamRequest({ hostname: target.hostname, port: target.port, path: req.url, method: req.method, headers: req.headers });
+  const requestTarget = target;
+  const upstream = upstreamRequest({ hostname: requestTarget.hostname, port: requestTarget.port, path: req.url, method: req.method, headers: req.headers });
+  const recordFailure = () => {
+    if (crashedApis.has(requestTarget.origin)) gatewayFailures.set(req.url, (gatewayFailures.get(req.url) ?? 0) + 1);
+  };
   const entry = { upstream, res };
   const isStream = req.url === '/api/v1/events';
   if (isStream) streams.add(entry);
@@ -42,11 +46,14 @@ const server = createServer((req, res) => {
   upstream.on('response', response => {
     res.writeHead(response.statusCode, response.headers);
     response.pipe(res);
-    response.on('error', () => res.destroy());
+    response.on('error', () => {
+      if (res.destroyed) return;
+      recordFailure(); res.destroy();
+    });
   });
   upstream.on('error', () => {
     if (res.destroyed) return;
-    gatewayFailures.set(req.url, (gatewayFailures.get(req.url) ?? 0) + 1);
+    recordFailure();
     if (isStream) report.gatewaySseErrors++;
     if (res.headersSent) res.destroy();
     else res.writeHead(503, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: { code: 'qa_upstream_unavailable', message: 'QA upstream unavailable' } }));
@@ -65,11 +72,11 @@ page.on('console', message => {
   if (message.type() !== 'error') return;
   const location = message.location().url;
   const path = location.startsWith(baseURL) ? new URL(location).pathname + new URL(location).search : '';
-  if (message.text().includes('503') && (gatewayFailures.get(path) ?? 0) > 0) {
+  if (/(503|ERR_|net::)/.test(message.text()) && (gatewayFailures.get(path) ?? 0) > 0) {
     gatewayFailures.set(path, gatewayFailures.get(path) - 1); report.expectedErrors.push(message.text());
   }
   else if (/\/api\/v1\/(events|auth\/me)/.test(location) && /(401|ERR_|net::)/.test(message.text())) report.expectedErrors.push(message.text());
-  else report.errors.push(message.text());
+  else report.errors.push({ message: message.text(), path: path.split('?')[0] });
 });
 page.on('request', req => { assert.equal(new URL(req.url()).origin, baseURL, 'Browser request escaped owned QA origin'); });
 await page.addInitScript(() => {
@@ -124,6 +131,10 @@ async function command(input) {
     assert.ok(report.gatewaySseErrors > 0);
     report.closedObserved = true;
     return { closed: true, gatewaySseErrors: report.gatewaySseErrors };
+  }
+  if (input.command === 'arm_crash') {
+    crashedApis.add(target.origin);
+    return { armed: true };
   }
   if (input.command === 'gap_commit') {
     const api = ownApi(input.api);

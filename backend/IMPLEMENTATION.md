@@ -1,5 +1,16 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Correlação HTTP e atividade de jobs em JSON
+
+- `app/observability.py` fornece eventos/fields limitados, timestamp UTC/PID, UUIDs, durações monotônicas e códigos conhecidos. Não serializa args de logging, exceções, headers, bodies, query, URLs de monitores ou SQL. IDs de alta cardinalidade permanecem nos logs.
+- Middleware ASGI puro gera X-Request-ID independente do cliente, registra headers e término separadamente e usa identidade de rotas declaradas. Rotas desconhecidas ficam unmatched; SSE não é bufferizado e cancelamento continua propagando. Resposta 500 do handler externo conserva o mesmo ID.
+- Worker registra claim/atraso de início, finalização somente após commit, recusa de claim, cancelamento e erro persistente sem ACK. Scheduler registra contagens de agendados/publicados e duração/falha de tick. Falha OSError/ValueError do sink não altera HTTP/transação/ACK.
+- Helpers de réplicas guardam atividade em `.cache/verification/api-activity-<PID>.jsonl` (ou mount privado `/reports`), conservando stderr/diagnósticos Uvicorn e suas assertions de erros inesperados.
+- Testes direcionados: 14 passed/2 skips apenas SQLite em 13,60s. Cobrem IDs concorrentes, query/header/exception sanitizados, 500, SSE antes de close/cancel, sink indisponível, commit/dedup/rollback sem ACK e tick sanitizado. Central final: 403 backend/16 skips apenas SQLite em 243,32s, 77 tooling e 44 frontend, zero skips obrigatórios; Ruff/TypeScript/build/Compose/egress aprovados.
+- API local reconstruída/atualizada isoladamente, com CMD --no-access-log. Prova readonly pelo Nginx8080 correlacionou os dois eventos/ID da resposta404, sem query/header controlado pelo cliente no log API; gates false e CA de build ausente. Relatório privado `.cache/verification/activity-runtime.json`.
+- Edge8080 `test:live` passou após atualização, com connected/project.updated/periodic, REST, revogação e errors=[]. Web/PG17/Redis preservados.
+- Limites: eventos por processo, sem métricas agregadas, heartbeat persistido, exporter ou correlação distribuída. Logs de frameworks/terceiros não usam este formatter; esta etapa não conclui RNF010 inteira.
+
 ## 2026-10-04 — Helper de API para recuperação no navegador
 
 - Helper de réplica aceita origin adicional exclusivamente HTTP/127.0.0.1/porta alta, sem path/query/credenciais, para UI/proxy QA efêmeros. A origin é preservada na substituição da API filha.
@@ -161,7 +172,7 @@ $env:UV_CACHE_DIR = "$PWD\..\.cache\uv"
 uv sync --frozen --python 3.13 --system-certs
 $env:VIGIL_DATABASE_URL = "postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55432/vigil"
 uv run --frozen alembic upgrade head
-uv run --frozen uvicorn app.main:app --host 127.0.0.1 --port 8000
+uv run --frozen uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
 A credencial acima pertence apenas ao cluster local isolado criado por Banco de Dados; use credenciais próprias em outros ambientes. O switch `--system-certs` foi necessário para a CA do ambiente nos downloads oficiais.

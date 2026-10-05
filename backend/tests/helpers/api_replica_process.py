@@ -20,6 +20,7 @@ import uvicorn  # noqa: E402
 from app.config import Settings  # noqa: E402
 from app.db.session import create_engine  # noqa: E402
 from app.main import create_app  # noqa: E402
+from app.observability import configure_activity_logging  # noqa: E402
 
 
 def output(value):
@@ -47,6 +48,15 @@ class ErrorProbe(logging.Handler):
 
 
 async def run(schema, socket_buffer_bytes=0, browser_origin=None):
+    directory = Path(
+        os.getenv(
+            "VIGIL_TEST_ARTIFACTS_DIR",
+            str(Path(__file__).resolve().parents[3] / ".cache" / "verification"),
+        )
+    )
+    directory.mkdir(parents=True, exist_ok=True)
+    activity_log = (directory / f"api-activity-{os.getpid()}.jsonl").open("w", encoding="utf8")
+    configure_activity_logging(stream=activity_log)
     assert re.fullmatch(r"vigil_test_[a-f0-9]{32}", schema)
     assert socket_buffer_bytes == 0 or 1024 <= socket_buffer_bytes <= 65536
     origins = ["http://vigil-qa.test"]
@@ -146,6 +156,7 @@ async def run(schema, socket_buffer_bytes=0, browser_origin=None):
             await asyncio.wait_for(task, 10)
             await engine.dispose()
     output({"closed": True, "subscriptions": len(app.state.event_hub.subscriptions)})
+    activity_log.close()
 
 
 if __name__ == "__main__":

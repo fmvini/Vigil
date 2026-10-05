@@ -77,6 +77,7 @@ async def test_real_native_browser_reconnect_recovers_gap_and_replacement(pg_eng
             replicas.append(await Replica.start(schema, browser_origin=ready["ui"]))
         failed, survivor = replicas
         identity = await browser.command("connect", api=failed.base)
+        assert (await browser.command("arm_crash"))["armed"]
         await failed.crash()
         assert (await browser.command("observe_failure"))["closed"]
         assert (await browser.command("gap_commit", api=survivor.base))["revision"] == 1

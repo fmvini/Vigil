@@ -13,6 +13,7 @@ from app.api.observations import router as observations_router
 from app.api.resources import router as resource_router
 from app.config import Settings
 from app.db.session import create_engine, create_session_factory
+from app.observability import RequestActivityMiddleware, configure_activity_logging
 from app.services.events import EventHub
 
 
@@ -74,7 +75,14 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
             raise ApiError(503, "not_ready", "Database is not ready") from None
         return {"status": "ok", "dependencies": {"database": "ok"}}
 
+    # FastAPI's included routers may preserve the original APIRoute in scope.
+    # Match declared route identities rather than reading raw paths or private internals.
+    routes = {id(route): route.path for route in app.routes if hasattr(route, "path")}
+    for router in (auth_router, resource_router, observations_router, events_router):
+        routes.update({id(route): "/api/v1" + route.path for route in router.routes})
+    app.add_middleware(RequestActivityMiddleware, route_templates=routes)
     return app
 
 
+configure_activity_logging()
 app = create_app()
