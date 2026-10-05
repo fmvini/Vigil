@@ -35,21 +35,47 @@ class Docker:
 
 
 def cleanup(docker, network, container, token, *, additional_containers=()):
-    # docker run --rm normally already removed this container. Never select by prefix.
+    # Validate the whole resource set before the first removal. Never select by prefix.
+    record = docker.inspect("network", network)
+    if record.get("Labels", {}).get("vigil.qa.token") != token or not record.get("Internal"):
+        raise ValueError("Refusing cleanup of a network without own UUID/internal guard")
+    network_identifier = record.get("Id")
+    if not isinstance(network_identifier, str) or not network_identifier:
+        raise ValueError("Refusing cleanup with ambiguous network identity")
     names = docker.command("container", "ls", "-a", "--format", "{{.Names}}")
     present = [name for name in (container, *additional_containers) if name in names.splitlines()]
+    owned = {}
     for name in present:
-        record = docker.inspect("container", name)
-        if record["Config"]["Labels"].get("vigil.qa.token") != token:
+        candidate = docker.inspect("container", name)
+        if candidate.get("Config", {}).get("Labels", {}).get("vigil.qa.token") != token:
             raise ValueError("Refusing cleanup of a container without own UUID label")
-    for name in present:
-        docker.command("container", "rm", "--force", name)
+        if set(candidate.get("NetworkSettings", {}).get("Networks", {})) != {network}:
+            raise ValueError("Refusing cleanup of a container with missing/foreign network")
+        identifier = candidate.get("Id")
+        if not isinstance(identifier, str) or not identifier or identifier in owned:
+            raise ValueError("Refusing cleanup with ambiguous container identity")
+        owned[identifier] = name
+    if set(record.get("Containers", {})) - set(owned):
+        raise ValueError("Own network has unexpected endpoints; preserve all resources for review")
+    for identifier, name in owned.items():
+        candidate = docker.inspect("container", name)
+        if (
+            candidate.get("Id") != identifier
+            or candidate.get("Config", {}).get("Labels", {}).get("vigil.qa.token") != token
+            or set(candidate.get("NetworkSettings", {}).get("Networks", {})) != {network}
+        ):
+            raise ValueError("Own container changed during cleanup; preserve it for review")
+        docker.command("container", "rm", "--force", identifier)
     record = docker.inspect("network", network)
-    if record["Labels"].get("vigil.qa.token") != token or not record["Internal"]:
+    if (
+        record.get("Id") != network_identifier
+        or record.get("Labels", {}).get("vigil.qa.token") != token
+        or not record.get("Internal")
+    ):
         raise ValueError("Refusing cleanup of a network without own UUID/internal guard")
     if record.get("Containers"):
         raise ValueError("Own network has unexpected endpoints; cleanup pending review")
-    docker.command("network", "rm", network)
+    docker.command("network", "rm", network_identifier)
 
 
 def probe(docker, *, image="vigil-worker-egress:qa"):

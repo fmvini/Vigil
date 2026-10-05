@@ -120,7 +120,15 @@ def test_worker_host_network_or_missing_docker_guard_never_installs(monkeypatch)
 
 class FakeDocker:
     def __init__(
-        self, *, run_failure=False, foreign=False, unexpected_endpoint=False, tls_incomplete=False
+        self,
+        *,
+        run_failure=False,
+        foreign=False,
+        unexpected_endpoint=False,
+        tls_incomplete=False,
+        not_internal=False,
+        foreign_network=False,
+        replaced_container=False,
     ):
         self.calls = []
         self.runs = 0
@@ -128,6 +136,8 @@ class FakeDocker:
         self.run_failure, self.foreign = run_failure, foreign
         self.unexpected_endpoint = unexpected_endpoint
         self.tls_incomplete = tls_incomplete
+        self.not_internal, self.foreign_network = not_internal, foreign_network
+        self.replaced_container, self.container_reads = replaced_container, 0
 
     def command(self, *args, **kwargs):
         self.calls.append(args)
@@ -173,10 +183,20 @@ class FakeDocker:
     def inspect(self, kind, name):
         label = "foreign" if self.foreign else self.token
         if kind == "container":
-            return {"Config": {"Labels": {"vigil.qa.token": label}}}
+            self.container_reads += 1
+            return {
+                "Id": name
+                + ("-replacement" if self.replaced_container and self.container_reads > 1 else ""),
+                "Config": {"Labels": {"vigil.qa.token": label}},
+                "NetworkSettings": {
+                    "Networks": {"vigil-egress-qa-" + self.token: {}}
+                    | ({"shared-network": {}} if self.foreign_network else {})
+                },
+            }
         return {
+            "Id": "vigil-egress-qa-" + self.token,
             "Labels": {"vigil.qa.token": label},
-            "Internal": True,
+            "Internal": not self.not_internal,
             "EnableIPv6": True,
             "Containers": {"foreign": {}} if self.unexpected_endpoint else {},
         }
@@ -213,6 +233,49 @@ def test_unowned_resources_are_never_removed_and_cleanup_is_pending(case):
     report = checker.probe(docker)
     assert not report["success"] and report["cleanup"] == "pending_review"
     assert not any(args[:2] in (("container", "rm"), ("network", "rm")) for args in docker.calls)
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        {"not_internal": True},
+        {"foreign_network": True},
+        {"unexpected_endpoint": True},
+        {"replaced_container": True},
+    ],
+)
+def test_cleanup_prevalidates_network_and_all_container_interfaces_before_removal(case):
+    docker = FakeDocker(run_failure=True, **case)
+    report = checker.probe(docker)
+    assert not report["success"] and report["cleanup"] == "pending_review"
+    assert not any(args[:2] in (("container", "rm"), ("network", "rm")) for args in docker.calls)
+
+
+@pytest.mark.parametrize("change", ["network_identity", "late_endpoint"])
+def test_cleanup_rechecks_network_identity_and_new_endpoints_after_own_container_removal(change):
+    class ChangingDocker(FakeDocker):
+        removed = False
+
+        def command(self, *args, **kwargs):
+            result = super().command(*args, **kwargs)
+            if args[:2] == ("container", "rm"):
+                self.removed = True
+            return result
+
+        def inspect(self, kind, name):
+            record = super().inspect(kind, name)
+            if kind == "network" and self.removed:
+                if change == "network_identity":
+                    record["Id"] = "replacement-network"
+                else:
+                    record["Containers"] = {"late-foreign-endpoint": {}}
+            return record
+
+    docker = ChangingDocker(run_failure=True)
+    report = checker.probe(docker)
+    assert not report["success"] and report["cleanup"] == "pending_review"
+    assert any(args[:2] == ("container", "rm") for args in docker.calls)
+    assert not any(args[:2] == ("network", "rm") for args in docker.calls)
 
 
 class NdpDocker:
@@ -277,6 +340,7 @@ class NdpDocker:
     def inspect(self, kind, name):
         if kind == "container":
             return {
+                "Id": name,
                 "Config": {
                     "Labels": {
                         "vigil.qa.token": "foreign"
@@ -296,6 +360,7 @@ class NdpDocker:
                 },
             }
         return {
+            "Id": self.network,
             "Labels": {"vigil.qa.token": self.token},
             "Internal": True,
             "EnableIPv6": True,
@@ -349,6 +414,7 @@ def test_ndp_unexpected_endpoint_is_preserved_for_review():
     report = checker.ndp_probe(docker)
     assert not report["success"] and report["cleanup"] == "pending_review"
     assert ("network", "rm", report["network"]) not in docker.calls
+    assert not any(args[:2] == ("container", "rm") for args in docker.calls)
 
 
 def test_cli_does_not_report_success_when_ndp_cleanup_is_uncertain(monkeypatch, tmp_path, capsys):

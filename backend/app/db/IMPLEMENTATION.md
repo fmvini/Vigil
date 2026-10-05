@@ -1,5 +1,34 @@
 # Persistência Vigil — 2026-10-04
 
+## 2026-10-04 — Regressão do tooling QA e fechamento da validação PG17
+
+### Implementado
+- Ampliada a cobertura do seed existente para verificar owner exclusivo, preservação de Monitor/Project anteriores, hash de login válido e leitura autenticada dos dados já commitados pela API em schema efêmero.
+- Verificados paginação de checks sem duplicatas, segunda página de incidentes encerrados, isolamento entre proprietários e ausência da sentinela privada nos DTOs públicos.
+- Adicionados valores numéricos independentes para p95 global e por monitor, contagens/buckets em 24h/7d/30d, retries recuperados e rollback de todas as entidades novas preservando o owner anterior.
+- A proteção de manifesto existente agora é testada sem `tmp_path`: o teste garante que o arquivo nem é aberto, evitando a falha de ACL do temporário pytest no Windows restrito. O teste também exige banco explicitamente e mantém a recusa de PG18/55432, 5432, host remoto, outro banco, query options, driver incorreto e SQLite.
+- No módulo de tooling, substituído o import dinâmico de `sys` por import explícito; nenhuma mudança de comportamento do seed ou do produto.
+
+### Arquivos principais alterados
+- `backend/app/db/seed_observations_qa.py`
+- `backend/tests/test_db_qa_seed.py`
+- `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Esta revisão executou apenas testes em schemas aleatórios do PG17/55433. Não foi executado novo seed em `public`, não foi atualizado o manifesto privado e não foi repetido o smoke aprovado.
+- Manifesto existente `frontend/.impeccable/review/observations-fixture.json` preservado; a leitura de metadados confirmou `fixture_version=1`, `fixture_kind=synthetic_persisted_qa`, `external_checks_executed=false`, banco `vigil/public`, porta 55433 e `server_version_num=170011`. Credenciais não foram expostas.
+- Não houve escrita/conexão ao runtime PG18 nesta etapa, alteração de models/migrations, infra, docs raiz, staging, commit ou push. Maestro permanece responsável pelo staging e documentação central.
+
+### Estado atual
+- Tooling QA: **13 passed, sem skips, em 3.69s** no PG17.11/55433, com `.venv/Scripts/python.exe -m pytest tests/test_db_qa_seed.py -q -p no:cacheprovider --tb=short`; Ruff check e format check dos dois arquivos passaram.
+- Validação PG17 anterior desta etapa: **90 passed, sem skips, em 59.82s**, em `test_db_schema.py`, `test_db_postgresql.py`, `test_pipeline_db.py` e `test_retention.py`. Migration `0001_initial (head)` confirmada. Servidor oficial `postgres:17.11-alpine`, porta publicada 55433/interna 5432 e volume `vigil_postgres_data` preservados.
+- Limitações: o teste de manifesto existente valida o bloqueio antes de qualquer I/O; não mede ACLs do filesystem. Os testes novos usam HTTP ASGI local da API, não navegador nem HTTP dos monitores. Manifesto/freshness do smoke anterior não foram renovados. Falha ao gravar manifesto após commit ainda pode deixar owner QA isolado, conforme registro anterior.
+
+### Próximos passos
+- Maestro pode revisar/stagear esta unidade de regressão; arquivos da área serão liberados após o relatório de evidências.
+- Para futura carga, preparar primeiro schema/owner PG17 e stream/group Redis exclusivos; medir agenda → publicação → claim → commit → ACK, queue delay, locks, pool DB e backlog/leases. Nenhuma carga iniciada nesta revisão.
+- Começar a análise de planos com `EXPLAIN` sem `ANALYZE`, verificando filtros de jobs abertos e índices parciais. Ensaios que executem mutações devem permanecer no ambiente QA isolado e não competir com o smoke existente.
+
 ## 2026-10-04 — Fixture sintética de observações no PostgreSQL 17
 
 - `seed_observations_qa.py` é tooling opt-in: exige URL explícita local em 55433/database vigil, PostgreSQL 17/schema public, ambiente não produtivo e ambos os gates desligados. Não é importado pelo produto.

@@ -12,6 +12,7 @@ import json
 import math
 import os
 import secrets
+import sys
 from collections import defaultdict
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
@@ -506,7 +507,7 @@ def main(argv=None):
     except Exception as error:
         print(
             f"QA seed failed: {type(error).__name__}; inspect target and private manifest",
-            file=__import__("sys").stderr,
+            file=sys.stderr,
         )
         return 1
     print(

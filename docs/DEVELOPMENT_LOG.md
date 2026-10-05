@@ -1,5 +1,51 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Regressão do seed QA verifica dados commitados
+
+### Implementado
+- Testes do tooling existente verificam owner exclusivo, preservação de dados anteriores, hash de login, leitura autenticada pela API, paginação de72 checks/36 incidentes encerrados e exclusão da sentinela privada nos DTOs públicos.
+- Métricas/buckets/p95 têm esperados independentes; rollback do chamador remove somente a nova fixture. Guarda de manifesto existente impede abertura/escrita sem depender de ACL de temporários no Windows.
+
+### Arquivos principais alterados
+- `backend/app/db/seed_observations_qa.py`, `backend/tests/test_db_qa_seed.py`, `backend/app/db/IMPLEMENTATION.md`
+- `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Produto e comportamento do seed permanecem; import sys explícito substitui import dinâmico. Os testes usam migrations/schema PG17 efêmero e HTTP ASGI local, sem checks externos.
+- Não repetir seed em public nem renovar manifesto privado/freshness somente para revisar entrega já integrada.
+
+### Estado atual
+- Banco entregou13 passed/zero skips em3,69s e Ruff/format; revisão central confirmou13 passed/zero skips em3,52s no PG17/55433, JUnit `.cache/verification/qa-seed-review.xml` e Ruff aprovado.
+- PG17 anterior: schema/migrations/pipeline/retention90 passed/zero skips em59,82s, migration0001_initial(head). Nesta revisão nenhum seedCLI/public, novo smoke ou alteração do manifesto existente; PG18 preservado.
+- Limites: ASGI não é navegador; proteção de manifesto verifica recusa antes de I/O, sem medir ACL real. Falha de gravação do manifesto depois do commit ainda pode deixar owner QA isolado.
+
+### Próximos passos
+- Concluir campanha Taskiq/PG17/Redis/TLS em serviços descartáveis próprios: Backend possui helper/teste; Maestro servidor/rede/runner e integração. Sem modelos/migrations ou escrita no runtime PG18.
+- Medir agenda/publicação/claim/commit/ACK separadamente e reportar limites da amostragem de CPU/RSS; gates compartilhados continuam false.
+
+## 2026-10-04 — Cleanup QA valida recursos antes de remover
+
+### Implementado
+- Ensaio egress valida rede internal/UUID, IDs Docker, labels e interfaces de todos os containers conhecidos, além dos endpoints da rede, antes da primeira remoção.
+- Revalida cada container e remove por ID imutável; revalida identidade e endpoints da rede antes de removê-la por ID. Divergências preservam recursos e tornam o ensaio falho com cleanup pending_review.
+
+### Arquivos principais alterados
+- `scripts/egress_check.py`, `scripts/tests/test_worker_egress.py`
+- `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Nomes literais servem somente para inventário/inspeção; remoção usa identidades capturadas para reduzir risco de reutilização de nome.
+- Rede não internal, interfaces estrangeiras ou endpoint inesperado já presente bloqueiam todas as remoções. Docker não oferece transação para esse conjunto: mudança tardia pode deixar containers próprios removidos e rede preservada para revisão.
+
+### Estado atual
+- Tooling completo:91 passed/zero skips em21,35s, incluindo Edge real, guardas de pré-validação e identidade/endpoint alterados durante cleanup. JUnit `.cache/verification/egress-cleanup-tooling.xml`; Ruff/format passaram nos arquivos modificados.
+- Ensaio físico com política/fixture existentes passou firewall/TLS/NDP e confirmou cleanup em `.cache/egress-qa/08c67177d9ff437a867c3d32e837f75f/report.json`; nenhuma rede QA rotulada permaneceu.
+- Backend/produto/infra de runtime não mudaram; baseline central anterior433 backend/16 skips SQLite e44 frontend permanece. Gates compartilhados false, PG18 preservado.
+
+### Próximos passos
+- Coordenar com Backend helper Taskiq/PG17/Redis/CheckExecutor TLS real para carga em fixtures exclusivas, medindo etapas e backlog; Maestro mantém rede/servidor/runner/relatório.
+- Banco finaliza correção pendente do seed QA com testes antes de staging centralizado. Frontend liberado, sem repetir manifesto/smoke expirado sem mudança.
+
 ## 2026-10-04 — Heartbeat persistido de ticks concluídos
 
 ### Implementado
