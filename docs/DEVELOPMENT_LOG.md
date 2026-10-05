@@ -1,5 +1,31 @@
 # Registro de desenvolvimento
 
+## 2026-10-04 — Diagnóstico read-only de backlog e leases
+
+### Implementado
+- CLI privado agrega jobs pending/running/publicação/retry/leases com clock PG e transação REPEATABLE READ/READ ONLY; consultas têm limites de tempo sem row locks.
+- Redis distingue stream retido, lag não entregue e ACK pendente em leitura atômica. PEL amostrada em100 menores IDs, com truncamento e medidas exclusivamente da amostra; não faz ACK/reclaim nem cria fila.
+- Fontes independentes preservam dados saudáveis em falha parcial, emitindo códigos sanitizados e exit1. Configuração inválida não revela credenciais; não importa tasks nem ativa checks.
+
+### Arquivos principais alterados
+- `backend/app/monitoring/status.py`, `backend/tests/test_pipeline_status.py`, `backend/IMPLEMENTATION.md`
+- `scripts/verify.ps1`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- pending_due mede elegibilidade temporal, sem alegar autorização/configuração/orçamento suficiente para claim. Contagens de leases/publicação respeitam cutoffs <=now/30s; idade sem população e lag Redis desconhecido ficam null.
+- XLEN inclui ACKados; PEL e lag não são intercambiáveis. Não usa XPENDING IDLE, que pode percorrer toda PEL. Consumers registrados não significam processos vivos.
+- Nenhum heartbeat foi inventado a partir de jobs; scheduler informa not_implemented/idade null. Flags refletem Settings do CLI e não processos alheios.
+
+### Estado atual
+- Direcionada status/observability/publisher/pipeline_db/broker_integration:57 passed/7 skips apenas SQLite em56,38s;12 testes novos. Ruff aprovado, integração central inclui o módulo obrigatório. Relatório `.cache/verification/pipeline-status.xml`.
+- Provas PG17/schema UUID: dados intactos, row locks não bloqueiam consulta e DML injetada é rejeitada em read-only. Redis UUID:150 pendentes/amostra100, ACK100 conserva XLEN160 e reduz PEL50, lag10 separado; lag desconhecido não vira zero.
+- CLI passou no Windows e Linux UID/GID10001/caps removidas/código readonly contra runtime PG17/Redis com gates false, zero jobs e stream ausente. Conexão Redis local indisponível retornou partial/exit1, preservando snapshot PG; sem mensagens privadas/URLs/DSN no JSON.
+- Sem alterações nos processos/dados PG18 nem startup do pipeline. Limites: não há atomicidade entre fontes, benchmark de volume, métricas históricas/exporter ou heartbeat persistido; status ok indica consulta bem-sucedida, não saúde do pipeline.
+
+### Próximos passos
+- Persistir heartbeat de tick concluído do scheduler em chave exclusiva com TTL, distinguir falha/ausência/idade sem confundir com liveness/readiness da API.
+- Provar carga end-to-end controlada com executor TLS real somente contra fixtures isoladas, incluindo atraso de início/backlog e recursos; checks externos seguem desligados.
+
 ## 2026-10-04 — Nginx acompanha mudança de IP da API
 
 ### Implementado

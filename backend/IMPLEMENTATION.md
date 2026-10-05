@@ -1,5 +1,14 @@
 # Backend — registro de implementação
 
+## 2026-10-04 — Snapshot operacional privado e read-only
+
+- `python -m app.monitoring.status` agrega jobs abertos/pendentes temporais/publicação/retry/leases e suas idades usando PostgreSQL REPEATABLE READ/READ ONLY e timeouts locais. Não importa tasks, executa HTTP, altera jobs ou gates.
+- Redis lê XLEN/XINFO GROUPS/XPENDING atomicamente, separando retenção, lag não entregue e PEL. Amostra de100 menores IDs limita trabalho e informa truncamento; idle/redelivery/reclaimable referem-se somente à amostra. Lag desconhecido e idades sem população são null; stream/group ausentes permanecem explícitos.
+- Fontes consultadas independentemente sob prazo3s. Falha parcial conserva fonte saudável e sanitiza DSN/SQL/exceções; cancelamento externo propaga. Configuração inválida não vaza senha. Flags são Settings do CLI, não flags inspecionados de processos runtime.
+- Regressão direcionada status/observability/publisher/pipeline_db/broker_integration:57 passed/7 skips apenas SQLite em56,38s. Testes novos12 casos incluem cutoffs, ledger intacto, leitura durante row lock, DML rejeitada na transação real, ACK que não reduz XLEN, PEL150/amostra100, lag null, tipo incorreto, falhas/timeout/cancelamento. Ruff aprovado.
+- CLI readonly contra PG17/Redis runtime passou no Windows e em container Linux UID/GID10001/caps removidas/código readonly. Zero jobs abertos e stream ausente com gates false. Redis local indisponível produziu partial/exit1 e manteve dados PG. API/PG18/processos compartilhados preservados.
+- Limites: scans de jobs abertos/quantidade de grupos sem benchmark; snapshots de PG/Redis não são atômicos entre si. Registered consumers não é heartbeat. Persistência de ticks, métricas históricas/exporter e carga end-to-end continuam pendentes; RNF010 permanece parcial.
+
 ## 2026-10-04 — Correlação HTTP e atividade de jobs em JSON
 
 - `app/observability.py` fornece eventos/fields limitados, timestamp UTC/PID, UUIDs, durações monotônicas e códigos conhecidos. Não serializa args de logging, exceções, headers, bodies, query, URLs de monitores ou SQL. IDs de alta cardinalidade permanecem nos logs.

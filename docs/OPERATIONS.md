@@ -181,6 +181,16 @@ Jobs registram job_id/monitor_id, start_delay_ms no claim e duração/attempt_co
 
 Formatter usa allowlist de eventos/fields/códigos e ignora msg arbitrária, args, exc_info, body, headers, URL/query e parâmetros SQL. Um sink fechado/indisponível por OSError/ValueError não impede response/commit/ACK. Helpers QA desviam somente a atividade estruturada para arquivos privados, conservando stderr de erro Uvicorn. Logs de frameworks/terceiros continuam independentes; não há exporter, heartbeat persistido ou backend de logs nesta etapa. Base técnica: [logging Python](https://docs.python.org/3/library/logging.html#logrecord-objects) e [middleware ASGI puro Starlette](https://starlette.dev/middleware/#pure-asgi-middleware).
 
+## Diagnóstico privado do pipeline
+
+No diretório `backend/`, execute `.venv/Scripts/python.exe -m app.monitoring.status` com VIGIL_DATABASE_URL/VIGIL_REDIS_URL do alvo. Em Linux, `python -m app.monitoring.status`. O comando lê Settings do ambiente, não importa tasks, não inicializa grupo/stream, não faz ACK/reclaim, não reconcilia jobs e não habilita gates. Não é endpoint HTTP; os flags emitidos refletem a configuração deste processo diagnóstico, sem inspecionar flags de outros processos.
+
+`database` agrega somente pending/running em transação PostgreSQL REPEATABLE READ/READ ONLY, com clock do banco, statement_timeout3s e lock_timeout1s locais. `pending_due` é elegibilidade temporal (slot/retry vencidos e expiry futuro), sem prometer claim válido contra orçamento/configuração/pausa. Counts de publicação distinguem nunca publicado e republicação após30s; leases <=clock estão expiradas. Ages são null quando a população não existe. Não acessa snapshots/URLs/identidades de jobs.
+
+`queue` lê XLEN/XINFO GROUPS/XPENDING em uma transação Redis sem alterar dados. Stream/group ausentes são estados explícitos, não falha de conectividade. `stream_length` inclui mensagens já ACKadas; `undelivered_lag` cobre apenas mensagens não entregues e mantém null quando Redis não consegue calculá-lo, conforme [XINFO GROUPS](https://redis.io/docs/latest/commands/xinfo-groups/). `pending_ack` é o total da PEL. Amostra dos100 menores IDs informa max_idle/redelivery/reclaimable120s exclusivamente da amostra, não o máximo global; truncamento é explícito. Evita filtro IDLE, que pode percorrer toda PEL, conforme [XPENDING](https://redis.io/docs/latest/commands/xpending/). Registered consumers não prova processos vivos.
+
+Exit0/status ok significa fontes consultadas, incluindo fila não inicializada; não significa pipeline saudável. Falha de uma dependência preserva a outra, retorna partial/exit1 e código sanitizado sem erro SQL/DSN/senha. Operações têm prazo3s por fonte; fechamento de conexão pode somar tempo. Não há snapshot atômico entre PG e Redis, benchmark de volume, exporter, histogramas ou heartbeat persistido: scheduler informa not_implemented/idade null. Não use como liveness/readiness da API. A proteção SQL segue [transações read-only PostgreSQL](https://www.postgresql.org/docs/17/sql-set-transaction.html).
+
 ## Pipeline
 
 `VIGIL_PIPELINE_ENABLED` e `VIGIL_MONITORING_NETWORK_ENABLED` permanecem `false` por padrão. Antes de habilitar execução externa, validar ACK/reclaim no Redis real, TLS/SNI/IPv6 com sockets reais em ambiente controlado, controles de egress e recuperação operacional.
