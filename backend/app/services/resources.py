@@ -9,7 +9,7 @@ from app.api.errors import ApiError
 from app.api.schemas import MonitorCreate, MonitorOut
 from app.db.models import CheckJob, Incident, Monitor, Project, User
 from app.domain.health import freshness
-from app.domain.monitors import CHECK_FIELDS
+from app.domain.monitors import CHECK_FIELDS, validate_check_config
 from app.security import aware, utcnow
 
 
@@ -89,7 +89,24 @@ async def create_project(db: AsyncSession, owner_id: UUID, data) -> Project:
     return project
 
 
-async def create_monitor(db: AsyncSession, owner_id: UUID, project_id: UUID, data) -> Monitor:
+def deployment_check_config(config, minimum_interval_seconds):
+    try:
+        validate_check_config(config, minimum_interval_seconds=minimum_interval_seconds)
+    except ValueError:
+        raise ApiError(
+            422,
+            "validation_error",
+            "Invalid monitor configuration",
+            [{"field": "interval_seconds", "type": "greater_than_equal"}],
+        ) from None
+
+
+async def create_monitor(
+    db: AsyncSession, owner_id: UUID, project_id: UUID, data, *, minimum_interval_seconds=60
+) -> Monitor:
+    if "interval_seconds" not in data.model_fields_set:
+        data = data.model_copy(update={"interval_seconds": minimum_interval_seconds})
+    deployment_check_config(data.model_dump(), minimum_interval_seconds)
     await lock_owner(db, owner_id)
     project = await owned_project(db, owner_id, project_id, lock=True)
     count = await db.scalar(
@@ -160,7 +177,9 @@ def reset_snapshot(monitor: Monitor) -> None:
         setattr(monitor, field, None)
 
 
-async def patch_monitor(db: AsyncSession, project: Project, monitor: Monitor, data) -> Monitor:
+async def patch_monitor(
+    db: AsyncSession, project: Project, monitor: Monitor, data, *, minimum_interval_seconds=60
+) -> Monitor:
     changes = data.model_dump(exclude_unset=True)
     merged = {field: getattr(monitor, field) for field in MonitorCreate.model_fields}
     merged.update(changes)
@@ -172,6 +191,7 @@ async def patch_monitor(db: AsyncSession, project: Project, monitor: Monitor, da
         ]
         raise ApiError(422, "validation_error", "Invalid monitor configuration", details) from None
     changes = {field: getattr(checked, field) for field in changes}
+    deployment_check_config(checked.model_dump(), minimum_interval_seconds)
     changed = {field for field, value in changes.items() if getattr(monitor, field) != value}
     if not changed:
         return monitor

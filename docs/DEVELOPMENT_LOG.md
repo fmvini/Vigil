@@ -1,5 +1,76 @@
 # Registro de desenvolvimento
 
+## 2026-10-06 — Perfil gratuito online com checks em lotes
+
+### Implementado
+- Web Docker recompila React e serve SPA/API na mesma origem; bootstrap explícito
+  cria somente schema privado vigil e aplica Alembic antes de iniciar a API.
+- API sem Redis opt-in, runtime-config anônimo e formulário com mínimo dinâmico.
+  Perfil cloud usa 900/900 segundos; defaults locais 60/null preservados.
+- Runner one-shot reutiliza claim/HTTP/finalização duráveis, backlog e retries, sem
+  broker Redis. Workflow público/manual/agendado 15min usa Docker protegido e relay
+  TCP com hostname original e TLS verificado. Recursos próprios recebem cleanup validado.
+- Factory TLS/schema/pool e Alembic privado integrados. SET SESSION no connect evita
+  search_path de startup descartado pelo Neon; sem fallback public/DDL na factory.
+- Timeout de conexão cloud10s/local3s; relatórios distinguem fase e deadline global.
+  Retenção até10s por batch dentro do prazo90s, sem alterar TTL ou statement/lock limits.
+
+### Arquivos principais alterados
+- `backend/app/config.py`, `backend/app/main.py`, `backend/app/web.py`, `backend/app/api/runtime.py`
+- `backend/app/api/resources.py`, `backend/app/services/resources.py`, `backend/app/domain/monitors.py`
+- `backend/app/monitoring/batch.py`, `backend/app/monitoring/run.py`, `backend/app/monitoring/tasks.py`, `backend/app/monitoring/status.py`
+- `backend/app/db/session.py`, `backend/migrations/env.py`, `backend/app/services/check_jobs.py`, `backend/app/services/retention.py`
+- `backend/tests/test_batch.py`, `backend/tests/test_batch_postgresql.py`, `backend/tests/test_db_session.py`, `backend/tests/test_db_fresh_slot.py`, `backend/tests/test_pipeline_db.py`
+- `backend/tests/test_runtime_config.py`, `backend/tests/test_web.py`, `backend/tests/test_retention.py`
+- `frontend/src/runtimeConfig.ts`, `frontend/src/Forms.tsx`, `frontend/src/domain.ts`, `frontend/src/test/RuntimeConfig.test.tsx`, `frontend/src/test/App.test.tsx`, `frontend/src/test/Observations.test.tsx`, `frontend/src/test/fixtures.ts`
+- `infra/free-cloud/Dockerfile`, `infra/free-cloud/pg_relay.py`, `infra/worker/egress.py`, `.dockerignore`, `render.yaml`, `.github/workflows/free-checks.yml`
+- `scripts/free_cloud_start.py`, `scripts/free_cloud_checks.py`, `scripts/tests/test_free_cloud.py`, `docs/FREE_CLOUD.md`, `docs/API.md`, `README.md`, `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Usuário escolheu Neon separado, gratuito, checks15min. Supabase Vault/VFitness e
+  bancos locais preservados; não transferir dados locais automaticamente.
+- Projeto Neon exclusivo vigil/lingering-water-00111721, Oregon, compute fixo0.25CU
+  e scale-to-zero5min. Schema vigil no head0002; clientTLS1.3/hostname verificado.
+- Render Free single instance, healthCheckPath live para evitar manter compute DB
+  acordado por probes; readiness explícita no deploy. API gatesfalse, runner true/true.
+- Cron best-effort sem SLA/replay de checks omitidos. Fresh slot usa clock real DB
+  após locks; legado abaixo900 legível e excluído da agenda até ajuste explícito.
+- Workflow somente default branch público não fork, sem PRs, checkout fixado e
+  runner padrão. Secrets servidor; nenhum DSN/cookie/senha em Git ou frontend.
+
+### Estado atual
+- Banco:138 passed/zero skips em PG18 UUID autorizados, antes do ajuste de connect;
+  `.cache/verification/db-cloud-neon-contracts-pg18-final.xml`, cleanup/catalog public preservados.
+- Backend:183 passed/76 skips sem URLs na regressão inicial; PG18 synthetic22 passed/3
+  skips SQLite-only, `.cache/verification/backend-cloud-pg18.xml`.
+- Maestro final:137 passed/zero skips de schema/timeout/tooling/egress em4.87s;
+  `.cache/verification/cloud-final-boundaries.xml`. API/batch/readiness83 passed/7
+  variantes incompatíveis SQLite/PG skipped em180.26s; `cloud-final-api-pg18.xml`.
+- Frontend:build Linux completo e Vitest real10 arquivos/95 testes passed,6.61s.
+  Novo bundle index-Q0hhzUNE.js, sem reutilizar dist histórico; formulário900/900
+  em1440/390 sem overflow, cópia15min e mínimo900 conferidos no portal.
+- Firewall físico na imagem final:18 bloqueios, controles negativos reais, IPv4/IPv6,
+  TLS/SNI/CA/hostname e NDP passed; `.cache/egress-qa/a58fbf4f57d348c0bbaa83f9a4c93fed/report.json`, cleanup confirmado.
+- Neon real:bootstrap/head0002, readiness200, cadastro/login/monitor QA próprio,
+  batch com1 completed/0 backlog, cleanup confirmado. HTTP example.com retornou200,
+  latência74.65ms, saúde online e last_checked_at2026-10-06T17:32:03.111087Z.
+  Check HTTPS anterior gravou tls_error da inspeção local, sem relaxar verificação.
+- Preview QA em5180(prod)/5181(dev somente para browser local) usa banco Neon
+  separado; runtime local anterior8000/5173 mantido. Ruff/diff-check aprovados.
+- Serviço Render ainda não publicado e agenda GitHub desativada por variável false;
+  aguarda código remoto e validação pública. Conta/projeto QA ainda existem nesta etapa.
+  Sem nova execução do verify completo RequireIntegration, guardasPG17 preservadas.
+
+### Próximos passos
+- Após commit local da unidade, obter pedido explícito de push exigido pelo AGENTS;
+  enviar main, publicar Render Free já preparado e validar URL HTTPS live/ready/UI.
+- Validar workflow manual no GitHub contra Neon e só então ativar variável true;
+  conferir rodada agendada e limites/cotas, sem adicionar cartão/upgrade.
+- Arquivar projeto QA próprio e logout, remover containers QA identificados e arquivos
+  privados temporários; preservar banco e credenciais exclusivamente nos secrets.
+- Registrar URL/provas públicas efetivas; não chamar online/agenda de concluídos
+  apenas porque build e runner local passaram.
+
 ## 2026-10-06 — Prontidão por migration e execução local
 
 ### Implementado

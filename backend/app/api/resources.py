@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import func, select
 
 from app.api.dependencies import DB, Auth, MutationAuth
@@ -94,8 +94,16 @@ async def list_monitors(
 
 
 @router.post("/projects/{project_id}/monitors", status_code=201, response_model=MonitorOut)
-async def create_monitor(project_id: UUID, data: MonitorCreate, db: DB, auth: MutationAuth):
-    monitor = await service.create_monitor(db, auth.user.id, project_id, data)
+async def create_monitor(
+    project_id: UUID, data: MonitorCreate, request: Request, db: DB, auth: MutationAuth
+):
+    monitor = await service.create_monitor(
+        db,
+        auth.user.id,
+        project_id,
+        data,
+        minimum_interval_seconds=request.app.state.settings.minimum_interval_seconds,
+    )
     return service.monitor_output(monitor)
 
 
@@ -106,9 +114,19 @@ async def get_monitor(monitor_id: UUID, db: DB, auth: Auth):
 
 
 @router.patch("/monitors/{monitor_id}", response_model=MonitorOut)
-async def patch_monitor(monitor_id: UUID, data: MonitorPatch, db: DB, auth: MutationAuth):
+async def patch_monitor(
+    monitor_id: UUID, data: MonitorPatch, request: Request, db: DB, auth: MutationAuth
+):
     project, monitor = await service.owned_monitor(db, auth.user.id, monitor_id, lock=True)
-    return service.monitor_output(await service.patch_monitor(db, project, monitor, data))
+    return service.monitor_output(
+        await service.patch_monitor(
+            db,
+            project,
+            monitor,
+            data,
+            minimum_interval_seconds=request.app.state.settings.minimum_interval_seconds,
+        )
+    )
 
 
 @router.delete("/monitors/{monitor_id}", status_code=204)

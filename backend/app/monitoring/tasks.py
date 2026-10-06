@@ -27,7 +27,7 @@ async def startup(state: TaskiqState):
     configure_activity_logging()
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
-    state.engine = create_engine(settings.database_url)
+    state.engine = create_engine(settings.database_url, **settings.database_options)
     state.factory = create_session_factory(state.engine)
     state.executor = CheckExecutor()
     state.redis = Redis.from_url(settings.redis_url, socket_connect_timeout=3, socket_timeout=3)

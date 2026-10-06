@@ -1,5 +1,62 @@
 # Persistência Vigil — 2026-10-04
 
+## 2026-10-06 — Conexão cloud verificada e slots para batch
+
+### Implementado
+- Factory genérica aceita `database_ssl`, CA opcional e `database_schema`.
+  TLS usa SSLContext com certificado/hostname verificados, via certifi ou CA explícita.
+  Pool configurável preserva defaults locais5/5; NullPool/SQLite ignoram tamanhos.
+- `server_settings.search_path` usa um identificador validado, sem criar schema.
+  Integração Maestro acrescentou SET SESSION via adapter.run_async no connect:
+  o Neon real descartou o parâmetro de startup. Schema permanece após rollback,
+  sem fallback public ou DDL; perfil usa endpoint direto, não pool transaction.
+  Alembic online/injetado/offline usa o mesmo schema para tabelas e versão;
+  `SET LOCAL search_path` fica na transação. Bootstrap é explícito e separado.
+- `schedule_due` aceita `fresh_slot=False` e `minimum_interval_seconds=60`.
+  Batch opt-in renova clock DB após locks, mantém skipped pelo anchor antigo e dá
+  janela inteira now→now+interval. Filtro de intervalo não modifica monitores legados.
+
+### Arquivos principais alterados
+- `backend/app/db/session.py`, `backend/migrations/env.py`
+- `backend/app/services/check_jobs.py`, `backend/tests/test_pipeline_db.py`
+- `backend/tests/test_db_session.py`, `backend/tests/test_db_fresh_slot.py`
+- `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Settings/callers pertencem ao Backend; interface `database_options` alinhada.
+  Defaults locais intactos; cloud configura TLStrue/schema vigil/pool2/overflow0.
+- TLS explícito recusa parâmetros concorrentes `ssl`/`sslmode`/certificados e
+  `channel_binding` da DSN, além de connect_args.ssl. URL mantém hostname original
+  para SNI mesmo com relay TCP roteado por alias/DNS. Não usar require sem verificação.
+- Escolha atual do usuário: Neon Free separado e batch15min, sem mexer em Supabase.
+  DSN: `postgresql+asyncpg://ROLE:SENHA_PERCENTENCODE@ep-...neon.tech:5432/neondb`,
+  sem query libpq; TLS via configuração explícita. Factory não depende do provedor.
+- TTL de resultados/jobs30d e incidentes encerrados90d permanece inalterado.
+  Em15min são2880 pares por monitor em30d; capacidade exige tamanho real com índices
+  e bloat. Readiness lê conectividade/revisão, não comprova capacidade de escrita.
+
+### Estado atual
+- Prova PG18.6 autorizada, somente schemas UUID próprios:138 passed/zero skips
+  em42.95s. Inclui schema inexistente sem bootstrap, schema/metadata/head após
+  bootstrap, atrasos/min900/retry/crash/rollback/concorrência e regressões existentes.
+  JUnit `.cache/verification/db-cloud-neon-contracts-pg18-final.xml`.
+- Catálogo public preservado no teste; schemas `vigil_cloud_test_*` ausentes depois;
+  public permanece head0002, sem alterações de usuários/runtime. Evidência readonly:
+  `.cache/verification/db-cloud-neon-pg18-cleanup.json`.
+- Sem conexão cloud, prova TLS/SNI remota ou guards PG17 executados; sem mudanças
+  ao helper de retenção, staging/commit, documentação central ou infraestrutura.
+- Neon anunciou em02/10/2026 Free1GB/projeto e100CUh/projeto/mês; fonte:
+  [atualização oficial](https://neon.com/blog/neon-free-plan-1-gb-per-project).
+  Consultas frequentes enquanto web ativo consomem compute; não inferir custo
+  somente da frequência do batch ou prometer disponibilidade/cron exatos.
+
+### Próximos passos
+- Maestro revisa a unidade junto de Settings/callers/batch e faz integração central.
+- Bootstrap explícito cria somente schema vigil antes de Alembic; validar readiness
+  e primeiro batch com TLS/SNI do endpoint real, preservando credenciais em secrets.
+- Medir tamanho por tabela/índice, backlog elegível e compute no Neon; operar
+  retenção bounded existente antes de atingir quota. Não aplicar VACUUM FULL automático.
+
 ## 2026-10-06 — Liberação da unidade de índices e relatório QA
 
 ### Implementado

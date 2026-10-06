@@ -15,6 +15,15 @@ Base: `/api/v1`. JSON, UUIDs e datas ISO 8601 em UTC. O OpenAPI gerado em `/docs
 
 ## Primeiro incremento
 
+`GET /api/v1/runtime-config` é anônimo, não consulta banco/Redis e retorna exatamente
+`{ "minimum_interval_seconds": 900, "scheduled_checks_interval_seconds": 900 }`
+no perfil gratuito; localmente os valores padrão são `60` e `null`. Resposta
+`Cache-Control: no-store`. Mínimo inteiro 60–3600; agenda inteiro positivo ou null.
+O formulário aguarda configuração válida, com timeout de dez segundos e opção de
+tentar novamente. Criar monitor sem intervalo usa o mínimo configurado; intervalo
+explícito abaixo dele e PATCH de configuração incompatível retornam 422 antes de
+mutação. Monitores legados abaixo do mínimo continuam legíveis.
+
 | Método | Rota | Resultado |
 | --- | --- | --- |
 | POST | `/auth/register` | 201; usuário criado, sem login automático |

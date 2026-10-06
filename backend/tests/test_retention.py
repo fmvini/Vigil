@@ -473,7 +473,9 @@ async def test_cli_real_postgresql_dry_run_rolls_back_and_multiple_batches_commi
                 connection, monitor_id, completed_at=NOW - timedelta(days=31, seconds=index)
             )
     monkeypatch.setattr(retention, "create_engine", lambda *args, **kwargs: pg_engine)
-    settings = SimpleNamespace(database_url=str(pg_engine.url), session_idle_seconds=86400)
+    settings = SimpleNamespace(
+        database_url=str(pg_engine.url), session_idle_seconds=86400, database_options={}
+    )
     dry_args = argparse.Namespace(batch_size=2, max_batches=5, dry_run=True)
     preview = await retention._run_cli(dry_args, settings)
     assert len(preview) == 1 and preview[0].check_results == 2
@@ -557,6 +559,7 @@ def test_cli_requires_explicit_database_and_never_prints_connection_secrets(monk
             model_fields_set={"database_url"},
             database_url="unused",
             session_idle_seconds=86400,
+            database_options={},
         ),
     )
 

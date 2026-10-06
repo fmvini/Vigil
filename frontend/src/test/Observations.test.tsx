@@ -90,17 +90,17 @@ describe('métricas e observações', () => {
 
 describe('publicação explícita e rota pública', () => {
   it('projeto e monitor novos iniciam privados e enviam o opt-in escolhido', async () => {
-    const fetch = vi.fn(async (url: string, init: RequestInit) => json({ ...(url.endsWith('/projects') ? project : monitor), ...JSON.parse(String(init.body)) }, 201)); vi.stubGlobal('fetch', fetch); const user = userEvent.setup();
+    const fetch = vi.fn(async (url: string, init: RequestInit) => url.endsWith('/runtime-config') ? json({ minimum_interval_seconds: 60, scheduled_checks_interval_seconds: null }) : json({ ...(url.endsWith('/projects') ? project : monitor), ...JSON.parse(String(init.body)) }, 201)); vi.stubGlobal('fetch', fetch); const user = userEvent.setup();
     const saved = vi.fn(); const props = { onCancel: vi.fn(), onSaved: saved, onBusyChange: vi.fn() };
     const first = render(<ProjectForm {...props} />);
     expect(screen.getByLabelText('Publicar página de status')).not.toBeChecked();
     await user.type(screen.getByLabelText('Nome do projeto'), 'Projeto'); await user.click(screen.getByLabelText('Publicar página de status'));
     await user.click(screen.getByRole('button', { name: 'Salvar projeto' })); await waitFor(() => expect(saved).toHaveBeenCalled());
     expect(JSON.parse(String(fetch.mock.calls[0][1].body)).public_status_enabled).toBe(true); first.unmount();
-    render(<MonitorForm {...props} projectId="p1" />); expect(screen.getByLabelText('Exibir na página pública')).not.toBeChecked();
+    render(<MonitorForm {...props} projectId="p1" />); expect(await screen.findByLabelText('Exibir na página pública')).not.toBeChecked();
     await user.type(screen.getByLabelText('Nome do monitor'), 'Endpoint'); await user.type(screen.getByLabelText('URL do endpoint'), 'https://example.com/health');
     await user.click(screen.getByLabelText('Exibir na página pública')); await user.click(screen.getByRole('button', { name: 'Salvar monitor' }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2)); expect(JSON.parse(String(fetch.mock.calls[1][1].body)).is_public).toBe(true);
+    await waitFor(() => expect(fetch.mock.calls.filter(([, init]) => init.method === 'POST')).toHaveLength(2)); expect(JSON.parse(String(fetch.mock.calls.find(([url, init]) => url.endsWith('/monitors') && init.method === 'POST')?.[1].body)).is_public).toBe(true);
   });
   it('abre /status/slug sem consultar auth e sem renderizar campos privados extras', async () => {
     const fetch = vi.fn(async (url: string) => url.includes('/incidents') ? json({ items: [], total: 0 }) : json({ ...published, url: 'https://private.invalid', email: 'private@example.com', description: 'PRIVATE_DESCRIPTION' })); vi.stubGlobal('fetch', fetch);

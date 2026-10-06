@@ -190,7 +190,7 @@ async def retain_batch(
 
 
 async def _run_cli(args: argparse.Namespace, settings: Any) -> list[RetentionCounts]:
-    engine = create_engine(settings.database_url, poolclass=NullPool)
+    engine = create_engine(settings.database_url, poolclass=NullPool, **settings.database_options)
     batches = []
     try:
         factory = create_session_factory(engine)

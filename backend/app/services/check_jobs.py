@@ -141,11 +141,24 @@ async def _lock_job(db: AsyncSession, job_id: UUID, *, skip_locked=False):
 
 
 async def schedule_due(
-    db: AsyncSession, *, now: datetime | None = None, limit: int = 100
+    db: AsyncSession,
+    *,
+    now: datetime | None = None,
+    limit: int = 100,
+    fresh_slot: bool = False,
+    minimum_interval_seconds: int = 60,
 ) -> list[UUID]:
-    """Latest due slot per monitor; advancing schedule and creating job are atomic."""
+    """Atomically schedule a due slot; opt-in batches start a full interval now."""
     if not 1 <= limit <= 100:
         raise ValueError("scheduler limit must be 1..100")
+    if not isinstance(fresh_slot, bool):
+        raise ValueError("fresh_slot must be a boolean")
+    if (
+        isinstance(minimum_interval_seconds, bool)
+        or not isinstance(minimum_interval_seconds, int)
+        or not 60 <= minimum_interval_seconds <= 3600
+    ):
+        raise ValueError("minimum_interval_seconds must be an integer from 60 to 3600")
     timestamp = await _clock(db, now)
     monitors = (
         await db.scalars(
@@ -155,6 +168,7 @@ async def schedule_due(
                 Project.archived_at.is_(None),
                 Monitor.archived_at.is_(None),
                 Monitor.paused_at.is_(None),
+                Monitor.interval_seconds >= minimum_interval_seconds,
                 Monitor.next_check_at <= timestamp,
             )
             .order_by(Monitor.next_check_at, Monitor.id)
@@ -170,6 +184,9 @@ async def schedule_due(
             .where(CheckJob.monitor_id == monitor.id, CheckJob.status.in_(OPEN))
             .with_for_update()
         )
+        if fresh_slot:
+            # Refresh after monitor/job locks, so sparse batches get a full window.
+            timestamp = await _clock(db, now)
         if current is not None:
             if current.config_version != monitor.config_version:
                 _finish_unevaluated(
@@ -191,7 +208,11 @@ async def schedule_due(
         skipped = int(
             (timestamp - monitor.next_check_at).total_seconds() // monitor.interval_seconds
         )
-        slot = monitor.next_check_at + timedelta(seconds=skipped * monitor.interval_seconds)
+        slot = (
+            timestamp
+            if fresh_slot
+            else monitor.next_check_at + timedelta(seconds=skipped * monitor.interval_seconds)
+        )
         job = CheckJob(
             id=uuid4(),
             monitor_id=monitor.id,

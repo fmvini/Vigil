@@ -19,6 +19,7 @@ export const emptyMetrics: Metrics = {
 };
 export function observationResponse(url: unknown) {
   const path = String(url).split('?')[0];
+  if (path.endsWith('/runtime-config')) return json({ minimum_interval_seconds: 60, scheduled_checks_interval_seconds: null });
   if (path.endsWith('/metrics')) return json(emptyMetrics);
   if (path.endsWith('/incidents')) return json({ items: [], total: 0 });
   return null;

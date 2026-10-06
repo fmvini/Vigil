@@ -11,6 +11,7 @@ from app.api.events import router as events_router
 from app.api.jobs import router as jobs_router
 from app.api.observations import router as observations_router
 from app.api.resources import router as resource_router
+from app.api.runtime import router as runtime_router
 from app.config import Settings
 from app.db.session import create_engine, create_session_factory
 from app.observability import RequestActivityMiddleware, configure_activity_logging
@@ -23,7 +24,9 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     owned_engine = engine is None
     if engine is None:
         engine = create_engine(
-            settings.database_url, allow_sqlite_for_tests=settings.environment == "test"
+            settings.database_url,
+            allow_sqlite_for_tests=settings.environment == "test",
+            **settings.database_options,
         )
     sqlite_test_engine = (
         not owned_engine and getattr(getattr(engine, "dialect", None), "name", None) == "sqlite"
@@ -52,9 +55,13 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     app.state.session_factory = create_session_factory(engine)
     app.state.password_limiter = CapacityLimiter(4)
     app.state.event_hub = EventHub(
-        redis_factory=lambda: Redis.from_url(
-            settings.redis_url, socket_connect_timeout=1, socket_timeout=2, max_connections=5
+        redis_factory=(
+            lambda: Redis.from_url(
+                settings.redis_url, socket_connect_timeout=1, socket_timeout=2, max_connections=5
+            )
         )
+        if settings.redis_enabled
+        else None
     )
     install_handlers(app)
     app.include_router(auth_router, prefix="/api/v1")
@@ -62,6 +69,7 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     app.include_router(observations_router, prefix="/api/v1")
     app.include_router(jobs_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
+    app.include_router(runtime_router, prefix="/api/v1")
 
     @app.middleware("http")
     async def private_response_headers(request, call_next):
@@ -89,7 +97,14 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     # FastAPI's included routers may preserve the original APIRoute in scope.
     # Match declared route identities rather than reading raw paths or private internals.
     routes = {id(route): route.path for route in app.routes if hasattr(route, "path")}
-    for router in (auth_router, resource_router, observations_router, jobs_router, events_router):
+    for router in (
+        auth_router,
+        resource_router,
+        observations_router,
+        jobs_router,
+        events_router,
+        runtime_router,
+    ):
         routes.update({id(route): "/api/v1" + route.path for route in router.routes})
     app.add_middleware(RequestActivityMiddleware, route_templates=routes)
     return app

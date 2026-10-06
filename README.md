@@ -8,6 +8,13 @@ A revisão atual exige a revision Alembic atual no readiness e inclui índices d
 
 ## Objetivo
 
+O novo [perfil gratuito online](docs/FREE_CLOUD.md) usa Render Free, Neon separado
+e GitHub Actions público, com checks aproximadamente a cada 15 minutos. A interface
+e a API compartilham HTTPS, sem Redis neste perfil. Build Linux, testes e check real
+com resultado HTTP200 no Neon foram validados; publicação e ativação da agenda
+aguardam o envio autorizado do novo código ao GitHub. O ambiente local anterior
+permanece separado, com seus gates desabilitados.
+
 Oferecer monitoramento útil para desenvolvedores e pequenas equipes, demonstrando processamento assíncrono, filas, concorrência, scheduling, recuperação de falhas e comunicação em tempo real, com uma arquitetura simples de operar.
 
 ## Funcionalidades planejadas para o MVP

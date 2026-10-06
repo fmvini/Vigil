@@ -1,7 +1,7 @@
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     environment: Literal["dev", "test", "prod"] = "dev"
     database_url: str = "postgresql+asyncpg://vigil:vigil@localhost:5432/vigil"
     redis_url: str = "redis://localhost:6379/0"
+    redis_enabled: bool = True
+    minimum_interval_seconds: int = Field(default=60, ge=60, le=3600)
+    scheduled_checks_interval_seconds: int | None = Field(default=None, ge=1)
+    database_ssl: bool = False
+    database_ssl_ca_file: str | None = None
+    database_schema: str | None = Field(default=None, pattern=r"^[a-z_][a-z0-9_]{0,62}$")
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_max_overflow: int = Field(default=5, ge=0, le=50)
     allowed_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
@@ -24,6 +32,29 @@ class Settings(BaseSettings):
     monitoring_network_enabled: bool = False
     redis_stream_name: str = "vigil:checks"
     redis_consumer_group: str = "vigil-workers"
+
+    @field_validator(
+        "minimum_interval_seconds",
+        "scheduled_checks_interval_seconds",
+        "database_pool_size",
+        "database_max_overflow",
+        mode="before",
+    )
+    @classmethod
+    def integer_settings(cls, value):
+        if isinstance(value, (bool, float)):
+            raise ValueError("Setting must be an integer")
+        return value
+
+    @property
+    def database_options(self) -> dict:
+        return {
+            "database_ssl": self.database_ssl,
+            "database_ssl_ca_file": self.database_ssl_ca_file,
+            "database_schema": self.database_schema,
+            "pool_size": self.database_pool_size,
+            "max_overflow": self.database_max_overflow,
+        }
 
     @model_validator(mode="after")
     def validate_environment(self):

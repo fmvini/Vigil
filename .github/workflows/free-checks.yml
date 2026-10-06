@@ -1,0 +1,37 @@
+name: Vigil free scheduled checks
+
+on:
+  schedule:
+    - cron: '2,17,32,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vigil-free-checks
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    # Private/larger runners are deliberately excluded from this free profile.
+    if: >-
+      github.event.repository.visibility == 'public' &&
+      github.event.repository.fork == false &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      vars.VIGIL_FREE_CHECKS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      VIGIL_DATABASE_URL: ${{ secrets.VIGIL_DATABASE_URL }}
+      VIGIL_DATABASE_CA_PEM: ${{ secrets.VIGIL_DATABASE_CA_PEM }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check deployment secret
+        run: python3 -c 'import os; assert os.environ.get("VIGIL_DATABASE_URL"), "Configure VIGIL_DATABASE_URL"'
+      - name: Build protected batch image
+        run: docker build --target batch -f infra/free-cloud/Dockerfile -t vigil-cloud-batch:local .
+      - name: Run bounded checks and retention
+        run: python3 scripts/free_cloud_checks.py

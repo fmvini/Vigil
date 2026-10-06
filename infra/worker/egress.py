@@ -37,10 +37,14 @@ BLOCKED_V6 = ("2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20")
 
 def control_endpoints(environment, *, resolver=socket.getaddrinfo):
     endpoints = []
-    for name, schemes, port in (
+    mode = environment.get("VIGIL_WORKER_CONTROL_MODE", "database-and-redis")
+    if mode not in {"database-and-redis", "database-only"}:
+        raise ValueError("Unknown worker control mode")
+    controls = (
         ("VIGIL_DATABASE_URL", {"postgresql+asyncpg", "postgresql"}, 5432),
         ("VIGIL_REDIS_URL", {"redis", "rediss"}, 6379),
-    ):
+    )
+    for name, schemes, port in controls[:1] if mode == "database-only" else controls:
         target = urlsplit(environment.get(name, ""))
         if target.scheme not in schemes or not target.hostname or (target.port or port) != port:
             raise ValueError("Control endpoint requires its standard internal port")
@@ -71,7 +75,16 @@ def rules(endpoints, *, ipv6=False):
     """Ordered arguments, no shell interpolation or credential-bearing URLs."""
     result = [
         ["-N", CHAIN],
-        ["-A", CHAIN, "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT"],
+        [
+            "-A",
+            CHAIN,
+            "-m",
+            "conntrack",
+            "--ctstate",
+            "ESTABLISHED,RELATED",
+            "-j",
+            "ACCEPT",
+        ],
     ]
     if ipv6:
         # IPv6 neighbor discovery is kernel-generated, link-scoped (hop limit 255).
@@ -137,7 +150,19 @@ def rules(endpoints, *, ipv6=False):
         result.append(["-A", CHAIN, "-d", network, "-j", "REJECT"])
     public = ["-d", "2000::/3"] if ipv6 else []
     result.append(
-        ["-A", CHAIN, *public, "-p", "tcp", "-m", "multiport", "--dports", "80,443", "-j", "ACCEPT"]
+        [
+            "-A",
+            CHAIN,
+            *public,
+            "-p",
+            "tcp",
+            "-m",
+            "multiport",
+            "--dports",
+            "80,443",
+            "-j",
+            "ACCEPT",
+        ]
     )
     result.append(["-A", CHAIN, "-j", "REJECT"])
     # Hook only the fully constructed chain. Any failure prevents starting worker.
@@ -148,7 +173,12 @@ def rules(endpoints, *, ipv6=False):
 def install(endpoints, *, run=subprocess.run):
     for executable, ipv6 in (("iptables", False), ("ip6tables", True)):
         for arguments in rules(endpoints, ipv6=ipv6):
-            run([executable, "-w", "5", *arguments], check=True, capture_output=True, timeout=10)
+            run(
+                [executable, "-w", "5", *arguments],
+                check=True,
+                capture_output=True,
+                timeout=10,
+            )
 
 
 def dropped_command(command):
@@ -171,6 +201,7 @@ def dropped_command(command):
 def main(command=None):
     command = sys.argv[1:] if command is None else command
     try:
+        os.environ.pop("VIGIL_EGRESS_READY", None)
         if os.geteuid() != 0:
             raise ValueError("Firewall initialization requires root")
         if os.environ.get("VIGIL_WORKER_NAMESPACE") != "dedicated":
@@ -183,6 +214,8 @@ def main(command=None):
         dropped = dropped_command(command)
         endpoints = control_endpoints(os.environ)
         install(endpoints)
+        # Used with UID/capability/no-new-privileges checks by the bounded batch runner.
+        os.environ["VIGIL_EGRESS_READY"] = "1"
         os.execvp(dropped[0], dropped)
     except Exception as error:
         # Never log URLs, credentials, DNS records or stderr from native commands.

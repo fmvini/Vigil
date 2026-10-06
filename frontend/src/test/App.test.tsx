@@ -80,11 +80,11 @@ describe('fluxos reais da interface com transporte isolado no teste', () => {
     expect(await screen.findByRole('heading', { name: 'Projeto editado' })).toBeVisible();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Novo monitor' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Novo monitor' }));
-    await user.type(screen.getByLabelText('Nome do monitor'), 'Endpoint criado');
+    await user.type(await screen.findByLabelText('Nome do monitor'), 'Endpoint criado');
     await user.type(screen.getByLabelText('URL do endpoint'), 'https://example.com/health');
     await user.click(screen.getByRole('button', { name: 'Salvar monitor' }));
     await user.click(await screen.findByRole('button', { name: 'Editar Endpoint criado' }));
-    await user.clear(screen.getByLabelText('Nome do monitor')); await user.type(screen.getByLabelText('Nome do monitor'), 'Endpoint editado');
+    await user.clear(await screen.findByLabelText('Nome do monitor')); await user.type(screen.getByLabelText('Nome do monitor'), 'Endpoint editado');
     await user.click(screen.getByRole('button', { name: 'Salvar monitor' }));
     expect(await screen.findByText('Endpoint editado')).toBeVisible();
     const request = fetch.mock.calls.find(([url, init]) => path(url) === '/monitors/m1' && init?.method === 'PATCH');
@@ -146,7 +146,7 @@ describe('fluxos reais da interface com transporte isolado no teste', () => {
     })); render(<App />); const user = userEvent.setup();
     const add = await screen.findByRole('button', { name: 'Novo monitor' });
     await waitFor(() => expect(add).toBeEnabled()); await user.click(add);
-    await user.type(screen.getByLabelText('Nome do monitor'), 'Salvamento lento');
+    await user.type(await screen.findByLabelText('Nome do monitor'), 'Salvamento lento');
     await user.type(screen.getByLabelText('URL do endpoint'), 'https://example.com/health');
     await user.click(screen.getByRole('button', { name: 'Salvar monitor' }));
     expect(screen.getByRole('button', { name: 'Projeto B' })).toBeDisabled();

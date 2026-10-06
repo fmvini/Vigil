@@ -150,10 +150,10 @@ async def snapshot(engine, redis, *, stream, group, pipeline_enabled, network_en
 
 
 async def collect(settings):
+    options = {**settings.database_options, "pool_size": 1, "max_overflow": 0}
     engine = create_engine(
         settings.database_url,
-        pool_size=1,
-        max_overflow=0,
+        **options,
         pool_timeout=TIMEOUT_SECONDS,
         connect_args={"timeout": TIMEOUT_SECONDS, "command_timeout": TIMEOUT_SECONDS},
     )

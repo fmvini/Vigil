@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: vigil
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/free-cloud/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    autoDeployTrigger: off
+    envVars:
+      - key: VIGIL_DATABASE_URL
+        sync: false
+      - key: VIGIL_ENVIRONMENT
+        value: prod
+      - key: VIGIL_DATABASE_SCHEMA
+        value: vigil
+      - key: VIGIL_DATABASE_SSL
+        value: "true"
+      - key: VIGIL_DATABASE_POOL_SIZE
+        value: "2"
+      - key: VIGIL_DATABASE_MAX_OVERFLOW
+        value: "0"
+      - key: VIGIL_READINESS_TIMEOUT_SECONDS
+        value: "10"
+      - key: VIGIL_REDIS_ENABLED
+        value: "false"
+      - key: VIGIL_MINIMUM_INTERVAL_SECONDS
+        value: "900"
+      - key: VIGIL_SCHEDULED_CHECKS_INTERVAL_SECONDS
+        value: "900"
+      - key: VIGIL_PIPELINE_ENABLED
+        value: "false"
+      - key: VIGIL_MONITORING_NETWORK_ENABLED
+        value: "false"

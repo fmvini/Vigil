@@ -19,7 +19,7 @@ async def main():
             "Pipeline disabled: complete the real Redis ACK/reclaim experiment first"
         )
     configure_activity_logging()
-    engine = create_engine(settings.database_url)
+    engine = create_engine(settings.database_url, **settings.database_options)
     factory = create_session_factory(engine)
     await broker.startup()
     try:

@@ -89,7 +89,11 @@ def cycle_budget_ms(timeout_ms: int, retry_count: int) -> int:
     return (retry_count + 1) * timeout_ms + sum((600, 1200)[:retry_count]) + 3000
 
 
-def validate_check_config(config: dict) -> None:
+def validate_check_config(config: dict, *, minimum_interval_seconds: int = 60) -> None:
+    if not 60 <= minimum_interval_seconds <= 3600:
+        raise ValueError("Invalid minimum interval")
+    if config["interval_seconds"] < minimum_interval_seconds:
+        raise ValueError("Interval is below the configured minimum")
     threshold = config["latency_threshold_ms"]
     if threshold is not None and threshold > config["timeout_ms"]:
         raise ValueError("latency_threshold_ms must be <= timeout_ms")

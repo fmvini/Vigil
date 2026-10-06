@@ -86,6 +86,107 @@ async def test_schedule_latest_slot_snapshot_and_duplicate_tick(pg_engine):
         assert job.config_version == monitor.config_version == 1
 
 
+@pytest.mark.parametrize("delay", [0, 59, 60, 185])
+async def test_fresh_slot_full_window_claim_and_duplicate(pg_engine, delay):
+    _, _, monitor_id = await setup_monitor(pg_engine)
+    current = NOW + timedelta(seconds=delay)
+    ids = await call(pg_engine, schedule_due, now=current, fresh_slot=True)
+    assert len(ids) == 1
+    assert await call(pg_engine, schedule_due, now=current, fresh_slot=True) == []
+    async with create_session_factory(pg_engine)() as db:
+        job = await db.get(CheckJob, ids[0])
+        assert job.scheduled_at == current
+        assert job.skipped_slots == delay // 60
+        assert job.expires_at == current + timedelta(seconds=60)
+        assert (await db.get(Monitor, monitor_id)).next_check_at == job.expires_at
+    claim = await call(pg_engine, claim_job, ids[0], now=current)
+    assert claim is not None and claim.scheduled_at == current
+
+
+async def test_fresh_slot_expired_predecessor_and_rollback(pg_engine):
+    _, _, monitor_id = await setup_monitor(pg_engine)
+    original_id = (await call(pg_engine, schedule_due, now=NOW))[0]
+    factory = create_session_factory(pg_engine)
+    with pytest.raises(RuntimeError, match="abort"):
+        async with factory.begin() as db:
+            ids = await schedule_due(db, now=NOW + timedelta(seconds=119), fresh_slot=True)
+            assert len(ids) == 1
+            assert (await db.get(CheckJob, original_id)).status == "expired"
+            assert (await db.get(CheckJob, ids[0])).expires_at == NOW + timedelta(seconds=179)
+            raise RuntimeError("abort")
+    async with factory() as db:
+        assert (await db.get(CheckJob, original_id)).status == "pending"
+        assert (await db.get(Monitor, monitor_id)).next_check_at == NOW + timedelta(seconds=60)
+        assert await db.scalar(select(func.count()).select_from(CheckJob)) == 1
+
+
+async def test_fresh_scheduler_skips_concurrently_locked_monitor(pg_engine):
+    await setup_monitor(pg_engine)
+    factory = create_session_factory(pg_engine)
+    async with factory.begin() as first:
+        ids = await schedule_due(first, now=NOW + timedelta(seconds=59), fresh_slot=True)
+        async with factory.begin() as second:
+            assert (
+                await asyncio.wait_for(
+                    schedule_due(second, now=NOW + timedelta(seconds=59), fresh_slot=True), 2
+                )
+                == []
+            )
+    async with factory() as db:
+        assert await db.scalar(select(func.count()).select_from(CheckJob)) == len(ids) == 1
+
+
+async def test_cloud_schedule_does_not_modify_or_admit_legacy_interval(pg_engine):
+    _, _, monitor_id = await setup_monitor(pg_engine, interval_seconds=60)
+    assert (
+        await call(pg_engine, schedule_due, now=NOW, fresh_slot=True, minimum_interval_seconds=300)
+        == []
+    )
+    async with create_session_factory(pg_engine)() as db:
+        monitor = await db.get(Monitor, monitor_id)
+        assert monitor.interval_seconds == 60 and monitor.next_check_at == NOW
+        assert monitor.health_status is None
+        assert await db.scalar(select(func.count()).select_from(CheckJob)) == 0
+    async with pg_engine.begin() as connection:
+        await connection.execute(
+            update(Monitor).where(Monitor.id == monitor_id).values(interval_seconds=300)
+        )
+    assert (
+        len(
+            await call(
+                pg_engine, schedule_due, now=NOW, fresh_slot=True, minimum_interval_seconds=300
+            )
+        )
+        == 1
+    )
+
+
+@pytest.mark.parametrize("recovery", ["error", "crash"])
+async def test_fresh_900_second_late_slot_retries_without_fabricating_health(pg_engine, recovery):
+    _, _, monitor_id = await setup_monitor(pg_engine, interval_seconds=900)
+    late = NOW + timedelta(seconds=1799)
+    ids = await call(
+        pg_engine, schedule_due, now=late, fresh_slot=True, minimum_interval_seconds=900
+    )
+    assert len(ids) == 1
+    claim = await call(pg_engine, claim_job, ids[0], now=late, lease_seconds=5)
+    assert claim.scheduled_at == late and claim.expires_at == late + timedelta(seconds=900)
+    if recovery == "error":
+        assert await call(
+            pg_engine, record_job_error, ids[0], claim.lease_token, "internal_error", now=late
+        )
+    else:
+        assert await call(pg_engine, reconcile_jobs, now=late + timedelta(seconds=6)) == 1
+    second = await call(pg_engine, claim_job, ids[0], now=late + timedelta(seconds=8))
+    assert second is not None and second.lease_token != claim.lease_token
+    async with create_session_factory(pg_engine)() as db:
+        assert (await db.get(CheckJob, ids[0])).execution_count == 2
+        assert (await db.get(CheckJob, ids[0])).skipped_slots == 1
+        assert (await db.get(Monitor, monitor_id)).health_status is None
+        assert (await db.get(Monitor, monitor_id)).next_check_at == claim.expires_at
+        assert await db.scalar(select(func.count()).select_from(CheckResult)) == 0
+
+
 @pytest.mark.asyncio
 async def test_scheduler_skips_locked_monitor_in_second_transaction(pg_engine):
     await setup_monitor(pg_engine)

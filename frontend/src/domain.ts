@@ -27,7 +27,10 @@ export const defaultConfig: MonitorConfig = {
   failure_threshold: 3, retry_count: 1, latency_threshold_ms: 1000, is_public: false,
 };
 
-export function validateMonitor(config: MonitorConfig): string | null {
+export function validateMonitor(config: MonitorConfig, minimumIntervalSeconds = 60): string | null {
+  if (!Number.isSafeInteger(config.interval_seconds) || config.interval_seconds < minimumIntervalSeconds || config.interval_seconds > 3600) {
+    return `Use um intervalo inteiro de ${minimumIntervalSeconds} a 3600 segundos.`;
+  }
   try {
     const url = new URL(config.url);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash || (url.port && !['80', '443'].includes(url.port))) {

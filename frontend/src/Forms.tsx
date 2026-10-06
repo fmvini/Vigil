@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Brand } from './Brand';
 import { api, errorMessage } from './api';
 import { defaultConfig, validateMonitor } from './domain';
+import { intervalHelp, useRuntimeConfig, type RuntimeConfig } from './runtimeConfig';
 import type { Monitor, MonitorConfig, Project, Session, User } from './types';
 
 export function Alert({ message }: { message: string }) {
@@ -84,17 +85,30 @@ const numericFields = [
   ['retry_count', 'Tentativas extras', 0, 2, 'Retries por ciclo, após uma falha transitória.'],
 ] as const;
 
-export function MonitorForm({ value, projectId, onSaved, onCancel, onBusyChange }: EditorProps<Monitor> & { projectId: string }) {
+type MonitorEditorProps = EditorProps<Monitor> & { projectId: string };
+
+export function MonitorForm(props: MonitorEditorProps) {
+  const runtime = useRuntimeConfig();
+  if (runtime.data && !runtime.loading && !runtime.failed) return <ConfiguredMonitorForm {...props} runtime={runtime.data} />;
+  return <section className="editor" aria-labelledby="monitor-form-title">
+    <h2 id="monitor-form-title">{props.value ? 'Editar monitor' : 'Novo monitor'}</h2>
+    {runtime.failed ? <><Alert message="Não foi possível confirmar o intervalo permitido para este ambiente. Tente carregar a configuração novamente antes de salvar." /><button type="button" onClick={runtime.retry}>Carregar configuração novamente</button></> : <p role="status">Consultando o intervalo permitido para este ambiente…</p>}
+    <div className="form-actions"><button type="button" onClick={props.onCancel}>Cancelar</button></div>
+  </section>;
+}
+
+function ConfiguredMonitorForm({ value, projectId, onSaved, onCancel, onBusyChange, runtime }: MonitorEditorProps & { runtime: RuntimeConfig }) {
   const [config, setConfig] = useState<MonitorConfig>(() => value ? {
     name: value.name, url: value.url, interval_seconds: value.interval_seconds, timeout_ms: value.timeout_ms,
     expected_status: value.expected_status, failure_threshold: value.failure_threshold, retry_count: value.retry_count, latency_threshold_ms: value.latency_threshold_ms, is_public: value.is_public,
-  } : { ...defaultConfig });
+  } : { ...defaultConfig, interval_seconds: runtime.minimum_interval_seconds });
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  const intervalInvalid = !Number.isSafeInteger(config.interval_seconds) || config.interval_seconds < runtime.minimum_interval_seconds || config.interval_seconds > 3600;
   const update = (key: keyof MonitorConfig, value: string | number | boolean | null) => setConfig(c => ({ ...c, [key]: value }));
   async function submit(e: FormEvent) {
     e.preventDefault(); setError('');
     const payload = { ...config, name: config.name.trim(), url: config.url.trim() };
-    const validation = !payload.name ? 'Informe o nome do monitor.' : validateMonitor(payload);
+    const validation = !payload.name ? 'Informe o nome do monitor.' : validateMonitor(payload, runtime.minimum_interval_seconds);
     if (validation) { setError(validation); return; }
     setBusy(true); onBusyChange(true);
     try { onSaved(await api.request<Monitor>(value ? `/monitors/${value.id}` : `/projects/${projectId}/monitors`, value ? 'PATCH' : 'POST', payload)); }
@@ -107,9 +121,9 @@ export function MonitorForm({ value, projectId, onSaved, onCancel, onBusyChange 
       <div className="form-grid"><div><label htmlFor="monitor-name">Nome do monitor</label><input id="monitor-name" required autoFocus maxLength={100} value={config.name} onChange={e => update('name', e.target.value)} /></div>
       <div><label htmlFor="monitor-url">URL do endpoint</label><input id="monitor-url" type="url" required maxLength={2048} placeholder="https://api.seuservico.com/health" value={config.url} onChange={e => update('url', e.target.value)} aria-describedby="url-help" /><small id="url-help">Endpoint público, sem credenciais ou secrets. Redirects não são seguidos.</small></div></div>
       <h3>Regras de verificação</h3><div className="form-grid rules">
-        {numericFields.map(([key, label, min, max, help]) => <div key={key}><label htmlFor={key}>{label}</label><input id={key} type="number" min={min} max={max} step={1} required value={Number.isNaN(config[key]) ? '' : config[key]} onChange={e => update(key, e.target.valueAsNumber)} aria-describedby={`${key}-help`} /><small id={`${key}-help`}>{help}</small></div>)}
+        {numericFields.map(([key, label, min, max, help]) => <div key={key}><label htmlFor={key}>{label}</label><input id={key} type="number" min={key === 'interval_seconds' ? runtime.minimum_interval_seconds : min} max={max} step={1} required value={Number.isNaN(config[key]) ? '' : config[key]} onChange={e => update(key, e.target.valueAsNumber)} aria-invalid={key === 'interval_seconds' && intervalInvalid ? true : undefined} aria-describedby={`${key}-help`} /><small id={`${key}-help`}>{key === 'interval_seconds' ? <>{intervalHelp(runtime)}{intervalInvalid && ` Ajuste o intervalo para um valor inteiro de ${runtime.minimum_interval_seconds} a 3600 segundos antes de salvar.`}</> : help}</small></div>)}
         <div><label htmlFor="latency_threshold_ms">Limiar de latência (ms)</label><input id="latency_threshold_ms" type="number" min={100} max={15000} step={1} value={config.latency_threshold_ms ?? ''} onChange={e => update('latency_threshold_ms', e.target.value === '' ? null : e.target.valueAsNumber)} aria-describedby="latency-help" /><small id="latency-help">Opcional. Em branco desativa a degradação por latência.</small></div>
-      </div><label className="check-label" htmlFor="monitor-public"><input id="monitor-public" type="checkbox" checked={config.is_public} onChange={e => update('is_public', e.target.checked)} />Exibir na página pública</label><small>Publica somente nome, saúde e qualidade dos dados quando a página de status do projeto estiver ativada.</small><div className="form-actions"><button className="primary">{busy ? 'Salvando…' : 'Salvar monitor'}</button><button type="button" onClick={onCancel}>Cancelar</button></div>
+      </div><label className="check-label" htmlFor="monitor-public"><input id="monitor-public" type="checkbox" checked={config.is_public} onChange={e => update('is_public', e.target.checked)} />Exibir na página pública</label><small>Publica somente nome, saúde e qualidade dos dados quando a página de status do projeto estiver ativada.</small><div className="form-actions"><button className="primary" disabled={intervalInvalid}>{busy ? 'Salvando…' : 'Salvar monitor'}</button><button type="button" onClick={onCancel}>Cancelar</button></div>
     </fieldset></form>
   </section>;
 }
