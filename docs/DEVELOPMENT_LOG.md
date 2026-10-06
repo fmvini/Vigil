@@ -1,5 +1,54 @@
 # Registro de desenvolvimento
 
+## 2026-10-06 — Publicação gratuita no Render e execução remota
+
+### Implementado
+- Após autorização explícita de push, enviada a implementação `6e6c87b` para
+  `fmvini/Vigil/main` e publicado https://vigil-4q06.onrender.com no Render Free.
+- Neon exclusivo, TLS verificado e schema vigil/head 0002 reutilizados pelo web
+  e pelo runner GitHub; API sem Redis, runtime-config 900/900 e novo bundle ativos.
+- Agenda habilitada por `VIGIL_FREE_CHECKS_ENABLED=true`; execução manual remota
+  concluída com check HTTPS 200 persistido e visível como online na página.
+- API local 8000 reiniciada com fontes atuais, PG18/55432 preservado; novo bundle
+  servido em 5173, runtime-config 60/null e gates false. Redis desabilitado nesta sessão
+  local explicitamente, sem mudar o default do código. Containers QA removidos
+  após conferir IDs/labels próprios; nenhum recurso de outro projeto foi removido.
+- Projeto QA cloud arquivado pela API, GET posterior 404 e lista vazia; logout
+  confirmado, portal público novamente no login. Conta/histórico retidos conforme
+  domínio e TTL, sem purge nem remoção de dados locais.
+- Pasta temporária `.cache/cloud-private` removida após validar o caminho absoluto;
+  credenciais cloud não permanecem nesses arquivos nem nos containers QA removidos.
+
+### Arquivos principais alterados
+- `README.md`
+- `docs/FREE_CLOUD.md`
+- `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Render Hobby/Free sem cartão, cobrança atual/projetada USD 0.00; auto deploy Off.
+  Publicação não depende do computador local ficar ligado.
+- Usuário deve criar conta e monitores na nuvem, sem importar seus dados locais.
+  Nenhum upgrade/plano pago foi contratado; cotas e atrasos continuam aplicáveis.
+
+### Estado atual
+- Render serviço `srv-db2j4eei0phs738oer30`, deploy `dep-db2j4emi0phs738oese0`,
+  implementação `6e6c87b` Live. HTTPS live/ready 200, runtime-config 900/900,
+  assets index-Q0hhzUNE.js conferidos. Desktop/mobile sem overflow.
+- GitHub manual [37505959414](https://github.com/fmvini/Vigil/actions/runs/37505959414):
+  success em 40s, attempts 1/jobs_admitted 1/completed 1, backlog 0, status ok,
+  deadline false, cleanup confirmed. HTTPS example.com retornou 200, último check
+  2026-10-06T17:45:36.478157Z, latência 61ms, saúde online no produto.
+  Evidência privada `.cache/verification/cloud-github-manual-report.json`.
+- Rodada anterior 37505503548 skipped com variável false, não usada como prova.
+- Até 18:05 UTC não apareceu evento schedule. Workflow active na default branch main
+  e variável true confirmados pela API GitHub; primeira execução automática ainda
+  sem prova observada. Sem SLA e sem promessa de checks 60s neste perfil.
+
+### Próximos passos
+- Confirmar primeira execução schedule e registrar resultado/cleanup real.
+- Após uso real, acompanhar cotas Neon/Render e backlog; agenda pode atrasar e
+  GitHub pode desativá-la após 60 dias sem atividade. Campanha física UI v3 segue pendente.
+
 ## 2026-10-06 — Perfil gratuito online com checks em lotes
 
 ### Implementado

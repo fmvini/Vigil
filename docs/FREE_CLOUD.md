@@ -5,6 +5,28 @@ e um workflow público do GitHub Actions para checks aproximadamente a cada
 15 minutos. As contas e os dados locais continuam separados; não existe migração
 automática dos monitores locais para a nuvem.
 
+## Instância publicada
+
+**[https://vigil-4q06.onrender.com](https://vigil-4q06.onrender.com)** está publicada
+desde 2026-10-06. Crie uma conta e cadastre seus endpoints na página; a conta e os
+monitores do ambiente local não aparecem automaticamente nesta instância.
+
+O Render usa Free/Hobby, sem cartão cadastrado, e auto deploy desativado. O Neon
+usa projeto exclusivo `vigil`, schema privado `vigil`, compute 0.25 CU e suspensão
+após cinco minutos. O repositório GitHub é público e a variável de agenda
+`VIGIL_FREE_CHECKS_ENABLED` está `true`. Nenhum plano pago foi contratado.
+
+Release de implementação: `6e6c87b`. Live e ready retornaram 200, runtime-config
+confirmou 900/900, e o site carregou o novo bundle `index-Q0hhzUNE.js`.
+A [execução manual 37505959414](https://github.com/fmvini/Vigil/actions/runs/37505959414)
+concluiu em 40 segundos, com um job completed, backlog zero, status ok e cleanup
+confirmado. O check HTTPS público retornou 200 e foi persistido em
+`2026-10-06T17:45:36.478157Z`, com saúde online na página. Isso comprova a execução
+no runner remoto; a cadência continua best-effort, sem garantia de 15 minutos.
+Até 18:05 UTC desta validação, o primeiro evento automático `schedule` ainda não
+tinha aparecido, embora o workflow estivesse ativo e a variável habilitada.
+O projeto QA foi arquivado e a sessão encerrada; o portal está pronto para seu cadastro.
+
 ## Componentes
 
 - `infra/free-cloud/Dockerfile`: recompila React e serve frontend/API na mesma
@@ -112,5 +134,6 @@ Os limites oficiais consultados em 2026-10-06:
 4. Conferir uma execução agendada e as cotas nos portais. Para QA, arquivar somente
    projeto próprio e fazer logout; não purgar dados de outros usuários.
 
-Publicação, URL e provas reais devem ser registradas no DEVELOPMENT_LOG após
-validação. Um build/teste aprovado sozinho não significa serviço publicado.
+As provas de publicação e execução estão no [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md).
+Para conferir a agenda atual, abrir as [execuções do workflow](https://github.com/fmvini/Vigil/actions/workflows/free-checks.yml)
+e filtrar pelo evento schedule; uma execução manual não comprova a cadência.

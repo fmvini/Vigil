@@ -2,18 +2,23 @@
 
 Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadastro de endpoints, histórico de disponibilidade/latência, incidentes e página pública de status por projeto. Execução externa de checks permanece opt-in.
 
-**Status atual: desenvolvimento funcional em 2026-10-06.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+**Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito verifica os monitores aproximadamente a cada 15 minutos; intervalos maiores são respeitados e a agenda pode atrasar. Os dados locais não foram transferidos para a nuvem.
 
-A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
+**Status atual: publicado em 2026-10-06.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+
+A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados nesse ambiente local. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
 
 ## Objetivo
 
 O novo [perfil gratuito online](docs/FREE_CLOUD.md) usa Render Free, Neon separado
 e GitHub Actions público, com checks aproximadamente a cada 15 minutos. A interface
-e a API compartilham HTTPS, sem Redis neste perfil. Build Linux, testes e check real
-com resultado HTTP200 no Neon foram validados; publicação e ativação da agenda
-aguardam o envio autorizado do novo código ao GitHub. O ambiente local anterior
-permanece separado, com seus gates desabilitados.
+e a API compartilham HTTPS, sem Redis neste perfil. O deploy está ativo, e uma
+[execução real no GitHub](https://github.com/fmvini/Vigil/actions/runs/37505959414)
+gravou um check HTTPS com resposta 200 no Neon e na interface pública. A agenda
+está habilitada. O serviço gratuito pode levar cerca de um minuto para abrir após
+ficar ocioso; consulte os [limites operacionais](docs/FREE_CLOUD.md).
+O ambiente local foi atualizado para o novo build e permanece separado, com seus
+gates desabilitados.
 
 Oferecer monitoramento útil para desenvolvedores e pequenas equipes, demonstrando processamento assíncrono, filas, concorrência, scheduling, recuperação de falhas e comunicação em tempo real, com uma arquitetura simples de operar.
 
