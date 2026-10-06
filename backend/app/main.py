@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from anyio import CapacityLimiter
 from fastapi import FastAPI
 from redis.asyncio import Redis
-from sqlalchemy import text
 
 from app.api.auth import router as auth_router
 from app.api.errors import ApiError, install_handlers
@@ -15,6 +14,7 @@ from app.api.resources import router as resource_router
 from app.config import Settings
 from app.db.session import create_engine, create_session_factory
 from app.observability import RequestActivityMiddleware, configure_activity_logging
+from app.readiness import database_ready, migration_head
 from app.services.events import EventHub
 
 
@@ -25,6 +25,14 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
         engine = create_engine(
             settings.database_url, allow_sqlite_for_tests=settings.environment == "test"
         )
+    sqlite_test_engine = (
+        not owned_engine and getattr(getattr(engine, "dialect", None), "name", None) == "sqlite"
+    )
+    try:
+        expected_head = migration_head()
+    except Exception:
+        # Missing/ambiguous packaged migrations fail readiness, not liveness/import.
+        expected_head = None
 
     @asynccontextmanager
     async def lifespan(app):
@@ -71,8 +79,9 @@ def create_app(settings: Settings | None = None, *, engine=None) -> FastAPI:
     async def ready():
         try:
             async with asyncio.timeout(settings.readiness_timeout_seconds):
-                async with engine.connect() as connection:
-                    await connection.execute(text("SELECT 1"))
+                await database_ready(
+                    engine, expected_head=expected_head, sqlite_test_engine=sqlite_test_engine
+                )
         except Exception:
             raise ApiError(503, "not_ready", "Database is not ready") from None
         return {"status": "ok", "dependencies": {"database": "ok"}}

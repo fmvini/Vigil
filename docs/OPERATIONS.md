@@ -2,6 +2,25 @@
 
 O PostgreSQL é a fonte de verdade. API, scheduler/publicador e worker são processos separados. A API pode servir cadastros e consultas com o pipeline desabilitado; isso não comprova execução de verificações externas.
 
+## Execução local de 2026-10-06
+
+Aplicação em `http://127.0.0.1:5173` e documentação da API em `http://127.0.0.1:8000/docs`. O cluster próprio em `.cache/postgresql/data` usa PostgreSQL 18.6 e porta 55432; preserve o serviço nativo independente na porta 5432. O banco `vigil` passou de `0001_initial` para `0002_incident_evidence_indexes` após preflight sem outros clientes e backup privado `.cache/local-runtime/vigil-before-0002.dump`.
+
+Para reiniciar esse ambiente, caso seus processos tenham encerrado, use terminais separados na raiz:
+
+```powershell
+# Somente se esse cluster ainda não estiver ativo na porta 55432.
+& 'C:/Program Files/PostgreSQL/18/bin/postgres.exe' -D "$PWD/.cache/postgresql/data" -h 127.0.0.1 -p 55432
+./scripts/start-local.ps1 api -DatabaseUrl 'postgresql+asyncpg://vigil:vigil_local_only@127.0.0.1:55432/vigil'
+./scripts/start-local.ps1 frontend -Preview
+```
+
+O preview serve `frontend/dist` existente, preserva cookies/Origin e proxy `/api`, sem recompilar ou hot reload. Foi usado porque o terminal restringe subprocessos esbuild/Edge com `spawn EPERM`; Docker Desktop também não conseguiu iniciar seu daemon neste ambiente. Não altera a política de build/testes. Use o modo frontend normal em um ambiente que permita Vite/esbuild; novos sources do produto exigem novo build antes do preview.
+
+Consulte `http://127.0.0.1:8000/health/ready` diretamente: o proxy Vite cobre `/api`, não `/health`. Readiness agora exige a revision única igual ao head dos arquivos instalados, além de SELECT 1; não executa migrations nem substitui auditoria do schema. A migration 0002 cria índices normais transacionais, bloqueando escritas durante construção: conferir destino/revision, fazer backup e escolher janela sem writers antes de upgrades futuros.
+
+Redis não foi iniciado nesta retomada. Cadastros e consultas funcionam; fanout entre processos e pipeline de checks não estão ativos. A UI pode indicar sincronização limitada e usar consultas de fallback. Para testar checks reais, a próxima etapa exige Redis e scheduler/worker, respeitando os gates e o procedimento de egress existente.
+
 ## Stack Compose e CA de build
 
 ```powershell

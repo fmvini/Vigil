@@ -4,11 +4,16 @@ from app.config import Settings
 from app.main import create_app
 
 
-async def test_health_probes_do_not_require_auth(client):
+async def test_health_probes_do_not_require_auth(client, api_app):
     assert (await client.get("/health/live")).json() == {"status": "ok"}
     ready = await client.get("/health/ready")
-    assert ready.status_code == 200
-    assert ready.json()["dependencies"] == {"database": "ok"}
+    # Shared API fixtures create ORM metadata, not an Alembic-managed schema.
+    if api_app.state.engine.dialect.name == "sqlite":
+        assert ready.status_code == 200
+        assert ready.json()["dependencies"] == {"database": "ok"}
+    else:
+        assert ready.status_code == 503
+        assert ready.json()["error"]["code"] == "not_ready"
     assert (await client.get("/api/v1/unknown")).json()["error"]["code"] == "not_found"
 
 

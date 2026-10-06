@@ -2,9 +2,9 @@
 
 Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadastro de endpoints, histórico de disponibilidade/latência, incidentes e página pública de status por projeto. Execução externa de checks permanece opt-in.
 
-**Status atual: desenvolvimento funcional em 2026-10-05.** Contas, projetos, monitores, histórico, métricas, incidentes e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+**Status atual: desenvolvimento funcional em 2026-10-06.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
 
-A revisão atual corrigiu sanitização de validação, formatos das janelas, portas de origem e mensagens de login. O dashboard ganhou modo de sincronização acessível e filtros de qualidade combinados com busca. A leitura privada de falhas do processamento está em implementação. Campanha de carga e coleta quantitativa do produto aguardam execução física; este terminal não acessa o pipe Docker nem escreve em `.git`. Checks externos permanecem desabilitados. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
+A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
 
 ## Objetivo
 
@@ -94,6 +94,14 @@ Abra `http://127.0.0.1:5173`; OpenAPI em `http://127.0.0.1:8000/docs`. A API usa
 ```
 
 Após o primeiro `uv sync`, mudanças de dependências exigem sincronizar novamente. Use Node 24 com certificados do sistema (`NODE_USE_SYSTEM_CA=1`) e `uv --system-certs` quando o ambiente exigir CA corporativa; não desabilite a verificação TLS.
+
+Quando o ambiente restringir os subprocessos do esbuild/Vite, é possível servir um build já existente:
+
+```powershell
+./scripts/start-local.ps1 frontend -Preview
+```
+
+Esse modo usa Node 24, ocupa a mesma porta 5173 e mantém o proxy `/api` para a API. Exige `frontend/dist/index.html`; não recompila nem oferece hot reload. Após alterações no produto, execute `npm.cmd run build` em um ambiente que permita o build antes de usar o preview. Na execução de 2026-10-06, o build existente corresponde à entrega de branding anterior; as mudanças novas do frontend são tooling de QA.
 
 O profile `app` contém build da API/UI, execução da migration e Nginx no mesmo origin (`docker compose --profile app up --build -d`). Imagens e startup foram validados localmente com PostgreSQL 17.11, Redis 7.4.11 e UI em `http://127.0.0.1:8080`; migration concluiu antes da API e readiness passou. Se 5432 estiver ocupada, configure `POSTGRES_PORT=55433`. Ambientes com inspeção HTTPS podem usar a CA pública aprovada somente como secret opcional de build, conforme [OPERATIONS](docs/OPERATIONS.md).
 

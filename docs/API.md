@@ -34,7 +34,7 @@ Senha: 10–128 caracteres; e-mail normalizado por trim/lowercase. Listas: `limi
 
 Saúde (`null/online/degraded/offline`) e freshness (`no_data/fresh/stale/paused`) são campos separados. Sem medições reais, não exibir uptime/latência inventados.
 
-Probes fora do prefixo: `GET /health/live` e `GET /health/ready`. Liveness não depende do banco; readiness informa indisponibilidade da persistência.
+Probes fora do prefixo: `GET /health/live` e `GET /health/ready`. Liveness não depende do banco. Readiness exige conexão e uma única revision em `alembic_version`, igual ao head resolvido dos arquivos de migration da aplicação; revision ausente, antiga, desconhecida ou múltipla resulta em `503 not_ready` sanitizado. A verificação respeita o deadline configurado, usa somente SELECT e nunca aplica migrations. Confirma a versão declarada, sem auditar a integridade global do schema. Somente engines SQLite injetadas explicitamente em testes dispensam Alembic.
 
 ## Histórico, métricas e incidentes
 

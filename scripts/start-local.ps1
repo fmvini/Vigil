@@ -1,12 +1,16 @@
 param(
     [ValidateSet('api', 'frontend')][string]$Component = 'api',
     [string]$DatabaseUrl = $env:VIGIL_DATABASE_URL,
-    [switch]$Migrate
+    [switch]$Migrate,
+    [switch]$Preview
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $env:UV_CACHE_DIR = Join-Path $projectRoot '.cache\uv'
+if ($Preview -and $Component -ne 'frontend') {
+    throw 'Preview so pode ser usado com o componente frontend.'
+}
 
 if ($Component -eq 'api') {
     if (!$DatabaseUrl) {
@@ -36,7 +40,16 @@ if ($Component -eq 'api') {
             npm.cmd ci --cache .npm-cache --no-audit --no-fund
             if ($LASTEXITCODE -ne 0) { throw 'Instalacao das dependencias JavaScript falhou.' }
         }
-        npm.cmd run dev
+        if ($Preview) {
+            if (!(Test-Path -LiteralPath 'dist/index.html' -PathType Leaf)) {
+                throw 'Build frontend ausente. Execute npm.cmd run build em frontend antes do Preview.'
+            }
+            Write-Output 'Servindo o build existente, sem recompilacao ou hot reload.'
+            # Node 24 carrega a configuracao TypeScript sem bundling via esbuild.
+            node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 5173 --strictPort --configLoader native
+        } else {
+            npm.cmd run dev
+        }
         if ($LASTEXITCODE -ne 0) { throw 'Frontend encerrou com erro.' }
     } finally { Pop-Location }
 }

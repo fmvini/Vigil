@@ -1,5 +1,35 @@
 # Registro de desenvolvimento
 
+## 2026-10-06 — Prontidão por migration e execução local
+
+### Implementado
+- Readiness exige conectividade e uma única revision Alembic igual ao head dinâmico dos arquivos instalados. Preserva liveness, deadline, cancelamento e503 sanitizado, sem aplicar migrations.
+- Adicionado `start-local.ps1 frontend -Preview`, servindo build existente em5173 com proxy/API e configuração nativa Node24, sem bundling/hot reload.
+- README/API/OPERATIONS documentam o ambiente local e procedimentos de reinício. Provas e regressões acompanham a correção.
+
+### Arquivos principais alterados
+- `backend/app/main.py`, `backend/app/readiness.py`
+- `backend/tests/test_api_health.py`, `backend/tests/test_readiness.py`
+- `scripts/start-local.ps1`, `README.md`, `docs/API.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Head resolvido via ScriptDirectory ancorado no backend, sem hardcode/CWD/conexão no startup. Probe usa apenasSELECT e respeita search_path. Confirma versão declarada, não integridade global do schema.
+- Somente SQLite explicitamente injetado em testes dispensa Alembic; fixtures PG metadata sem alembic_version corretamente retornam503.
+- Preview serve dist histórico e52dd02; src/public/package/config não mudaram, mesmos assets da coleta anterior. Sem novo rebuild ou equivalência criptográfica fonte→bundle nesta sessão.
+- Runtime usa PostgreSQL18.6 próprio em `.cache/postgresql/data`, porta55432, API8000 e frontend5173; PostgreSQL independente5432 preservado. Redis/scheduler/worker não iniciados e gates de checks externos preservados.
+
+### Estado atual
+- Readiness final:31 passed/2 skips exclusivamente SQLite-only em4.87s; `.cache/verification/backend-local-readiness-pg18-final.xml`. Missing/empty/old/unknown/multiple/current exercitados em schemas UUID próprios; cleanup confirmado, public nohead0002 sem DDL/DML dos testes.
+- Regressão offline:110 passed/49 skips de integrações semURLs, em28s; `.cache/verification/backend-local-readiness-regression.xml`. Ruff completo, diff-check e AST PowerShell aprovados; Preview iniciado pelo novo comando.
+- HTTP live/ready8000 e frontend5173 responderam200; portal Vigil Preview no login. Cadastros/consultas disponíveis, com smoke jobsUI vazio descrito na entrada anterior. Redis ausente limita fanout/pipeline; checks automáticos não estão ativos.
+- Build/esbuild e launch Edge restringidos por spawn EPERM; Docker sem daemon disponível. Verify completo obrigatório/campanha v3 não executados.
+- Escrita Git antes bloqueada; usuário liberou commits locais e a operação foi autorizada pelo revisor do ambiente. Três unidades concluídas agrupam implementação/testes/docs em feat/fix, sem commit exclusivo de testes/log ou push.
+
+### Próximos passos
+- Quando Docker/Edge estiverem disponíveis, executar verify completo obrigatório com dependências isoladas e provas de egress/recovery; manter limites desta sessão registrados.
+- Para testar checks externos, preparar Redis e scheduler/worker pelo procedimento existente e validar egress antes de habilitar ambos os gates; next_check_at não demonstra execução ativa.
+- Para editar UI, voltar ao Vite normal em ambiente que permita esbuild; recompilar antes de usar Preview sobre novos sources.
+
 ## 2026-10-06 — Relatório de latência v3 com replay auditável
 
 ### Implementado
