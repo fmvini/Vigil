@@ -87,3 +87,15 @@ erro em1440/390, sem overflow/erros e controles44px; relatório
 validada separadamente por sete casos PG reais, incluindo RR/RO e COUNT/página
 durante commits concorrentes, no QA Backend descartável. As capturas da seção
 usam API sintética: não demonstram integração da seção no navegador com PG real.
+
+Em 2026-10-06 a seção foi exercitada pelo portal `Frontend QA` contra API real
+em8000, com Vite preview do dist existente em5173 e PG18/head0002 informado pelo
+Maestro. Conta/projeto QA privados próprios vazios:17 consultas do produto200,
+situações all/exhausted/expired e períodos24h/7d/30d, reload, fechamento por40s
+sem nova consulta e reabertura nos defaults. Desktop1440/mobile390 sem overflow,
+controles44px e mensagens de vazio/retention corretas. Archive404/lista vazia e
+logout204/me401 confirmados; owner/projeto arquivado retidos pela API. Evidência
+`.impeccable/review/live-latency-resume-20261006/jobs-api-real.json` e duas capturas.
+Esse smoke comprova leitura integrada do dataset vazio; não demonstra linhas,
+paginação populada, monitor específico, planos PG17, keyboard nativo ou token
+antigo revogado. Nenhum dado do usuário, seed histórico ou gate foi alterado.

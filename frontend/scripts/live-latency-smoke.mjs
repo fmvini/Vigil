@@ -2,6 +2,7 @@ import { chromium, request } from 'playwright';
 import { fileURLToPath } from 'node:url';
 import { correlateUpdate, measurementOrigin, observeNativeProjectSnapshots, summary } from './live-latency-observer.mjs';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { buildUpdateEvidence, qaUpdateName, replayLatencyReport, updateEvidenceLimit } from './live-latency-replay.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -19,7 +20,7 @@ const viewportPlan = [
   { name: 'mobile', width: 390, height: 844, measuredUpdates: 12 },
 ];
 const report = {
-  report_version: 2, result: 'prepared', run_id: runId, origin, started_at: new Date().toISOString(),
+  report_version: 3, result: 'prepared', run_id: runId, origin, started_at: new Date().toISOString(),
   fixture_kind: 'synthetic_private_owner_empty_project', external_checks_executed: false, shared_gates_modified: false,
   methodology: {
     quantiles: 'nearest-rank: sorted[ceil(percentile * n / 100) - 1]',
@@ -29,6 +30,7 @@ const report = {
     clocks: 'REST/PATCH-to-DOM use browser performance.now; SSE-to-product-GET uses only CDP monotonic timestamps, never mixed clocks',
     sse_observation: 'CDP Network.eventSourceMessageReceived; native product EventSource/fetch remain untouched',
     reconciliation: 'matching native project.updated revision, subsequent untagged GET snapshot by exact CDP requestId and matching DOM; polling remains enabled',
+    evidence: 'up to 29 projected own-project witnesses: CDP SSE/GET monotonic seconds separated from browser PATCH/DOM performance.now milliseconds; only run-scoped QA names',
     dataset: 'one new private project, zero monitors; empty metrics/incidents; not a pipeline or populated-database benchmark',
     rest_samples_per_route_per_viewport: 30, rest_warmups_per_route_per_viewport: 3,
     updates_measured: 25, updates_warmup: 4, update_start_spacing_min_ms: 1000,
@@ -80,7 +82,7 @@ let lastUpdateStart = -Infinity;
 let lastRestStart = -Infinity;
 const identity = { email: `latency.${runId}@example.com`, password: randomBytes(24).toString('base64url') };
 const description = `Synthetic local QA latency run ${runId}; no external checks.`;
-const nameFor = index => `QA latency ${runId} #${String(index).padStart(3, '0')}`;
+const nameFor = index => qaUpdateName(runId, index);
 let signals = [], snapshots = [], pendingObservers = new Set();
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function ownRoute(path) {
@@ -162,6 +164,7 @@ async function timedRest(route, viewport, warmup, ordinal) {
   if (result.status !== 200 || !result.json_complete || !validDataset) throw new Failure(result.code ?? 'REST_STATUS_OR_DATASET_DIVERGED', result.status);
 }
 async function timedUpdate(viewport, warmup) {
+  require(nextUpdateIndex < updateEvidenceLimit, 'EVIDENCE_UPDATE_LIMIT');
   await browserSpacing(lastUpdateStart, 1000);
   const ordinal = ++nextUpdateIndex;
   const name = nameFor(ordinal);
@@ -174,8 +177,10 @@ async function timedUpdate(viewport, warmup) {
     let start;
     const dom = new Promise(resolve => {
       const check = () => {
-        if (document.querySelector('#main .page-heading h1')?.textContent === name) {
-          observer.disconnect(); clearTimeout(timer); resolve({ elapsed_ms: performance.now() - start, timed_out: false });
+        const domName = document.querySelector('#main .page-heading h1')?.textContent;
+        if (domName === name) {
+          const observedAt = performance.now();
+          observer.disconnect(); clearTimeout(timer); resolve({ elapsed_ms: observedAt - start, dom_observed_ms: observedAt, dom_name: domName, timed_out: false });
         }
       };
       observer = new MutationObserver(check);
@@ -193,14 +198,14 @@ async function timedUpdate(viewport, warmup) {
       const patch = { status: response.status, patch_rtt_ms: performance.now() - start, payload_matches: data.id === id && data.name === name, revision: Number.isSafeInteger(data.revision) ? data.revision : null };
       if (response.status !== 200 || !patch.payload_matches) { observer.disconnect(); clearTimeout(timer); return { ...patch, start_ms: start, code: 'PATCH_STATUS_OR_IDENTITY_DIVERGED' }; }
       const observed = await dom;
-      return { ...patch, start_ms: start, request_start_to_dom_ms: observed.elapsed_ms, dom_timed_out: observed.timed_out };
+      return { ...patch, start_ms: start, request_start_to_dom_ms: observed.elapsed_ms, dom_observed_ms: observed.dom_observed_ms, dom_name: observed.dom_name, realm_time_origin_ms: performance.timeOrigin, viewport_width: innerWidth, viewport_height: innerHeight, dom_timed_out: observed.timed_out };
     } catch (error) {
       observer.disconnect(); clearTimeout(timer);
       return { start_ms: start, status: null, patch_rtt_ms: performance.now() - start, code: error.name === 'TimeoutError' ? 'PATCH_TIMEOUT' : 'PATCH_TRANSPORT_OR_JSON_ERROR' };
     }
   }, { id: report.identities.project_id, name, csrfToken: csrf, timeout: deadlineMs });
   lastUpdateStart = result.start_ms ?? lastUpdateStart;
-  const sample = { ordinal, viewport, warmup, status: result.status, revision: result.revision ?? null, patch_rtt_ms: result.patch_rtt_ms ?? null, request_start_to_dom_ms: result.request_start_to_dom_ms ?? null, success: false, native_sse_revision_match: false, product_rest_revision_match: false, product_get_started_after_sse: false, periodic_overlap: false };
+  const sample = { ordinal, viewport, warmup, status: result.status, revision: result.revision ?? null, patch_rtt_ms: result.patch_rtt_ms ?? null, request_start_to_dom_ms: result.request_start_to_dom_ms ?? null, success: false, native_sse_revision_match: false, product_rest_revision_match: false, product_get_started_after_sse: false, periodic_overlap: false, evidence: null };
   report.updates.push(sample);
   if (result.status === 200 && result.payload_matches) { currentName = name; currentRevision = result.revision; }
   if (result.code) throw new Failure(result.code, result.status);
@@ -208,6 +213,7 @@ async function timedUpdate(viewport, warmup) {
   require(!result.dom_timed_out && Number.isFinite(result.request_start_to_dom_ms), 'DOM_RECONCILIATION_TIMEOUT');
   await waitForObservation(() => correlateUpdate(signals.slice(signalOffset), snapshots, result.revision, name) !== null, 'SSE_OR_SUBSEQUENT_PRODUCT_REST_CORRELATION_MISSING');
   const correlation = correlateUpdate(signals.slice(signalOffset), snapshots, result.revision, name);
+  sample.evidence = buildUpdateEvidence({ runId, projectId: report.identities.project_id, ordinal, expectedRevision, signal: correlation.signal, snapshot: correlation.snapshot, browser: { viewport, viewport_width: result.viewport_width, viewport_height: result.viewport_height, realm_time_origin_ms: result.realm_time_origin_ms, patch_started_ms: result.start_ms, dom_observed_ms: result.dom_observed_ms, dom_name: result.dom_name } });
   sample.native_sse_revision_match = true;
   sample.product_rest_revision_match = true;
   sample.product_get_started_after_sse = true;
@@ -320,6 +326,7 @@ try {
   const project = await api('/projects', 'POST', { name: currentName, description, public_status_enabled: false }, 201);
   require(uuidPattern.test(project.id) && Number.isSafeInteger(project.revision) && typeof project.public_slug === 'string', 'CREATED_PROJECT_IDENTITY_INVALID');
   report.identities.project_id = project.id; currentRevision = project.revision; initialRevision = project.revision; projectSlug = project.public_slug;
+  report.identities.initial_project_revision = initialRevision;
   await validateProject();
   page = await context.newPage();
   const cdp = await context.newCDPSession(page); await cdp.send('Network.enable'); observeBrowser(cdp);
@@ -363,6 +370,12 @@ try {
   if (browser) await browser.close().catch(() => recordFailure('BROWSER_CLOSE_FAILED', 'cleanup'));
   summarize();
   if (report.result === 'passed_measurement') report.result = report.cleanup.disposition === 'confirmed_api_scope' && report.errors.length === 0 ? 'passed' : 'failed';
+  if (report.result === 'passed') {
+    const replay = replayLatencyReport(report);
+    if (replay.result !== 'passed_replay') {
+      report.result = 'failed'; recordFailure(replay.code ?? 'REPORT_EVIDENCE_REPLAY_FAILED', 'report');
+    }
+  }
   report.finished_at = new Date().toISOString();
   await checkpoint();
 }

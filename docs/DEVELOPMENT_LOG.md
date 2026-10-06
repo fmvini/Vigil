@@ -1,5 +1,32 @@
 # Registro de desenvolvimento
 
+## 2026-10-06 — Relatório de latência v3 com replay auditável
+
+### Implementado
+- Tooling guarda evidências projetadas de SSE/GET/DOM por atualização e oferece replay offline, sem modificar UI, transporte ou polling do produto.
+- Builder exige UUID de projeto como string primitiva; corrigida aceitação de arrays/String encapsulada por coerção regex. Regressões integram a implementação.
+- Contratos/documentação registram smoke jobsUI real de leitura do dataset vazio.
+
+### Arquivos principais alterados
+- `frontend/scripts/live-latency-observer.mjs`, `frontend/scripts/live-latency-observer-browser.mjs`, `frontend/scripts/live-latency-smoke.mjs`
+- `frontend/scripts/live-latency-unit.mjs`, `frontend/scripts/live-latency-replay.mjs`
+- `frontend/LIVE_LATENCY_V3_CONTRACT.md`, `frontend/IMPLEMENTATION.md`, `frontend/JOBS_UI_CONTRACT.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Whitelist de campos vincula run/projeto/revisão/nome QA e IDs CDP, mantendo clocks CDP e browser separados e sem copiar credenciais ou payloads privados.
+- Replay comprova consistência da evidência projetada, sem autenticação criptográfica, paint, causalidade exclusiva de SSE ou instante exato de commit. Relatório v2 histórico preservado; não fabricar conversão para v3.
+
+### Estado atual
+- Sete testes Node passed/zero skips, typecheck/syntax/diff-check aprovados; `frontend/.impeccable/review/live-latency-resume-20261006/unit.tap`. Build/esbuild e launch Edge restringidos por spawn EPERM nesta sessão; aprovações anteriores são históricas.
+- Smoke jobsUI real passed:17 consultas200, situações all/exhausted/expired e períodos24h/7d/30d, reload, fechamento40s sem novas leituras, reabertura default. Desktop1440/mobile390 sem overflow e controles44px.
+- Owner/projeto QA privados próprios vazios; guardas owner/singleton/marker/zero-monitores passaram. Archive204 seguidoGET404/lista autenticada vazia; logout204/me401. Conta e projeto arquivado retidos pela API, sem purge/seed histórico/gates alterados.
+- Evidências/capturas em `frontend/.impeccable/review/live-latency-resume-20261006/`: `jobs-api-real.json` SHA256354C17C44433F11BA8BF6D1F6C71CFC183C7579B4209B0B2E7F6E3D8874DC58C, `jobs-desktop.png`, `jobs-mobile.png`.
+- Runtime serviu dist histórico e52dd02, src/public/package/config intactos. Sem novo rebuild ou campanha física v3. Dataset vazio não cobre linhas/paginação/filtro de monitor/teclado nativo/token antigo; ResourceTiming não é trace bruto dos métodos ou SLA.
+
+### Próximos passos
+- Executar primeira campanha física v3 em QA exclusivo com Docker/Edge disponíveis, seguida do replay offline; preservar v2 e cleanup.
+- Em outra janela QA própria, preencher falhas exhausted/expired e validar filtro de monitor, paginação e teclado com cleanup confirmado.
+
 ## 2026-10-06 — Índices de evidência e ensaio de retenção
 
 ### Implementado

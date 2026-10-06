@@ -19,9 +19,9 @@ export function summary(values, total, failures) {
 }
 
 export function correlateUpdate(signals, snapshots, revision, name) {
-  const signal = signals.find(entry => entry.type === 'project.updated' && entry.revision === revision);
+  const signal = signals.find(entry => entry.type === 'project.updated' && entry.revision === revision && Number.isFinite(entry.timestamp) && entry.timestamp >= 0);
   if (!signal) return null;
-  const snapshot = snapshots.find(entry => entry.revision === revision && entry.name === name && Number.isFinite(entry.request_timestamp) && entry.request_timestamp >= signal.timestamp);
+  const snapshot = snapshots.find(entry => entry.revision === revision && entry.name === name && Number.isFinite(entry.request_timestamp) && entry.request_timestamp >= signal.timestamp && Number.isFinite(entry.completed_timestamp) && entry.completed_timestamp >= entry.request_timestamp);
   if (!snapshot) return null;
   return { signal, snapshot, sse_to_product_get_ms: (snapshot.request_timestamp - signal.timestamp) * 1000 };
 }
@@ -50,7 +50,7 @@ export function observeNativeProjectSnapshots(cdp, { origin, projectId, qaHeader
     if ('owner_id' in payload || 'source' in payload) { onFailure('SSE_FORBIDDEN_FIELD'); return; }
     if (event.eventName === 'project.updated') {
       if (payload.project_id !== projectId || !Number.isSafeInteger(payload.revision) || payload.revision < 0) { onFailure('SSE_FOREIGN_OR_INVALID_PROJECT'); return; }
-      signals.push({ type: event.eventName, revision: payload.revision, timestamp: event.timestamp });
+      signals.push({ type: event.eventName, project_id: projectId, request_id: event.requestId, revision: payload.revision, timestamp: event.timestamp });
     } else if (event.eventName === 'snapshot.required') signals.push({ type: event.eventName, reason: payload.reason, timestamp: event.timestamp });
   });
   cdp.on('Network.loadingFinished', event => {
@@ -62,8 +62,9 @@ export function observeNativeProjectSnapshots(cdp, { origin, projectId, qaHeader
       try {
         const body = await cdp.send('Network.getResponseBody', { requestId: event.requestId });
         const data = JSON.parse(body.base64Encoded ? Buffer.from(body.body, 'base64').toString('utf8') : body.body);
-        const project = data.items?.find(item => item.id === projectId);
-        if (project) snapshots.push({ revision: project.revision, name: project.name, request_timestamp: entry.timestamp });
+        if (!Array.isArray(data.items) || data.items.length !== 1 || data.items[0].id !== projectId) { onFailure('PRODUCT_SNAPSHOT_NOT_OWN_SINGLETON'); return; }
+        const project = data.items[0];
+        snapshots.push({ project_id: projectId, request_id: event.requestId, revision: project.revision, name: project.name, request_timestamp: entry.timestamp, completed_timestamp: event.timestamp });
       } catch { onFailure('PRODUCT_SNAPSHOT_BODY_UNAVAILABLE_OR_INVALID'); }
     })();
     pending.add(observation);
