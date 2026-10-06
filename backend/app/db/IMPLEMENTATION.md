@@ -1,5 +1,90 @@
 # Persistência Vigil — 2026-10-04
 
+## 2026-10-06 — Liberação da unidade de índices e relatório QA
+
+### Implementado
+- Revisados models/migration0002/helper e confirmada posse exclusiva com Maestro.
+- Corrigido `completed`: o relatório QA só indica sucesso após cleanup concluído.
+  Regressão cobre sucesso e falha de remoção, sem conexão real.
+
+### Arquivos principais alterados
+- `backend/app/db/retention_plan_qa.py`, `backend/tests/test_db_retention_plan.py`
+- `backend/app/db/IMPLEMENTATION.md`, `backend/app/db/RETENTION_QA_CONTRACT.md`
+- Unidade pendente revisada: `backend/app/db/models.py`, `backend/migrations/versions/0002_incident_evidence_indexes.py`, `backend/tests/test_db_incident_evidence_indexes.py`, `backend/tests/test_db_postgresql.py`, `backend/tests/test_db_retention_contract.py`.
+
+### Decisões técnicas
+- Todos os 13 hashes SHA256 históricos coincidiram antes da correção. Models,
+  migrations e testes PG permanecem congelados; apenas helper/regressões mudaram.
+- Head único esperado: `0002_incident_evidence_indexes`. Runtime/Alembic exigem
+  `postgresql+asyncpg`; startup não migra. Backend implementa readiness por revisão
+  única igual ao head dinâmico, com timeout/503 sanitizado; não prova paridade global.
+- Maestro aplica a migration local após conferir destino/revisão, backup e janela
+  de lock: CREATE INDEX transacional bloqueia escritas durante a construção.
+
+### Estado atual
+- Nova prova offline: 47 passed/zero skips em 0.65s; Ruff check/format aprovados.
+  Alembic heads e auditoria offline confirmam coerência índices/FKs/metadata.
+  JUnit: `.cache/verification/db-retention-resume-20261006-offline-final.xml`.
+- Histórico PG17 confirmado: 102 passed/zero skips em 26.491s, em 2026-10-05;
+  29 dbPG, 8 schema, 16 contrato, 18 helper, 2 índices, 29 retenção. Preflight depois:
+  schemas vazios, Redis0, gates false. Diretório da rodada: `.cache/verification/backend-retention-qa-9e7cf99f9f0f42519af3af1be88f7f8d/`.
+- Comparação SHA256 anterior à correção: `.cache/verification/db-retention-resume-20261006-hashes.json`.
+  Essa prova histórica não valida a correção posterior do helper nem o PG18 local.
+  Docker indisponível; nenhum acesso/mudança ao banco local/compartilhado,
+  staging/commit, documentação central ou infraestrutura nesta retomada.
+
+### Próximos passos
+- Maestro revisa/integra a unidade, atualiza o log central e aplica a migration
+  no destino local autorizado; Backend conclui readiness e Maestro verifica smoke.
+- Na próxima janela PG17 exclusiva, repetir helper/catálogo/retenção com fontes
+  atuais, preservando evidência de cleanup; a correção tem apenas prova offline nova.
+
+## 2026-10-05 — Índices de evidência corroborados por planos PG17
+
+### Implementado
+- Ensaio opt-in `retention_plan_qa.py` aplica Alembic0001 em schema UUID marcado do lease
+  PG17 exclusivo. Gera10mil incidentes/jobs/resultados, captura driver SQL/binds das queries
+  reais de `retain_batch` em rollback e compara EXPLAIN JSON sem ANALYZE com dois candidatos QA.
+- Após evidência e autorização do Maestro, acrescentada `0002_incident_evidence_indexes` e
+  metadata: B-tree parciais em opening/closing_check_id, somente quando IS NOT NULL.
+- Regressões novas verificam catálogo, upgrade/downgrade, preservação de linhas/FKs e
+  rollback de DDL/SET NULL. Expectativas head e scripts offline existentes atualizadas
+  conscientemente;0001, env/alembic e serviço/testes Backend de retenção preservados.
+
+### Arquivos principais alterados
+- `backend/app/db/retention_plan_qa.py`, `backend/app/db/models.py`
+- `backend/migrations/versions/0002_incident_evidence_indexes.py`
+- `backend/tests/test_db_retention_plan.py`, `backend/tests/test_db_incident_evidence_indexes.py`
+- `backend/tests/test_db_postgresql.py`, `backend/tests/test_db_retention_contract.py`
+- `backend/app/db/RETENTION_QA_CONTRACT.md`, `backend/app/db/IMPLEMENTATION.md`
+
+### Decisões técnicas
+- Planos reais PG170011, dados/binds/stats idênticos: scans incidents nas queries de evidência
+  e DELETE guardado passaram a bitmap com ambos os índices, reduzindo custos estimados.
+  Detalhes e números estão no contrato; cada índice ocupou180224bytes nessa fixture.
+- Não há alegação de ganho medido de latência, overhead de triggers ou SLA. Distribuição,
+  volume e stats podem mudar a escolha do planner; regressões não exigem acesso específico.
+- CREATE INDEX normal é transacional e bloqueia escritas durante construção. Requer janela
+  de aplicação apropriada; dois índices adicionam storage e manutenção de escritas. Sem
+  CONCURRENTLY espontâneo, alteração de política, FK, nulabilidade ou migração inicial.
+- Executor Backend mantém Docker/cleanup; Banco só altera sua área e revisa artefatos.
+
+### Estado atual
+- Investigação real concluída:18 guardas passaram no runner; JSON completed/rollback
+  fingerprints/schema_absent true. Fixture2500 por categoria,100 abertos com closingNULL.
+- Local42 testes offline/guardas passed, zero skips em0.89s; Ruff e auditoria offline
+  head0002/contrato/indexes coerentes. Models e migration congelados com hashes entregues
+  ao Maestro para UIQA própria; nenhuma edição posterior dessas fontes.
+- Regressões PG posteriormente concluídas: 102 passed/zero skips em26.491s;
+  JUnit/hashes conferidos na retomada acima. Fonte de evidência em
+  `.cache/verification/backend-retention-qa-9e7cf99f9f0f42519af3af1be88f7f8d/`.
+
+### Próximos passos
+- Conferência histórica de JUnit PG, schemas/chaves e hashes concluída; seguir
+  próximos passos de2026-10-06 para aplicação local e nova prova física.
+- Maestro integra documentação root e unidade única de implementação+testes+docs, staging
+  e commit. Banco não disputa índice Git nem aplica migrations no runtime/PG18.
+
 ## 2026-10-05 — Seed QA recusa diretório inválido antes de acessar banco
 
 ### Implementado

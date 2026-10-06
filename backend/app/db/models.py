@@ -335,6 +335,18 @@ class Incident(UUIDPrimaryKey, AuditTimestamps, Base):
         ),
         Index("ix_incidents_history", "monitor_id", text("started_at DESC"), text("id DESC")),
         Index("ix_incidents_ended_at", "ended_at"),
+        Index(
+            "ix_incidents_opening_check_id",
+            "opening_check_id",
+            postgresql_where=text("opening_check_id IS NOT NULL"),
+            sqlite_where=text("opening_check_id IS NOT NULL"),
+        ),
+        Index(
+            "ix_incidents_closing_check_id",
+            "closing_check_id",
+            postgresql_where=text("closing_check_id IS NOT NULL"),
+            sqlite_where=text("closing_check_id IS NOT NULL"),
+        ),
     )
     monitor_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("monitors.id"))
     started_at: Mapped[datetime] = mapped_column(TIMESTAMP)

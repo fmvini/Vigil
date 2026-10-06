@@ -140,7 +140,7 @@ async def test_migration_roundtrip_matches_metadata_and_real_types(pg_engine):
     async with pg_engine.begin() as connection:
         assert (
             await connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "0001_initial"
+            == "0002_incident_evidence_indexes"
         )
         differences = await connection.run_sync(
             lambda c: compare_metadata(
@@ -175,7 +175,7 @@ async def test_offline_sql_scripts_execute_on_real_postgresql(pg_engine):
         await raw.driver_connection.execute(output.getvalue())
         assert (
             await connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "0001_initial"
+            == "0002_incident_evidence_indexes"
         )
         differences = await connection.run_sync(
             lambda c: compare_metadata(MigrationContext.configure(c), Base.metadata)
@@ -183,7 +183,9 @@ async def test_offline_sql_scripts_execute_on_real_postgresql(pg_engine):
         assert differences == []
         await connection.commit()
         output = StringIO()
-        command.downgrade(migration_config(output=output), "0001_initial:base", sql=True)
+        command.downgrade(
+            migration_config(output=output), "0002_incident_evidence_indexes:base", sql=True
+        )
         await raw.driver_connection.execute(output.getvalue())
         assert await connection.run_sync(lambda c: inspect(c).get_table_names()) == [
             "alembic_version"

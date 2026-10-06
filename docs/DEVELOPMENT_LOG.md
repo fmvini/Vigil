@@ -1,5 +1,32 @@
 # Registro de desenvolvimento
 
+## 2026-10-06 — Índices de evidência e ensaio de retenção
+
+### Implementado
+- Migration 0002 e metadata acrescentam índices parciais em opening_check_id e closing_check_id dos incidentes, corroborados por planos PostgreSQL17 históricos.
+- Helper QA captura queries reais de retenção, compara EXPLAIN JSON sem ANALYZE em schema UUID próprio e só marca completed após cleanup bem-sucedido. Regressões acompanham a implementação.
+
+### Arquivos principais alterados
+- `backend/app/db/models.py`, `backend/app/db/retention_plan_qa.py`
+- `backend/migrations/versions/0002_incident_evidence_indexes.py`
+- `backend/tests/test_db_postgresql.py`, `backend/tests/test_db_retention_contract.py`, `backend/tests/test_db_incident_evidence_indexes.py`, `backend/tests/test_db_retention_plan.py`
+- `backend/app/db/IMPLEMENTATION.md`, `backend/app/db/RETENTION_QA_CONTRACT.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Índices B-tree parciais preservam FKs, nulabilidade e regras de retenção. CREATE INDEX normal é transacional e bloqueia escritas durante construção; exige janela adequada e acrescenta manutenção/storage.
+- Planos estimados não demonstram redução medida de latência ou SLA. Guardas PG17 permanecem; resultados históricos e novas provas PG18 são separados.
+
+### Estado atual
+- Histórico PG17:102 passed/zero skips em26.491s; hashes de models/migration/testesPG conferidos. Evidência em `.cache/verification/backend-retention-qa-9e7cf99f9f0f42519af3af1be88f7f8d/`.
+- Banco:47 testes offline passed/zero skips em0.65s, incluindo completed/cleanup; `.cache/verification/db-retention-resume-20261006-offline-final.xml`.
+- Central:102 passed/zero skips em38.41s com schemas próprios noPG18, incluindo dbpostgresql/schema/contrato/helper/retenção; `.cache/verification/local-pg18-retention.xml`. Nenhuma nova campanha de planos PG17 após o fix de cleanup.
+- Banco local vigil/55432 atualizado de0001 para0002 após preflight sem outros clientes e backup `.cache/local-runtime/vigil-before-0002.dump` (138434bytes). Revision e ambos os índices confirmados; schemas temporários ausentes. Serviço independente na5432 preservado.
+- Fontes liberadas pelos agentes, Ruff completo e diff-check aprovados. Permissão de commits locais liberada pelo usuário; implementação, testes e documentação integram a mesma unidade, sem push.
+
+### Próximos passos
+- Repetir helper/catálogo/retenção em PG17 exclusivo com fontes atuais quando Docker estiver disponível, preservando cleanup e hashes.
+- Registrar continuidade das unidades de tooling v3 e execução local em seus commits correspondentes.
+
 ## 2026-10-05 — Verificação obrigatória de jobs e provas QA reais
 
 ### Implementado

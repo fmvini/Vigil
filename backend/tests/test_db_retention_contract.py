@@ -84,9 +84,9 @@ def test_audit_detects_metadata_only_index_and_records_candidate_predicate(migra
     assert (
         not report["retention_contract_matches_migration"] and not report["incident_indexes_match"]
     )
-    assert report["evidence_foreign_keys"]["opening_check_id"][
-        "declared_btree_leading_candidates"
-    ] == [{"name": index.name, "predicate": "opening_check_id IS NOT NULL"}]
+    assert {"name": index.name, "predicate": "opening_check_id IS NOT NULL"} in report[
+        "evidence_foreign_keys"
+    ]["opening_check_id"]["declared_btree_leading_candidates"]
 
 
 @pytest.mark.parametrize("kind", ["nonleading", "hash"])
