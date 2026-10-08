@@ -4,16 +4,16 @@ Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadast
 
 **Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito tem agenda configurada a cada 15 minutos; intervalos maiores são respeitados, mas atrasos de horas foram observados. Os dados locais não foram transferidos para a nuvem.
 
-**Status atual: publicado em 2026-10-06.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+**Status atual: atualizado online em 2026-10-08.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
 
 A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados nesse ambiente local. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
 
-A revisão local de 2026-10-08 adiciona Tema Claro/Escuro/Sistema com preferência salva e corrige validações de nome nulo e paginação. Essas mudanças foram verificadas no build oficial e estão disponíveis no preview local, aguardando envio remoto e publicação; o site público continua no release `6e6c87b`.
+A revisão de 2026-10-08 adiciona Tema Claro/Escuro/Sistema com preferência salva e corrige validações de nome nulo e paginação. Está publicada no release `e68ba02`, com build limpo, 111 testes frontend e 16 capturas Edge verificados. Um novo check HTTPS real passou no runner remoto e apareceu online na interface escura e na status pública.
 
 ## Objetivo
 
 O novo [perfil gratuito online](docs/FREE_CLOUD.md) usa Render Free, Neon separado
-e GitHub Actions público, com checks aproximadamente a cada 15 minutos. A interface
+e GitHub Actions público, com agenda configurada a cada 15 minutos e atrasos observados de horas. A interface
 e a API compartilham HTTPS, sem Redis neste perfil. O deploy está ativo, e uma
 [execução real no GitHub](https://github.com/fmvini/Vigil/actions/runs/37505959414)
 gravou um check HTTPS com resposta 200 no Neon e na interface pública. A agenda

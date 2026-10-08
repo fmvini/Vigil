@@ -1,5 +1,28 @@
 # Registro de desenvolvimento
 
+## 2026-10-08 — MVP com modo escuro publicado e verificado
+
+### Implementado
+- Após pedido explícito do usuário, enviados `e43e1d3` (entradas API), `d32bd04` (modo escuro) e `e68ba02` (build limpo) para `origin/main`; publicado `e68ba02` no Render Free. Nenhum plano pago ou mudança de quotas/gates cloud.
+- Verificação real da nova versão: cadastro/login/projeto/monitor próprios, validações inválidas422 sem mutação parcial, check HTTPS200 persistido e visível online no dashboard escuro e na status pública clara/escura.
+
+### Arquivos principais alterados
+- `README.md`, `docs/FREE_CLOUD.md`, `docs/PROJECT_SCOPE.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Deploy manual preserva auto deploy Off. Build inicial falhou por dependência Node ausente, corrigida em unidade fix com instalação limpa verificada; nenhum teste foi excluído da compilação.
+- Evidências sintéticas de tema e prova real cloud são distintas. Nenhuma medição foi fabricada para preencher a aplicação.
+
+### Estado atual
+- Render deploy `dep-db3qv0d9fdbs73essqpg` Live/Free em `e68ba02`; build Linux passou. Live/ready200, banco ok, runtime900/900, `/theme.js`200 e bundle oficial `index-MUkzQPic.js`/`index-RgnfoF_B.css`. Tema escuro salvo sobreviveu reload; claro/escuro funcionaram na página pública, sem overflow desktop/celular.
+- [Runner37797297573](https://github.com/fmvini/Vigil/actions/runs/37797297573) em `e68ba02`: checks32s, uma tentativa/um job completed, backlog0/status ok/cleanup confirmed. HTTPS200 às15:01:57UTC, latência107ms; histórico1/métricas1/uptime por amostras100%. Não representa cobertura contínua.
+- Recurso QA arquivado com guardas de owner/marker/monitor; privado/público404, lista própria0, logout204 e sessão401. Conta/histórico retidos; nenhum purge. Portal devolvido ao login anônimo, preferência Sistema e largura desktop. Evidências `.cache/verification/cloud-theme-release-20261008.json` e `theme-cloud-release/`.
+- Goal de MVP online com modo escuro atingido. Build/typecheck/Vitest111 e Edge16 passaram; auditorias Backend324 e Banco205 registradas abaixo. Atrasos de horas da agenda gratuita continuam conhecidos; não há SLA de15min. Ensaios físicos Docker/PG17/TLS desta sessão permanecem limitados como registrado.
+
+### Próximos passos
+- Acompanhar cadência/backlog/quotas reais; se o produto exigir checks pontuais, selecionar executor confiável antes de prometer frequência.
+- Preservar PG local em execução e conferir posse/lock antes de restart, por ausência do pidfile. Ensaiar PG17/TLS sem interceptação e campanha UI v3 em ambiente apropriado quando retomados.
+
 ## 2026-10-08 — Tipos Node explícitos no build limpo
 
 ### Implementado

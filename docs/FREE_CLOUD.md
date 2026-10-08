@@ -16,7 +16,20 @@ usa projeto exclusivo `vigil`, schema privado `vigil`, compute 0.25 CU e suspens
 após cinco minutos. O repositório GitHub é público e a variável de agenda
 `VIGIL_FREE_CHECKS_ENABLED` está `true`. Nenhum plano pago foi contratado.
 
-Release de implementação: `6e6c87b`. Live e ready retornaram 200, runtime-config
+Release atual: `e68ba02`, publicado em 2026-10-08 com Tema Claro/Escuro/Sistema e
+correções de entradas API. Deploy Render `dep-db3qv0d9fdbs73essqpg` Live;
+build Linux limpo passou. Live/ready 200 com banco ok, runtime-config 900/900,
+`/theme.js` 200 e bundle `index-MUkzQPic.js`/`index-RgnfoF_B.css` confirmados.
+A [rodada manual 37797297573](https://github.com/fmvini/Vigil/actions/runs/37797297573)
+em `e68ba02` concluiu checks em 32 s: um job completed/uma tentativa, backlog zero,
+status ok e cleanup confirmado. HTTPS 200 persistido às 15:01:57 UTC, latência 107 ms,
+histórico/métricas com uma amostra real; dashboard escuro e status pública
+clara/escura online, sem overflow em desktop/celular. PATCH nome nulo e offset
+acima de BIGINT retornaram 422, sem mutação parcial. Projeto próprio de QA
+arquivado, privado/público 404, lista própria vazia e logout 204/me 401; conta retida.
+O portal voltou ao login anônimo com preferência Sistema.
+
+Validação da publicação inicial (`6e6c87b`): live e ready retornaram 200, runtime-config
 confirmou 900/900, e o site carregou o novo bundle `index-Q0hhzUNE.js`.
 A [execução manual 37505959414](https://github.com/fmvini/Vigil/actions/runs/37505959414)
 concluiu em 40 segundos, com um job completed, backlog zero, status ok e cleanup
@@ -36,7 +49,7 @@ e na status pública. Histórico e métricas retornaram uma amostra real; runner
 success40s, um job completed, backlog zero e cleanup confirmado.
 O projeto QA foi arquivado (privado/público404), lista própria vazia e logout
 confirmado; conta/histórico permanecem sujeitos à retenção normal. Essas provas
-usam o release publicado `6e6c87b`, sem o novo modo escuro ainda local.
+usam o release anterior `6e6c87b`; a publicação atual está descrita acima.
 
 ## Componentes
 

@@ -1,6 +1,6 @@
 # Escopo do Vigil
 
-Data da definição inicial: 2026-10-04. O MVP foi implementado e publicado no perfil gratuito; a revisão de 2026-10-08 confirmou fluxos reais online. Consulte [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md) e [FREE_CLOUD](FREE_CLOUD.md) para provas e limites, inclusive atrasos da agenda. O modo escuro novo permanece local até publicação.
+Data da definição inicial: 2026-10-04. O MVP foi implementado e publicado no perfil gratuito; a revisão de 2026-10-08 confirmou fluxos reais online e publicou o modo escuro. Consulte [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md) e [FREE_CLOUD](FREE_CLOUD.md) para provas e limites, inclusive atrasos da agenda.
 
 ## Visão e problema
 
