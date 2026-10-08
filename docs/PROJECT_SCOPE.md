@@ -1,6 +1,6 @@
 # Escopo do Vigil
 
-Data da definição inicial: 2026-10-04. Documento de planejamento; nenhuma funcionalidade está implementada.
+Data da definição inicial: 2026-10-04. O MVP foi implementado e publicado no perfil gratuito; a revisão de 2026-10-08 confirmou fluxos reais online. Consulte [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md) e [FREE_CLOUD](FREE_CLOUD.md) para provas e limites, inclusive atrasos da agenda. O modo escuro novo permanece local até publicação.
 
 ## Visão e problema
 
@@ -87,4 +87,4 @@ Esses limites evitam transformar a plataforma em um gerador de tráfego sem cont
 
 Billing, planos comerciais, Kubernetes, Kafka, service mesh, arquitetura de microserviços, event sourcing, APM/tracing dos serviços dos clientes, armazenamento de bodies, checks que alteram dados, monitoramento global, infraestrutura multi-região e migração de ferramentas externas.
 
-Nesta etapa de documentação também estão fora do escopo: qualquer código de aplicação, scaffold, instalação, configuração de PostgreSQL/Redis/Docker ou criação de migrations. A implementação depende de uma nova instrução.
+A restrição inicial a trabalho somente documental foi encerrada com a autorização de implementação de 2026-10-04. Código, infraestrutura e migrations do MVP estão no repositório; evoluções mantêm os limites de produto acima.

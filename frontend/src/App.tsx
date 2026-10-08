@@ -7,6 +7,7 @@ import { IncidentList, MetricsPanel, MonitorDetail, PublicLink, PublicStatus, us
 import { useLiveUpdates } from './live';
 import { ProcessingFailures } from './ProcessingFailures';
 import { Brand } from './Brand';
+import { ThemeControl } from './ThemeControl';
 
 type Editor = { type: 'project'; value?: Project } | { type: 'monitor'; value?: Monitor } | null;
 type Archive = { type: 'project'; value: Project } | { type: 'monitor'; value: Monitor } | null;
@@ -40,8 +41,8 @@ function AuthenticatedApp() {
     api.onUnauthorized = () => { api.setCsrfToken(null); setSession(null); setNotice('Sua sessão expirou. Entre novamente para continuar.'); };
     return () => { api.onUnauthorized = undefined; };
   }, []);
-  if (loading) return <main className="boot"><Brand /><p role="status">Verificando sua sessão…</p></main>;
-  if (error) return <main className="boot"><Brand /><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button></main>;
+  if (loading) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><p role="status">Verificando sua sessão…</p></main>;
+  if (error) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button></main>;
   if (!session) return <AuthForm notice={notice} onSession={value => { setSession(value); setNotice(''); }} />;
   return <Dashboard session={session} onLogout={() => { api.setCsrfToken(null); setSession(null); setNotice(''); }} />;
 }
@@ -134,7 +135,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
       <div className="account"><span title={session.user.email}>{session.user.email}</span><button className="link" onClick={logout} disabled={Boolean(busy || editorBusy)}>{busy === 'logout' ? 'Saindo…' : 'Sair da conta'}</button></div>
     </aside>
     <main id="main" className="workspace" tabIndex={-1}>
-      <div className="workspace-top"><span>Visão geral</span><div className="sync-status">
+      <div className="workspace-top"><div className="workspace-preferences"><span>Visão geral</span><ThemeControl /></div><div className="sync-status">
         <span role="status">{connected ? 'Atualizações conectadas' : 'Sincronização a cada 30 s'}</span>
         {refreshBlocked ? <span className="quiet">A consulta automática aguarda a ação em andamento.</span> : !connected && <span className="quiet">Consulta automática a cada 30 s.{project && ' Use Atualizar para consultar agora.'}</span>}
         {project && <span className="quiet">{updatedAt === null ? 'Nenhuma consulta dos monitores concluída.' : <>Última consulta dos monitores às <time dateTime={new Date(updatedAt).toISOString()}>{new Date(updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></>}</span>}

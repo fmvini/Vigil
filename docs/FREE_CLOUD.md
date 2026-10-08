@@ -1,8 +1,8 @@
 # Vigil online no plano gratuito
 
 O perfil gratuito combina uma página web no Render Free, um projeto Neon separado
-e um workflow público do GitHub Actions para checks aproximadamente a cada
-15 minutos. As contas e os dados locais continuam separados; não existe migração
+e um workflow público do GitHub Actions com agenda configurada a cada
+15 minutos, sem prazo garantido de execução. As contas e os dados locais continuam separados; não existe migração
 automática dos monitores locais para a nuvem.
 
 ## Instância publicada
@@ -23,9 +23,20 @@ concluiu em 40 segundos, com um job completed, backlog zero, status ok e cleanup
 confirmado. O check HTTPS público retornou 200 e foi persistido em
 `2026-10-06T17:45:36.478157Z`, com saúde online na página. Isso comprova a execução
 no runner remoto; a cadência continua best-effort, sem garantia de 15 minutos.
-Até 18:05 UTC desta validação, o primeiro evento automático `schedule` ainda não
-tinha aparecido, embora o workflow estivesse ativo e a variável habilitada.
-O projeto QA foi arquivado e a sessão encerrada; o portal está pronto para seu cadastro.
+Em 2026-10-08, a [rodada automática 37785218408](https://github.com/fmvini/Vigil/actions/runs/37785218408)
+foi conferida: evento `schedule`, success em 32 segundos, status ok e cleanup
+confirmado; nenhum monitor elegível nessa rodada. Os dois últimos eventos schedule
+observados começaram às 06:09 e 13:32 UTC, separados por cerca de 7h23. A agenda
+de 15 minutos não representa a frequência efetivamente demonstrada; atrasos de
+horas foram observados e o perfil gratuito não oferece monitoramento pontual.
+A [rodada manual 37792782610](https://github.com/fmvini/Vigil/actions/runs/37792782610)
+validou novamente cadastro/login/projeto/monitor próprios e persistiu um check
+HTTPS200 em `2026-10-08T14:29:15.031193Z`, latência82ms e saúde online no dashboard
+e na status pública. Histórico e métricas retornaram uma amostra real; runner
+success40s, um job completed, backlog zero e cleanup confirmado.
+O projeto QA foi arquivado (privado/público404), lista própria vazia e logout
+confirmado; conta/histórico permanecem sujeitos à retenção normal. Essas provas
+usam o release publicado `6e6c87b`, sem o novo modo escuro ainda local.
 
 ## Componentes
 

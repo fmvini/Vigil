@@ -1,5 +1,35 @@
 # Registro de desenvolvimento
 
+## 2026-10-08 — Modo escuro e revisão online do MVP
+
+### Implementado
+- Tema Sistema por padrão, com seleção Claro/Escuro/Sistema no login, dashboard, status pública e estados de abertura/erro. Preferência `vigil.theme` persistida; bootstrap bloqueante aplica o tema antes do React. Mudanças de sistema e storage são acompanhadas; storage indisponível mantém a escolha no documento.
+- Tokens claros/escuros cobrem marca, campos, botões, alertas, saúde/qualidade, tabelas, histórico, incidentes e falhas do processamento. SVG inline preserva a geometria da marca usando a cor do tema. Bordas de campo claro ajustadas para contraste mínimo3:1.
+- Revisão de documentação remove afirmações obsoletas de que não existia implementação e registra a frequência cloud realmente observada.
+
+### Arquivos principais alterados
+- `frontend/index.html`, `frontend/package.json`, `frontend/public/theme.js`
+- `frontend/src/ThemeControl.tsx`, `frontend/src/App.tsx`, `frontend/src/Brand.tsx`, `frontend/src/Forms.tsx`, `frontend/src/Observations.tsx`, `frontend/src/styles.css`
+- `frontend/src/test/ThemeControl.test.tsx`, `frontend/scripts/theme-unit.mjs`, `frontend/scripts/theme-smoke.mjs`
+- `README.md`, `docs/PROJECT_SCOPE.md`, `docs/FREE_CLOUD.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Preferência pertence ao navegador, sem mudança de API/schema ou dependências. Tema pode ser escolhido durante edição/mutação. Sem medições fabricadas para preencher a UI.
+- Subprocessos inicialmente bloqueados por EPERM foram liberados pela revisão automática de `require_escalated`. O preview5173 agora serve o `frontend/dist` gerado pelo build oficial Vite; o bundle CLI temporário anterior não é usado como prova de produção.
+- Testes e log pertencem às unidades correspondentes de feat/fix; não haverá commit exclusivo de testes ou registro automático.
+
+### Estado atual
+- Build oficial `npm run build` passou (TypeScript/Vite7.3.6,43 módulos); preview5173 serve o `frontend/dist` resultante. Vitest oficial:11 arquivos/111 testes passados, incluindo16 de ThemeControl. Typecheck e Node3/3 passaram: bootstrap,28 pares de texto por tema>=4,5:1 e bordas de campo>=3:1. Fontes finais congeladas.
+- QA real via portais: cadastro/login/projeto/monitor próprios; login/dashboard/formulário/status pública em1440/390, claro/escuro, sem overflow e seletor44px. Confirmado bundle final, borda clara efetiva, preferência persistida e Sistema seguindo OS dark. Capturas/DOM em `.cache/verification/theme-portal/`; relatório `theme-portal-report.json`. Projeto arquivado, lista própria vazia, status pública404 e logout; conta dedicada retida, sem purge.
+- Playwright Edge oficial passou nas16 combinações de login/dashboard/formulário/status pública,1440/390 e claro/escuro, sem overflow ou erro JS. Nome acessível exato Tema, alvo44px e foco visível por teclado comprovados; preferência antes do primeiro conteúdo/reload, mudanças de sistema e storage entre abas passaram. Métricas/série, incidentes e jobs populados usam fixtures declaradas, sem comprovar integração backend/cloud. Evidência `.cache/verification/theme-official-smoke/report.json` e PNGs; limitações EPERM anteriores resolvidas nesta retomada. O nome acessível composto do seletor encontrado no ensaio foi corrigido com label associado separado.
+- Cloud existente validada novamente em `6e6c87b`: cadastro201/login200/projeto201/monitor201; [runner manual37792782610](https://github.com/fmvini/Vigil/actions/runs/37792782610) success40s, um job completed/uma tentativa/backlog0/cleanup confirmed. HTTPS200 às14:29:15UTC, latência82ms, histórico com1 check e métricas com1 amostra; dashboard/status pública online. `.cache/verification/cloud-mvp-20261008.json`. Archive204, privado/público404, projetos0, logout204/me401 (`cloud-mvp-20261008-cleanup.json`). Conta/histórico de QA retidos conforme domínio/TTL.
+- Agenda schedule confirmada, mas entre duas rodadas recentes decorreram cerca de7h23; não há garantia de15min. Neon Free mostrou0,42CUh/32,57MB; nenhum plano pago contratado.
+- Escrita Git liberada pela revisão automática: correção API integrada no commit local `e43e1d3`, sem push. Tema validado no bundle oficial `index-MUkzQPic.js`/`index-RgnfoF_B.css`, ainda sem publicação cloud. API8000 corrigida e ready200; preview5173 ativo. PG local mestrePID14956 saudável, mas `postmaster.pid` ausente após tentativas simultâneas de startup; preservar o processo e conferir posse antes de qualquer novo restart.
+
+### Próximos passos
+- Obter pedido explícito de push conforme AGENTS.md, enviar os commits e publicar o release revisado no Render Free, com auto deploy Off. Confirmar novo commit/bundle, `/theme.js`, live/ready/runtime e preferência no navegador público. Não reutilizar release antigo como prova do modo escuro online.
+- Acompanhar atrasos/quotas/backlog da nuvem. Para monitoramento pontual, reavaliar executor agendado fora do GitHub best-effort; nenhum SLA foi acrescentado. Ensaios físicos Docker/PG17/TLS sem Avast continuam próximos passos de operação.
+
 ## 2026-10-08 — Validação de entradas e auditoria do MVP
 
 ### Implementado

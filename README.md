@@ -2,11 +2,13 @@
 
 Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadastro de endpoints, histórico de disponibilidade/latência, incidentes e página pública de status por projeto. Execução externa de checks permanece opt-in.
 
-**Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito verifica os monitores aproximadamente a cada 15 minutos; intervalos maiores são respeitados e a agenda pode atrasar. Os dados locais não foram transferidos para a nuvem.
+**Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito tem agenda configurada a cada 15 minutos; intervalos maiores são respeitados, mas atrasos de horas foram observados. Os dados locais não foram transferidos para a nuvem.
 
 **Status atual: publicado em 2026-10-06.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
 
 A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados nesse ambiente local. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
+
+A revisão local de 2026-10-08 adiciona Tema Claro/Escuro/Sistema com preferência salva e corrige validações de nome nulo e paginação. Essas mudanças foram verificadas no build oficial e estão disponíveis no preview local, aguardando envio remoto e publicação; o site público continua no release `6e6c87b`.
 
 ## Objetivo
 
@@ -22,7 +24,7 @@ gates desabilitados.
 
 Oferecer monitoramento útil para desenvolvedores e pequenas equipes, demonstrando processamento assíncrono, filas, concorrência, scheduling, recuperação de falhas e comunicação em tempo real, com uma arquitetura simples de operar.
 
-## Funcionalidades planejadas para o MVP
+## Funcionalidades do MVP
 
 - Cadastro, login e isolamento dos dados de cada usuário.
 - Projetos e monitores de endpoints públicos com método GET.
