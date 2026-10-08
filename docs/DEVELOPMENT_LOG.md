@@ -1,5 +1,24 @@
 # Registro de desenvolvimento
 
+## 2026-10-08 — Tipos Node explícitos no build limpo
+
+### Implementado
+- Declarado `@types/node`24.19.1 como dependência de desenvolvimento e incluído `node` nos tipos do TypeScript. Lockfile inclui a dependência transitiva `undici-types`7.24.6.
+- Corrigida falha do build Render após instalação limpa: fixtures de tema usam `node:fs`, `node:path` e `process`; os tipos estavam disponíveis somente por pacote instalado em uma pasta ancestral local.
+
+### Arquivos principais alterados
+- `frontend/package.json`, `frontend/package-lock.json`, `frontend/tsconfig.json`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Testes continuam incluídos na compilação; nenhum erro de tipo foi ocultado e nenhuma fonte de aplicação mudou.
+- Download local inicialmente falhou por cadeia TLS. `NODE_USE_SYSTEM_CA=1` foi usado apenas no processo npm para ler certificados já confiados pelo Windows e restaurado depois; registry e verificação TLS preservados. Render usa seu ambiente Linux normal.
+
+### Estado atual
+- `npm ci` limpo passou,173 pacotes em3s. Build oficial43 módulos, typecheck e Vitest111/111 em11 arquivos passaram (16,87s); tipos resolvem de `frontend/node_modules/@types/node`, sem depender da pasta ancestral. Bundle preservado `index-MUkzQPic.js`/`index-RgnfoF_B.css`. Evidência `.cache/verification/node-types-clean-build-report.json`. Primeiro deploy `dep-db3qqn59fdbs73esfp50` falhou em TS2307/TS2591; release anterior `6e6c87b` permanece online até nova publicação.
+
+### Próximos passos
+- Integrar a correção e repetir publicação autorizada no Render Free. Conferir novo release, probes públicos e preferência de tema na nuvem.
+
 ## 2026-10-08 — Modo escuro e revisão online do MVP
 
 ### Implementado
