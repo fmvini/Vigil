@@ -4,7 +4,7 @@ Base: `/api/v1`. JSON, UUIDs e datas ISO 8601 em UTC. O OpenAPI gerado em `/docs
 
 ## Convenções
 
-- Listas retornam `{ "items": [...], "total": 0 }`; paginação por `limit` e `offset`.
+- Listas retornam `{ "items": [...], "total": 0 }`; paginação por `limit` (1–100) e `offset` (0–9223372036854775807). Offsets fora do BIGINT retornam 422 sanitizado antes da consulta ao banco; o teto não garante baixo custo para offsets elevados.
 - Erros retornam `{ "error": { "code": "...", "message": "...", "details": null } }`.
 - Validação retorna 422 `validation_error` com `details` contendo somente `field` e `type`. Campos declarados e índices numéricos são preservados; chaves JSON extras são informadas pelo caminho do objeto pai (`body`, por exemplo), sem repetir o nome fornecido pelo cliente, valores ou contexto do validador.
 - Respostas incluem `X-Request-ID` UUID gerado pela API para correlação com logs de atividade; um header de mesmo nome recebido do cliente é substituído. Não é credencial ou ID de sessão.
@@ -39,7 +39,7 @@ mutação. Monitores legados abaixo do mínimo continuam legíveis.
 
 Cadastro/login recebem `{email,password}`. Projeto recebe `name`, `description` opcional e `public_status_enabled` (false por padrão). Monitor recebe `name`, `url`, `interval_seconds`, `timeout_ms`, `expected_status`, `failure_threshold`, `retry_count`, `latency_threshold_ms` e `is_public`. O servidor define IDs, proprietário, método GET, versão e agenda.
 
-Senha: 10–128 caracteres; e-mail normalizado por trim/lowercase. Listas: `limit=20` por padrão, máximo 100, `offset>=0`. Criações retornam 201; DELETE retorna 204 e é idempotente para recurso já arquivado. Pausa/retomada retornam o monitor atualizado (200).
+Senha: 10–128 caracteres; e-mail normalizado por trim/lowercase. Listas: `limit=20` por padrão, máximo 100, `offset` dentro dos limites das convenções. Criações retornam 201; DELETE retorna 204 e é idempotente para recurso já arquivado. Pausa/retomada retornam o monitor atualizado (200). `PATCH /projects/{id}` com `name: null` retorna 422 sanitizado sem modificar o projeto; omitir `name` mantém o nome atual.
 
 Saúde (`null/online/degraded/offline`) e freshness (`no_data/fresh/stale/paused`) são campos separados. Sem medições reais, não exibir uptime/latência inventados.
 

@@ -52,7 +52,7 @@ class ProjectCreate(Input):
     @field_validator("name")
     @classmethod
     def clean_name(cls, value):
-        if not value.strip():
+        if value is None or not value.strip():
             raise ValueError("name must not be blank")
         return value.strip()
 

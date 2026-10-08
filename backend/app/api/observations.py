@@ -115,7 +115,7 @@ async def checks(
     from_: IsoTimestamp | None = Query(None, alias="from"),
     to: IsoTimestamp | None = None,
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
 ):
     await owned_monitor(db, auth.user.id, monitor_id)
     window = service.observation_window(period, from_, to)
@@ -200,7 +200,7 @@ async def incidents(
     from_: IsoTimestamp | None = Query(None, alias="from"),
     to: IsoTimestamp | None = None,
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
 ):
     await owned_project(db, auth.user.id, project_id)
     if monitor_id is not None:
@@ -253,7 +253,7 @@ async def public_incidents(
     state: Literal["all", "open", "closed"] = "all",
     period: Literal["24h", "7d", "30d", "90d"] = "30d",
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
 ):
     project, _ = await service.published_project(db, slug)
     rows, total = await service.incident_page(

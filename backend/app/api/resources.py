@@ -21,7 +21,10 @@ router = APIRouter(tags=["resources"])
 
 @router.get("/projects", response_model=Page[ProjectOut])
 async def list_projects(
-    db: DB, auth: Auth, limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)
+    db: DB,
+    auth: Auth,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
 ):
     filters = (Project.owner_id == auth.user.id, Project.archived_at.is_(None))
     total = await db.scalar(select(func.count()).select_from(Project).where(*filters))
@@ -76,7 +79,7 @@ async def list_monitors(
     db: DB,
     auth: Auth,
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
 ):
     await service.owned_project(db, auth.user.id, project_id)
     filters = (Monitor.project_id == project_id, Monitor.archived_at.is_(None))

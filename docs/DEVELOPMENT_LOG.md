@@ -1,5 +1,31 @@
 # Registro de desenvolvimento
 
+## 2026-10-08 — Validação de entradas e auditoria do MVP
+
+### Implementado
+- Corrigido PATCH de projeto com `name: null`: retorna 422 sanitizado, sem alterar outros campos, em vez de 500.
+- Aplicado teto BIGINT a offsets de projetos, monitores, checks e incidentes privados/públicos, consistente com a lista de jobs.
+- Maestro coordenou os agentes existentes Backend, Frontend e Banco de Dados; staging e commits permanecem centralizados, com testes junto da implementação.
+
+### Arquivos principais alterados
+- `backend/app/api/schemas.py`, `backend/app/api/resources.py`, `backend/app/api/observations.py`
+- `backend/tests/test_api_input_boundaries.py`, `docs/API.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Entradas inválidas são rejeitadas antes da mutação ou binding SQL; o limite de paginação não promete consultas baratas para offsets elevados.
+- Nenhum bug de persistência demonstrado; não foram necessárias novas migrations ou alterações nos contratos de banco.
+
+### Estado atual
+- Backend: 324 passed, 5 skips de variantes incompatíveis SQLite/PG e 9 casos PG17 deselecionados em PG18.6; `.cache/verification/backend-mvp-compatible-pg18.xml`. Batch sintético: 3 passed/3 skips SQLite em `backend-cloud-batch-pg18.xml`. Ruff e diff-check passaram.
+- Banco: 205 passed/zero skips em 68,65s (`db-audit-20261008-pg18.xml`), mais 3 casos de cleanup próprios. Catálogo/head public preservados; migrations/head 0002 e constraints, isolamento, rollback, leases e retenção verificados. Três schemas observados durante a suíte têm autoria incerta e foram preservados.
+- Runtime local PG18/55432 e API8000 ativos, gates externos desligados e Redis desabilitado nesta sessão. API live/ready 200; runtime60/null. Docker indisponível; guardas PG17 preservadas. Dois testes TLS físicos foram interceptados pelo Avast no loopback, com certificado distinto da fixture; TLS não foi relaxado. Regressão runtime compatível: 124 passed/49 skips/2 casos TLS deselecionados.
+- Cloud existente: HTTPS live/ready200, runtime900/900, Render Live no release `6e6c87b`. Agenda automática confirmada: [run37785218408](https://github.com/fmvini/Vigil/actions/runs/37785218408), evento schedule em `fc38a58`, success32s, completed=true/status ok/cleanup confirmed; nenhum monitor elegível ou job nessa rodada. Isso comprova execução automática, não nova medição de um alvo nem cadência garantida.
+
+### Próximos passos
+- Finalizar e validar modo escuro, com registro próprio junto da feature. Recompilar pelo fluxo oficial Vite antes da nova publicação; Node/esbuild com pipes apresenta EPERM neste ambiente.
+- Publicar os commits revisados no Render após pedido explícito de envio remoto exigido pelo AGENTS.md; confirmar release, UI e probes públicos da nova versão.
+- Acompanhar atrasos da agenda e quotas cloud em uso real; repetir ensaios físicos em ambiente Docker/PG17/TLS sem interceptação quando disponível.
+
 ## 2026-10-06 — Publicação gratuita no Render e execução remota
 
 ### Implementado
