@@ -18,12 +18,15 @@ export function parseRuntimeConfig(value: unknown): RuntimeConfig {
   return { minimum_interval_seconds: minimum, scheduled_checks_interval_seconds: scheduled as number | null };
 }
 
+export function scheduledCadence(scheduled: number): string {
+  return scheduled % 60 === 0 ? `${scheduled / 60} ${scheduled === 60 ? 'minuto' : 'minutos'}` : `${scheduled} ${scheduled === 1 ? 'segundo' : 'segundos'}`;
+}
+
 export function intervalHelp(runtime: RuntimeConfig): string {
   const minimum = `Intervalo mínimo: ${runtime.minimum_interval_seconds} segundos.`;
   const scheduled = runtime.scheduled_checks_interval_seconds;
   if (scheduled === null) return `${minimum} Tempo entre ciclos.`;
-  const cadence = scheduled % 60 === 0 ? `${scheduled / 60} ${scheduled === 60 ? 'minuto' : 'minutos'}` : `${scheduled} ${scheduled === 1 ? 'segundo' : 'segundos'}`;
-  return `${minimum} As verificações são agendadas aproximadamente a cada ${cadence} e podem atrasar. Intervalos maiores continuam sendo respeitados.`;
+  return `${minimum} As verificações são agendadas aproximadamente a cada ${scheduledCadence(scheduled)} e podem atrasar por horas, inclusive a primeira medição. O intervalo não garante um prazo de execução. Intervalos maiores continuam sendo respeitados.`;
 }
 
 export function useRuntimeConfig() {

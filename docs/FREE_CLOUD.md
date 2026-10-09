@@ -1,7 +1,7 @@
 # Vigil online no plano gratuito
 
 O perfil gratuito combina uma página web no Render Free, um projeto Neon separado
-e um workflow público do GitHub Actions com agenda configurada a cada
+e um workflow público do GitHub Actions disparado por Cloudflare Workers Free a cada
 15 minutos, sem prazo garantido de execução. As contas e os dados locais continuam separados; não existe migração
 automática dos monitores locais para a nuvem.
 
@@ -53,17 +53,43 @@ usam o release anterior `6e6c87b`; a publicação atual está descrita acima.
 
 ## Componentes
 
+Agenda externa ativada e validada em2026-10-09: Cloudflare cron regular12:32UTC
+gerou o [run37930675185](https://github.com/fmvini/Vigil/actions/runs/37930675185),
+workflow_dispatch/main/c3ef052, completed/success45s. A primeira medição de um
+novo monitor QA retornou HTTPS200/60ms e apareceu em histórico, métricas,
+dashboard e status pública. Agregado Neon após rodada:3ativos/0sem resultados/
+0devidos; inclui o monitor preexistente. QA arquivado com guardas, privado/público
+404, logout confirmado; restou1monitor ativo, com último check12:32:43UTC.
+Cloudflare mantém somente o cron15 regular e secret; workers.dev/previews estão
+desativados. Essa prova não garante frequência futura. Backend/UI novos e
+workflow verify-web permanecem locais, com testes e build oficiais aprovados
+na retomada; envio remoto e publicação no Render ainda pendentes. Ver o log
+para validações e limites.
+
+- `infra/check-schedule/worker.mjs` e `wrangler.jsonc`: Cron Trigger externo UTC
+  `2,17,32,47 * * * *`, POST autenticado ao workflow existente na branch `main`.
+  Sem acesso ao Neon, HTTP trigger ou rota pública; segredo exclusivo no Worker.
+  Consulte o [procedimento de ativação/rotação](../infra/check-schedule/README.md).
 - `infra/free-cloud/Dockerfile`: recompila React e serve frontend/API na mesma
   origem HTTPS, com sessões Secure/HttpOnly e CSRF.
 - `scripts/free_cloud_start.py`: bootstrap explícito do schema privado `vigil` e
   `alembic upgrade head` antes de iniciar a API. Não usa stamp ou create_all.
 - `.github/workflows/free-checks.yml`: agenda UTC `2,17,32,47 * * * *` e execução
-  manual, somente no branch principal de repositório público não fork.
+  manual/dispatch externo, somente no branch principal de repositório público não fork.
+  O evento `schedule` GitHub permanece ativo em paralelo como reserva; pode gerar
+  rodadas extras. A concorrência serializa os disparos e o DB preserva o mínimo.
 - `scripts/free_cloud_checks.py`: bridge Docker exclusiva e recursos identificados
   por UUID/labels, relay TCP e executor protegido com cleanup verificado.
 - `backend/app/monitoring/batch.py`: rodada durável sem Redis, até 90 segundos,
   cinco execuções simultâneas e cem jobs por padrão. Não reserva leases enquanto
   aguarda capacidade; reutiliza claims, retries e finalização transacional.
+
+A revisão local de 2026-10-09 acrescenta espera acumulada de até 30 segundos
+quando não há jobs/execuções ativos e o próximo monitor elegível está no futuro
+próximo. A sessão é fechada antes da espera e a admissão real é revalidada ao
+acordar, com orçamento estrito para o ciclo completo. O mínimo de 900 segundos
+é preservado. A publicação desta revisão ainda está pendente; o runner remoto
+continua usando a versão existente em `main`.
 
 O relay só conecta aos IPs públicos resolvidos do endpoint Neon. O executor mantém
 o hostname original para TLS com CA e hostname verificados, mas acessa o relay
@@ -121,6 +147,11 @@ mínimo permanecem legíveis, mas não são agendados; a edição exige ajuste e
 Os slots omitidos não recebem checks fabricados. O batch usa o instante real de
 admissão e respeita intervalos maiores, leases e orçamento restante.
 
+A revisão local também mostra a agenda do runtime no dashboard/status pública,
+distingue primeira medição e pausa e explica que Atualizar apenas consulta os
+dados salvos. Ausência ou atraso de dados não confirma endpoint offline. O
+polling REST30s já existia mesmo com SSE silencioso, sem alteração de contrato.
+
 Sem Redis, sinais de mutação são locais à instância web. Resultados do runner
 aparecem pela leitura REST e polling de 30 segundos; não há fanout entre réplicas.
 O relatório distingue tentativas, estados persistidos, backlog, retenção e fase de
@@ -146,6 +177,13 @@ Os limites oficiais consultados em 2026-10-06:
 - [Agenda GitHub](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule):
   pode atrasar ou perder rodadas; agendas públicas podem ser desativadas após
   60 dias sem atividade no repositório. Não oferece SLA nem monitoramento de um minuto.
+- [Workers Free](https://developers.cloudflare.com/workers/platform/limits/):
+  o cron15 gera 96 invocações/dia, uma requisição GitHub por invocação. Não foi
+  contratado plano pago. O novo cron pode levar até15min para propagar; não há
+  keep-alive no Render nem credencial do Neon no Cloudflare. Não aumentar para
+  cron5min sem avaliar consumo Neon:288 rodadas/dia podem impedir suspensão5min.
+  As96 invocações contam somente Cloudflare; schedule GitHub/manual acrescentam
+  rodadas. Medir o total real e o consumo do banco, mesmo sem checks devidos.
 
 ## Verificação operacional
 
@@ -160,4 +198,6 @@ Os limites oficiais consultados em 2026-10-06:
 
 As provas de publicação e execução estão no [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md).
 Para conferir a agenda atual, abrir as [execuções do workflow](https://github.com/fmvini/Vigil/actions/workflows/free-checks.yml)
-e filtrar pelo evento schedule; uma execução manual não comprova a cadência.
+e correlacionar o recibo `workflow_run_id` dos logs Cloudflare com o evento
+`workflow_dispatch`, conclusão do runner e check persistido. O filtro `schedule`
+mostra somente a agenda GitHub de reserva; um disparo manual não prova o cron.

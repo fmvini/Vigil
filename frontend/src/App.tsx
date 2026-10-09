@@ -8,6 +8,7 @@ import { useLiveUpdates } from './live';
 import { ProcessingFailures } from './ProcessingFailures';
 import { Brand } from './Brand';
 import { ThemeControl } from './ThemeControl';
+import { CheckTiming } from './CheckTiming';
 
 type Editor = { type: 'project'; value?: Project } | { type: 'monitor'; value?: Monitor } | null;
 type Archive = { type: 'project'; value: Project } | { type: 'monitor'; value: Monitor } | null;
@@ -150,6 +151,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
       {!project && !projectLoading && !projectError && editor?.type !== 'project' && <section className="empty"><h2>Comece com um projeto</h2><p>Um projeto reúne os monitores de uma aplicação. Depois, adicione os endpoints que deseja acompanhar.</p><button className="primary" onClick={() => openEditor({ type: 'project' })}>Criar primeiro projeto</button></section>}
       {project && <>
         <PublicLink key={`public-${project.id}`} slug={project.public_slug} enabled={project.public_status_enabled} />
+        <CheckTiming />
         <section className="overview" aria-label="Resumo do projeto"><div><span className="quiet">Saúde observada</span><strong>{monitorLoading || monitorError ? 'Indisponível' : summary.health ? healthLabels[summary.health] : 'Ainda sem leitura'}</strong><p>{monitorError ? 'Não foi possível consultar os monitores.' : monitorLoading ? 'Consultando os monitores…' : summary.partial ? 'Resumo parcial. Há monitores sem dados atuais.' : summary.health ? 'Considera apenas monitores com dados atualizados.' : 'Nenhum monitor com medição atual elegível.'}</p></div>
           {!monitorLoading && !monitorError && <dl className="quality-counts">{(['no_data', 'stale', 'paused', 'fresh'] as const).map(state => <div key={state}><dt>{freshnessLabels[state]}</dt><dd>{summary.counts[state]}</dd></div>)}</dl>}
         </section>
@@ -179,7 +181,7 @@ function MonitorRow({ monitor: m, now, disabled, busy, onDetail, onPause, onEdit
   return <tr><td data-label="Endpoint"><button className="link monitor-name" onClick={onDetail} disabled={disabled} aria-label={`Ver histórico de ${m.name}`}>{m.name}</button><span className="endpoint-url" title={m.url}>{m.url}</span><small>GET · a cada {m.interval_seconds}s</small></td>
     <td data-label="Dados"><span className={`badge ${freshness}`}>{freshnessLabels[freshness]}</span></td>
     <td data-label="Última saúde"><span className={m.health_status ? `health ${m.health_status}` : 'quiet'}>{m.health_status ? healthLabels[m.health_status] : 'Não avaliada'}</span>{freshness !== 'fresh' && m.health_status && <small>Leitura histórica</small>}</td>
-    <td data-label="Último check">{m.last_checked_at ? <><time dateTime={m.last_checked_at}>{new Date(m.last_checked_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</time><small>{m.last_http_status === null ? 'Sem resposta HTTP' : `HTTP ${m.last_http_status}`}{m.last_latency_ms === null ? '' : ` · ${Math.round(m.last_latency_ms)} ms`}</small></> : <span className="quiet">Nenhum check</span>}</td>
+    <td data-label="Último check">{m.last_checked_at ? <><time dateTime={m.last_checked_at}>{new Date(m.last_checked_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</time><small>{m.last_http_status === null ? 'Sem resposta HTTP' : `HTTP ${m.last_http_status}`}{m.last_latency_ms === null ? '' : ` · ${Math.round(m.last_latency_ms)} ms`}</small></> : <><span className="quiet">Nenhum check</span><small>{freshness === 'paused' ? 'Retome para permitir a primeira medição.' : 'Aguardando a primeira medição.'}</small></>}</td>
     <td data-label="Ações"><div className="row-actions"><button disabled={disabled} onClick={onPause} aria-label={`${freshness === 'paused' ? 'Retomar' : 'Pausar'} ${m.name}`}>{busy ? 'Aguarde…' : freshness === 'paused' ? 'Retomar' : 'Pausar'}</button><button disabled={disabled} onClick={onEdit} aria-label={`Editar ${m.name}`}>Editar</button><button className="danger-text" disabled={disabled} onClick={onArchive} aria-label={`Arquivar ${m.name}`}>Arquivar</button></div></td>
   </tr>;
 }

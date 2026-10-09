@@ -360,3 +360,7 @@ td:first-child { min-width: 190px; max-width: 300px; }
   .theme-control select { font-size: 1rem; }
   .account { flex-wrap: wrap; }
 }
+
+.check-timing { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--border); font-size: .875rem; }
+.check-timing p { margin: 0 0 8px; }
+.check-timing p:last-child { margin-bottom: 0; }

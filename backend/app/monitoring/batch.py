@@ -72,8 +72,39 @@ async def pending_jobs(factory, minimum_interval_seconds, excluded, limit=100):
     return now, rows
 
 
+async def next_monitor_delay(factory, minimum_interval_seconds):
+    """Read one DB clock; release the connection before the caller waits."""
+    clock = select(
+        func.clock_timestamp(type_=Monitor.next_check_at.type).label("now")
+    ).cte("batch_clock")
+    open_job = (
+        select(CheckJob.id)
+        .where(CheckJob.monitor_id == Monitor.id, CheckJob.status.in_(("pending", "running")))
+        .correlate(Monitor)
+        .exists()
+    )
+    future = (
+        select(func.min(Monitor.next_check_at))
+        .join(Project, Project.id == Monitor.project_id)
+        .where(
+            Monitor.next_check_at > clock.c.now,
+            Monitor.interval_seconds >= minimum_interval_seconds,
+            Monitor.archived_at.is_(None),
+            Monitor.paused_at.is_(None),
+            Project.archived_at.is_(None),
+            ~open_job,
+        )
+        .correlate(clock)
+        .scalar_subquery()
+    )
+    async with factory() as db:
+        now, next_at = (await db.execute(select(clock.c.now, future))).one()
+    return None if next_at is None else (next_at - now).total_seconds()
+
+
 async def _execute(factory, executor, settings, report, *, concurrency, max_jobs, deadline):
     active, visited, host_slots = {}, set(), {}
+    future_wait_seconds = 0
     loop = asyncio.get_running_loop()
 
     async def execute(identifier, host):
@@ -134,6 +165,18 @@ async def _execute(factory, executor, settings, report, *, concurrency, max_jobs
                         break
             if not active:
                 if waiting is None:
+                    if not rows and len(visited) < max_jobs:
+                        delay = await next_monitor_delay(factory, settings.minimum_interval_seconds)
+                        # Reserve a full cycle after the query/connection release. Never
+                        # create future work; wake up into normal DB-clock admission.
+                        if (
+                            delay is not None
+                            and 0 < delay <= 30 - future_wait_seconds
+                            and deadline - loop.time() > delay + 51
+                        ):
+                            future_wait_seconds += delay
+                            await asyncio.sleep(delay)
+                            continue
                     break
                 await asyncio.sleep(min(waiting, 1))
             else:

@@ -151,6 +151,11 @@ def controlled(monkeypatch):
     monkeypatch.setattr(batch, "reconcile_jobs", reconcile)
     monkeypatch.setattr(batch, "schedule_due", schedule)
     monkeypatch.setattr(batch, "pending_jobs", pending)
+
+    async def no_future(*args):
+        return None
+
+    monkeypatch.setattr(batch, "next_monitor_delay", no_future)
     monkeypatch.setattr(batch, "retain_batch", retention)
     return SimpleNamespace(
         states=states, statements=statements, scheduled=scheduled, observations=observations

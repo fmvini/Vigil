@@ -4,16 +4,27 @@ Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadast
 
 **Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito tem agenda configurada a cada 15 minutos; intervalos maiores são respeitados, mas atrasos de horas foram observados. Os dados locais não foram transferidos para a nuvem.
 
-**Status atual: atualizado online em 2026-10-08.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
+**Status atual: agenda externa validada em 2026-10-09; aplicação publicada em 2026-10-08.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
 
 A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados nesse ambiente local. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.
 
 A revisão de 2026-10-08 adiciona Tema Claro/Escuro/Sistema com preferência salva e corrige validações de nome nulo e paginação. Está publicada no release `e68ba02`, com build limpo, 111 testes frontend e 16 capturas Edge verificados. Um novo check HTTPS real passou no runner remoto e apareceu online na interface escura e na status pública.
 
+A investigação de 2026-10-09 confirmou horas entre disparos da agenda GitHub.
+O [agendador Cloudflare](infra/check-schedule/README.md) foi ativado para
+disparar o mesmo executor protegido a cada 15 minutos, sem acessar o banco.
+A [rodada automática37930675185](https://github.com/fmvini/Vigil/actions/runs/37930675185)
+concluiu com sucesso e gravou a primeira medição de um monitor QA: HTTPS200/60ms,
+visível no dashboard/status pública. O monitor preexistente também foi avaliado.
+A revisão local mitiga jitter de até 30 segundos no batch e esclarece primeira
+medição, pausa e consulta dos resultados na UI; ainda exige integração/publicação.
+Os limites e a prova operacional atual estão no log, sem promessa de prazo.
+
 ## Objetivo
 
 O novo [perfil gratuito online](docs/FREE_CLOUD.md) usa Render Free, Neon separado
-e GitHub Actions público, com agenda configurada a cada 15 minutos e atrasos observados de horas. A interface
+e GitHub Actions público, com disparo externo Cloudflare e agenda GitHub de reserva,
+configuradas a cada 15 minutos; atrasos de horas foram observados no GitHub. A interface
 e a API compartilham HTTPS, sem Redis neste perfil. O deploy está ativo, e uma
 [execução real no GitHub](https://github.com/fmvini/Vigil/actions/runs/37505959414)
 gravou um check HTTPS com resposta 200 no Neon e na interface pública. A agenda
