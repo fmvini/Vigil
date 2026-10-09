@@ -364,3 +364,28 @@ td:first-child { min-width: 190px; max-width: 300px; }
 .check-timing { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--border); font-size: .875rem; }
 .check-timing p { margin: 0 0 8px; }
 .check-timing p:last-child { margin-bottom: 0; }
+
+.demo-entry { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.demo-entry p { font-size: .875rem; margin: 10px 0 0; }
+.demo-cta { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 14px; border: 1px solid var(--control-border); border-radius: 6px; font-weight: 600; color: var(--accent); }
+.boot .demo-cta { margin-top: 20px; }
+.demo-banner { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; padding: 16px 24px; border-bottom: 1px solid var(--control-border); background: var(--surface); }
+.demo-banner p { margin: 4px 0 0; font-size: .875rem; }
+.demo-banner .button-group { flex-wrap: wrap; align-items: center; max-width: 100%; flex-shrink: 1; }
+.demo-banner button, .demo-banner a { min-height: 44px; display: inline-flex; align-items: center; }
+.demo-banner .demo-notice { flex-basis: 100%; color: var(--success-text); }
+.demo-shell .skip-link { z-index: 20; }
+.demo-shell #main, .demo-shell #public-main, .demo-shell .editor { scroll-margin-top: var(--demo-banner-offset, 220px); }
+.demo-simulation { border-bottom: 1px solid var(--border); padding: 0 0 24px; margin: 24px 0; }
+.demo-simulation h2 { font-size: 1.25rem; }
+.demo-simulation-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 20px; }
+.demo-simulation-controls label { min-width: 180px; flex: 1; margin: 0; }
+.demo-simulation-controls select { min-height: 44px; }
+.demo-simulation-controls button { min-height: 44px; }
+@media (max-width: 760px) {
+  .demo-banner { padding: 12px 20px; gap: 8px; }
+  .demo-banner p { font-size: .75rem; }
+  .demo-banner .button-group { gap: 8px 16px; }
+  .demo-simulation-controls { flex-direction: column; align-items: stretch; }
+  .demo-simulation-controls label { min-width: 0; width: 100%; }
+}

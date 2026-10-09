@@ -1,13 +1,15 @@
+import { useApi, useTransport } from './transport';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Brand } from './Brand';
 import { ThemeControl } from './ThemeControl';
 import { CheckTiming } from './CheckTiming';
-import { api, ApiError, errorMessage } from './api';
+import { ApiError, errorMessage } from './api';
 import { Alert } from './Forms';
 import { currentFreshness, freshnessLabels, healthLabels } from './domain';
 import type { Check, MetricPeriod, Metrics, Monitor, Page, PublicIncident, PublicStatus as PublicStatusDTO } from './types';
 
 export function useResource<T>(path: string, revision = 0, load?: (path: string, signal: AbortSignal) => Promise<T>, paused = false) {
+  const api = useApi();
   const [state, setState] = useState<{ path: string; data: T | null; error: unknown; loading: boolean }>({ path, data: null, error: null, loading: true });
   const latest = useRef({ revision, load });
   latest.current = { revision, load };
@@ -35,7 +37,7 @@ export function useResource<T>(path: string, revision = 0, load?: (path: string,
     if (paused) setState(previous => ({ path, data: previous.path === path ? previous.data : null, error: null, loading: false }));
     else void refresh();
     return () => { controller.abort(); reader.current = null; };
-  }, [path, paused]);
+  }, [path, paused, api]);
   useEffect(() => {
     if (reader.current && reader.current.revision !== revision) {
       reader.current.revision = revision; reader.current.refresh();
@@ -115,9 +117,10 @@ export function MonitorDetail({ monitor, revision, onBack }: { monitor: Monitor;
 
 export function PublicLink({ slug, enabled }: { slug: string; enabled: boolean }) {
   const [message, setMessage] = useState('');
-  const path = `/status/${encodeURIComponent(slug)}`;
-  async function copy() { try { await navigator.clipboard.writeText(new URL(path, window.location.origin).href); setMessage('Link público copiado.'); } catch { setMessage('Não foi possível copiar. Use o link da página para copiar o endereço.'); } }
-  return <div className="public-link"><span>{enabled ? 'Página pública ativada' : 'Página pública desativada'}</span>{enabled && <><a href={path} target="_blank" rel="noopener noreferrer">Abrir página pública</a><button className="link" onClick={copy}>Copiar link público</button></>}{message && <span role="status">{message}</span>}</div>;
+  const { demo } = useTransport();
+  const path = `${demo ? '/demo' : ''}/status/${encodeURIComponent(slug)}`;
+  async function copy() { try { await navigator.clipboard.writeText(new URL(path, window.location.origin).href); setMessage(demo ? 'Link da demonstração copiado. Ao abrir em outra aba, os exemplos iniciais serão restaurados; suas edições não são compartilhadas.' : 'Link público copiado.'); } catch { setMessage('Não foi possível copiar. Use o link da página para copiar o endereço.'); } }
+  return <div className="public-link"><span>{enabled ? 'Página pública ativada' : 'Página pública desativada'}</span>{enabled && <><a href={path} target={demo ? undefined : "_blank"} rel="noopener noreferrer">Abrir página pública</a><button className="link" onClick={copy}>Copiar link público</button></>}{message && <span role="status">{message}</span>}</div>;
 }
 
 export function PublicStatus({ slug }: { slug: string }) {
@@ -125,7 +128,7 @@ export function PublicStatus({ slug }: { slug: string }) {
   const { data, error, loading } = useResource<PublicStatusDTO>(`/public/status/${encodeURIComponent(slug)}`, revision);
   useEffect(() => { const timer = window.setInterval(() => setRevision(n => n + 1), 30000); return () => window.clearInterval(timer); }, []);
   useEffect(() => { const previous = document.title; if (data) document.title = `${data.name} · Status | Vigil`; return () => { document.title = previous; }; }, [data?.name]);
-  return <div className="public-page"><a className="skip-link" href="#public-main">Pular para o conteúdo</a><header className="public-header"><Brand href="/" /><div className="public-preferences"><span>Página de status</span><ThemeControl /></div></header><main id="public-main" tabIndex={-1}>
+  return <div className="public-page"><a className="skip-link" href="#public-main">Pular para o conteúdo</a><header className="public-header"><Brand href={useTransport().demo ? "/demo" : "/"} /><div className="public-preferences"><span>Página de status</span><ThemeControl /></div></header><main id="public-main" tabIndex={-1}>
     {error ? <section className="empty"><h1>{error instanceof ApiError && error.status === 404 ? 'Página não publicada' : 'Não foi possível consultar o status'}</h1><p>{error instanceof ApiError && error.status === 404 ? 'Esta página está desativada, foi arquivada ou o endereço não existe.' : errorMessage(error)}</p><button onClick={() => setRevision(r => r + 1)}>Tentar novamente</button></section> : !data ? <p role="status" className="loading">Consultando status publicado…</p> : <>
       <h1>{data.name}</h1><CheckTiming /><section className="overview" aria-label="Saúde publicada"><div><span className="quiet">Saúde observada</span><strong>{data.health_status ? healthLabels[data.health_status] : 'Ainda sem leitura'}</strong><p>{data.data_complete ? 'Resumo dos monitores públicos com leituras elegíveis.' : 'Resumo parcial. Há monitores públicos sem dados atuais.'}</p></div><dl className="quality-counts">{(['no_data', 'stale', 'paused', 'fresh'] as const).map(value => <div key={value}><dt>{freshnessLabels[value]}</dt><dd>{data.freshness_counts[value]}</dd></div>)}</dl></section>
       <div className="section-heading"><div><h2>Serviços</h2><p className="quiet">Consultado em {formatDate(data.computed_at)}. Atualização a cada 30 segundos.</p></div><button onClick={() => setRevision(r => r + 1)} disabled={loading}>{loading ? 'Atualizando…' : 'Atualizar status'}</button></div>

@@ -1,5 +1,40 @@
 # Registro de desenvolvimento
 
+## 2026-10-09 — Demonstração pública interativa sem login
+
+### Implementado
+- Acesso “Visualizar demonstração” no login e nas telas de carregamento/erro da sessão. `/demo` e suas rotas são resolvidas antes da autenticação; rotas desconhecidas da demonstração retornam estado local de página inexistente.
+- Dashboard real reutilizado com exemplos fictícios: dois projetos, monitores online/degradado/offline/pausado/desatualizado/sem leitura, métricas, histórico e tentativas, incidentes abertos/encerrados e falhas de processamento. Filtros, períodos, paginação e temas permanecem disponíveis.
+- CRUD de projetos/monitores, pausa/retomada, arquivamento, restauração e simulação explícita de verificações acontecem somente em memória. `/demo/status/vigil-demo` reutiliza a página pública com DTO restrito; navegação interna preserva alterações durante a sessão. Recarregar ou abrir em outra aba restaura os exemplos, sem compartilhar edições.
+- Banner persistente identifica dados fictícios. URLs `.invalid`, allowlist de transporte sem fallback de rede, SSE desativado na demonstração e saída sem logout real. Domínio da simulação preserva limiar de falhas, interrupção por pausa, recuperação, versões e duração dos ciclos; jobs técnicos não contam como falhas do endpoint.
+- Maestro reutilizou Frontend/Backend/Banco via Maestri. Frontend implementou fontes até atingir limite de uso; Maestro assumiu testes, QA, correções finais e documentação. Backend comprovou fallback SPA `/demo/*` sem autenticação ou conexão DB; nenhuma mudança backend/schema/cloud foi necessária.
+
+### Arquivos principais alterados
+- `frontend/src/DemoApp.tsx`, `frontend/src/demo.ts`, `frontend/src/transport.tsx`
+- `frontend/src/App.tsx`, `frontend/src/Forms.tsx`, `frontend/src/Observations.tsx`, `frontend/src/CheckTiming.tsx`
+- `frontend/src/api.ts`, `frontend/src/live.ts`, `frontend/src/runtimeConfig.ts`, `frontend/src/styles.css`
+- `frontend/src/test/demo.test.ts`, `frontend/src/test/DemoApp.test.tsx`
+- `.gitignore`, `README.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Provider React injeta cliente em memória explicitamente; cliente real continua padrão fora da demonstração. Não há monkeypatch de fetch no produto, seeds no banco, migrations, execução HTTP ou persistência de entidades em storage. Tema mantém a preferência existente.
+- Atualização do runtime real pelo transporte conserva HTTP200 estrito, cache no-store, abort e ausência de revogação de sessão em erro da leitura anônima. Rotas públicas fictícias nunca usam `/status` real.
+- Identidade visual existente preservada. Corrigidos controles do banner cortados em390px e link de acesso ao conteúdo encoberto pelo banner. Margem de rolagem usa altura medida do banner e atualização por ResizeObserver, com limpeza de listeners/observer.
+
+### Estado atual
+- Retomada para commit: 124/124 testes oficiais Vitest passaram, incluindo os oito casos da demonstração; build TypeScript/Vite aprovado (47 módulos, JS `index-BK3m_EYn.js`, CSS `index-CyatHwCA.css`). O bloqueio de spawn da sessão original foi resolvido com execução aprovada fora do sandbox. Nenhuma publicação ou envio remoto nesta retomada.
+- Typecheck e bundle direto esbuild CLI passaram. Ensaios executáveis das fontes finais em Node/React/jsdom:38 assertions,0chamadas de fetch/API,0SSE e cookies intactos; CRUD/reset/isolamento/public DTO/paginação/limiar/pausa/recuperação/versões/tempos/rotas/status/retorno verificados. Evidência `.cache/verification/demo-node-assertions.tsx` e relatório `.cache/verification/demo-proof-20261009.json`.
+- QA em portal real `Vigil Demo`, servidor isolado127.0.0.1:5181: primeira simulação gerou HTTP200 no histórico; criação/pausa/arquivamento de monitor fictício passaram e log de pedidos API permaneceu vazio. Desktop1440/mobile390 claro/escuro, status pública e formulário inspecionados. Capturas `.impeccable/review/` são ignoradas no Git. Bootstrap/contraste de tema:3 testes Node passaram.
+- Na sessão original, Vitest e Vite build foram bloqueados na inicialização por spawn EPERM; na retomada, os oito casos novos e toda a suíte oficial passaram. A verificação de release em Linux continua prevista no workflow verify-web.
+- Revisão Impeccable independente preservou identidade; achado de acessibilidade corrigido e pontuado como resolvido/ship no escopo da correção. Portal inativo não fornece foco real de teclado: aparência de foco foi emulada somente nas capturas, com remoção do estilo QA; ativação DOM nativa do link confirmou hash/foco no destino e topo209px contra banner193px no celular. Navegação real por teclado ainda deve ser validada em navegador ativo.
+- Documenter independente comparou fontes/capturas com `frontend/PRODUCT.md`, `frontend/DESIGN.md` e `frontend/.impeccable/design.json`: extensão mantém o sistema. Arquivos de design preservados; divergências prévias de pipeline, tema e borda de campo foram relatadas, sem reparo incidental.
+- Recurso somente local, ainda não publicado no Render. Agenda/jitter/CheckTiming integrada no commit local `8ae32f8`; a demonstração acompanha implementação, testes e este registro em sua própria unidade. Escrita Git liberada pela revisão automática na retomada; nenhum push/deploy realizado.
+
+### Próximos passos
+- Obter pedido explícito antes de enviar os commits locais de agenda/jitter/UX e demonstração ao remoto. Testes e registros acompanham cada implementação; não há commit separado de testes ou atualização automática do log.
+- Testes e build oficiais aprovados na retomada; validar teclado ativo no dashboard/status e abrir `/demo`/`/demo/status/vigil-demo` por acesso direto e reload em release. Executar verify-web em Linux após envio autorizado antes de publicar.
+- Após envio/publicação autorizados, conferir CTA e ausência de pedidos `/api/v1`/SSE durante uso da demonstração; compartilhar o link online `/demo` com recrutadores. Preview local usa5181 e não altera o QA sintético anterior em5173.
+
 ## 2026-10-09 — Agenda externa e diagnóstico de endpoints sem medição
 
 ### Implementado

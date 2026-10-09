@@ -4,6 +4,15 @@ Plataforma web de monitoramento de APIs e serviços HTTP. O Vigil integra cadast
 
 **Online: [abrir o Vigil](https://vigil-4q06.onrender.com).** Crie uma conta na página e cadastre seus endpoints públicos. O perfil gratuito tem agenda configurada a cada 15 minutos; intervalos maiores são respeitados, mas atrasos de horas foram observados. Os dados locais não foram transferidos para a nuvem.
 
+**Demonstração sem login — implementação local.** A opção “Visualizar demonstração”
+abre `/demo`, com projetos, monitores, métricas, histórico, incidentes e falhas de
+processamento fictícios. É possível criar, editar, pausar, arquivar e simular
+verificações, além de explorar `/demo/status/vigil-demo`. Os exemplos vivem em
+memória nesta aba: “Restaurar demonstração” ou recarregar repõe os dados iniciais.
+As ações não acessam endpoints, autenticação ou banco; URLs dos exemplos usam
+`.invalid`. Testes e build oficiais passaram localmente; a publicação ainda
+está pendente para ficar disponível no endereço online acima.
+
 **Status atual: agenda externa validada em 2026-10-09; aplicação publicada em 2026-10-08.** Contas, projetos, monitores, histórico, métricas, incidentes, falhas do processamento e status pública estão integrados entre React, FastAPI e PostgreSQL. SSE e observações preenchidas passaram no navegador real em etapas anteriores. Retenção, Redis/PubSub, TLS/SNI/IPv6, crash/reentrega de worker e backup/restore PG17 possuem provas reais controladas registradas.
 
 A revisão atual exige a revision Alembic atual no readiness e inclui índices de evidência dos incidentes, corroborados por planos PG17. Campanhas de carga e coleta UI v2 anteriores estão registradas; a nova coleta auditável v3 ainda aguarda execução física. O ambiente local usa PostgreSQL 18 na porta 55432, API 8000 e frontend 5173. Checks externos permanecem desabilitados nesse ambiente local. Consulte [DEVELOPMENT_LOG](docs/DEVELOPMENT_LOG.md) para resultados e limites de cada etapa.

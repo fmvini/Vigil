@@ -1,9 +1,12 @@
+import { useApi, useTransport } from './transport';
 import { useEffect, useRef, useState } from 'react';
-import { api, ApiError } from './api';
+import { ApiError } from './api';
 import type { Session } from './types';
 
 // Signals invalidate REST snapshots; they never become monitoring results.
 export function useLiveUpdates(projectId: string, onRefresh: () => void, onProjectsChange: () => void, blocked = false) {
+  const api = useApi();
+  const { demo } = useTransport();
   const callbacks = useRef({ projectId, onRefresh, onProjectsChange, blocked });
   callbacks.current = { projectId, onRefresh, onProjectsChange, blocked };
   const flush = useRef<() => void>(() => {});
@@ -43,7 +46,7 @@ export function useLiveUpdates(projectId: string, onRefresh: () => void, onProje
       reconnect = setTimeout(() => { reconnect = undefined; connect(); }, delay);
     };
     const connect = () => {
-      if (!alive || revoked || typeof EventSource === 'undefined') return;
+      if (demo || !alive || revoked || typeof EventSource === 'undefined') return;
       sessionProbe?.abort();
       source?.close(); source = null;
       try { source = new EventSource('/api/v1/events'); }
@@ -93,6 +96,6 @@ export function useLiveUpdates(projectId: string, onRefresh: () => void, onProje
       flush.current = () => {};
       document.removeEventListener('visibilitychange', visible);
     };
-  }, []);
+  }, [api, demo]);
   return connected;
 }

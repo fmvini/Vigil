@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
+import { useApi, useTransport } from './transport';
+import { isDemoUrl } from './demo';
 import { Brand } from './Brand';
 import { ThemeControl } from './ThemeControl';
-import { api, errorMessage } from './api';
+import { errorMessage } from './api';
 import { defaultConfig, validateMonitor } from './domain';
 import { intervalHelp, useRuntimeConfig, type RuntimeConfig } from './runtimeConfig';
 import type { Monitor, MonitorConfig, Project, Session, User } from './types';
@@ -11,6 +13,7 @@ export function Alert({ message }: { message: string }) {
 }
 
 export function AuthForm({ onSession, notice }: { onSession: (session: Session) => void; notice: string }) {
+  const api = useApi();
   const [register, setRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,6 +51,7 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
         <button className="primary full" disabled={busy}>{busy ? 'Aguarde…' : register ? 'Criar conta' : 'Entrar'}</button>
       </form>
       <button className="link auth-switch" disabled={busy} onClick={() => { setRegister(!register); setError(''); setSuccess(''); setPassword(''); }}>{register ? 'Já tenho uma conta' : 'Criar uma conta'}</button>
+      <div className="demo-entry"><a className="demo-cta" href="/demo">Visualizar demonstração</a><p className="quiet">Explore todas as funcionalidades com dados fictícios, sem criar uma conta.</p></div>
     </section></div>
   </main>;
 }
@@ -55,6 +59,7 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
 interface EditorProps<T> { value?: T; onCancel: () => void; onSaved: (value: T) => void; onBusyChange: (busy: boolean) => void }
 
 export function ProjectForm({ value, onCancel, onSaved, onBusyChange }: EditorProps<Project>) {
+  const api = useApi();
   const [name, setName] = useState(value?.name ?? '');
   const [description, setDescription] = useState(value?.description ?? '');
   const [isPublic, setIsPublic] = useState(value?.public_status_enabled ?? false);
@@ -99,6 +104,8 @@ export function MonitorForm(props: MonitorEditorProps) {
 }
 
 function ConfiguredMonitorForm({ value, projectId, onSaved, onCancel, onBusyChange, runtime }: MonitorEditorProps & { runtime: RuntimeConfig }) {
+  const api = useApi();
+  const { demo } = useTransport();
   const [config, setConfig] = useState<MonitorConfig>(() => value ? {
     name: value.name, url: value.url, interval_seconds: value.interval_seconds, timeout_ms: value.timeout_ms,
     expected_status: value.expected_status, failure_threshold: value.failure_threshold, retry_count: value.retry_count, latency_threshold_ms: value.latency_threshold_ms, is_public: value.is_public,
@@ -109,7 +116,7 @@ function ConfiguredMonitorForm({ value, projectId, onSaved, onCancel, onBusyChan
   async function submit(e: FormEvent) {
     e.preventDefault(); setError('');
     const payload = { ...config, name: config.name.trim(), url: config.url.trim() };
-    const validation = !payload.name ? 'Informe o nome do monitor.' : validateMonitor(payload, runtime.minimum_interval_seconds);
+    const validation = demo && !isDemoUrl(payload.url) ? 'Na demonstração, use uma URL fictícia terminada em .invalid.' : !payload.name ? 'Informe o nome do monitor.' : validateMonitor(payload, runtime.minimum_interval_seconds);
     if (validation) { setError(validation); return; }
     setBusy(true); onBusyChange(true);
     try { onSaved(await api.request<Monitor>(value ? `/monitors/${value.id}` : `/projects/${projectId}/monitors`, value ? 'PATCH' : 'POST', payload)); }
@@ -120,7 +127,7 @@ function ConfiguredMonitorForm({ value, projectId, onSaved, onCancel, onBusyChan
     <p>O método é GET. Alterar as regras de check reinicia a leitura de saúde.</p>{error && <Alert message={error} />}
     <form onSubmit={submit}><fieldset disabled={busy}>
       <div className="form-grid"><div><label htmlFor="monitor-name">Nome do monitor</label><input id="monitor-name" required autoFocus maxLength={100} value={config.name} onChange={e => update('name', e.target.value)} /></div>
-      <div><label htmlFor="monitor-url">URL do endpoint</label><input id="monitor-url" type="url" required maxLength={2048} placeholder="https://api.seuservico.com/health" value={config.url} onChange={e => update('url', e.target.value)} aria-describedby="url-help" /><small id="url-help">Endpoint público, sem credenciais ou secrets. Redirects não são seguidos.</small></div></div>
+      <div><label htmlFor="monitor-url">URL do endpoint</label><input id="monitor-url" type="url" required maxLength={2048} placeholder={demo ? "https://api.exemplo.invalid/health" : "https://api.seuservico.com/health"} value={config.url} onChange={e => update('url', e.target.value)} aria-describedby="url-help" /><small id="url-help">{demo ? 'Use um domínio fictício .invalid. Nenhuma URL será acessada.' : 'Endpoint público, sem credenciais ou secrets. Redirects não são seguidos.'}</small></div></div>
       <h3>Regras de verificação</h3><div className="form-grid rules">
         {numericFields.map(([key, label, min, max, help]) => <div key={key}><label htmlFor={key}>{label}</label><input id={key} type="number" min={key === 'interval_seconds' ? runtime.minimum_interval_seconds : min} max={max} step={1} required value={Number.isNaN(config[key]) ? '' : config[key]} onChange={e => update(key, e.target.valueAsNumber)} aria-invalid={key === 'interval_seconds' && intervalInvalid ? true : undefined} aria-describedby={`${key}-help`} /><small id={`${key}-help`}>{key === 'interval_seconds' ? <>{intervalHelp(runtime)}{intervalInvalid && ` Ajuste o intervalo para um valor inteiro de ${runtime.minimum_interval_seconds} a 3600 segundos antes de salvar.`}</> : help}</small></div>)}
         <div><label htmlFor="latency_threshold_ms">Limiar de latência (ms)</label><input id="latency_threshold_ms" type="number" min={100} max={15000} step={1} value={config.latency_threshold_ms ?? ''} onChange={e => update('latency_threshold_ms', e.target.value === '' ? null : e.target.valueAsNumber)} aria-describedby="latency-help" /><small id="latency-help">Opcional. Em branco desativa a degradação por latência.</small></div>

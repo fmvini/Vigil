@@ -46,14 +46,16 @@ export class ApiClient {
     }
     const response = await fetch(`/api/v1${path}`, {
       method, headers, credentials: 'same-origin',
+      ...(path === '/runtime-config' ? { cache: 'no-store' as const } : {}),
       body: body === undefined ? undefined : JSON.stringify(body), signal,
     });
     signal?.throwIfAborted();
+    if (path === '/runtime-config' && response.status !== 200) throw new ApiError(response.status, 'runtime_config_unavailable', 'Runtime configuration unavailable');
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
       signal?.throwIfAborted();
       const error = payload?.error;
-      if (response.status === 401 && !path.startsWith('/auth/') && !path.startsWith('/public/') && sessionVersion === this.sessionVersion) {
+      if (response.status === 401 && path !== '/runtime-config' && !path.startsWith('/auth/') && !path.startsWith('/public/') && sessionVersion === this.sessionVersion) {
         this.setCsrfToken(null);
         this.onUnauthorized?.();
       }

@@ -1,3 +1,4 @@
+import { useApi } from './transport';
 import { useEffect, useState } from 'react';
 
 export interface RuntimeConfig {
@@ -30,6 +31,7 @@ export function intervalHelp(runtime: RuntimeConfig): string {
 }
 
 export function useRuntimeConfig() {
+  const api = useApi();
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<{ data: RuntimeConfig | null; loading: boolean; failed: boolean }>({ data: null, loading: true, failed: false });
   useEffect(() => {
@@ -43,16 +45,14 @@ export function useRuntimeConfig() {
     void (async () => {
       try {
         // This anonymous read has no private-session 401 side effects.
-        const response = await fetch('/api/v1/runtime-config', { method: 'GET', credentials: 'same-origin', headers: { Accept: 'application/json' }, cache: 'no-store', signal: controller.signal });
-        if (response.status !== 200) throw new Error('RUNTIME_CONFIG_UNAVAILABLE');
-        const data = parseRuntimeConfig(await response.json());
+        const data = parseRuntimeConfig(await api.request<unknown>('/runtime-config', 'GET', undefined, controller.signal));
         if (active && !controller.signal.aborted) setState({ data, loading: false, failed: false });
       } catch {
         if (active && !controller.signal.aborted) setState({ data: null, loading: false, failed: true });
       } finally { window.clearTimeout(timeout); }
     })();
     return () => { active = false; window.clearTimeout(timeout); controller.abort(); };
-  }, [attempt]);
+  }, [attempt, api]);
   function retry() {
     setState({ data: null, loading: true, failed: false });
     setAttempt(value => value + 1);

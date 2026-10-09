@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, ApiError, errorMessage } from './api';
+import { ApiError, errorMessage } from './api';
+import { useApi, useTransport } from './transport';
+import { DemoApp, DemoSimulation } from './DemoApp';
 import { Alert, AuthForm, MonitorForm, ProjectForm } from './Forms';
 import { currentFreshness, freshnessLabels, healthLabels, summarize } from './domain';
 import type { Freshness, Monitor, Project, Session } from './types';
@@ -14,6 +16,7 @@ type Editor = { type: 'project'; value?: Project } | { type: 'monitor'; value?: 
 type Archive = { type: 'project'; value: Project } | { type: 'monitor'; value: Monitor } | null;
 
 export default function App() {
+  if (/^\/demo(?:\/|$)/.test(window.location.pathname)) return <DemoApp />;
   const match = window.location.pathname.match(/^\/status\/([^/]+)\/?$/);
   if (match) {
     let slug = match[1];
@@ -24,6 +27,7 @@ export default function App() {
 }
 
 function AuthenticatedApp() {
+  const api = useApi();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,13 +46,15 @@ function AuthenticatedApp() {
     api.onUnauthorized = () => { api.setCsrfToken(null); setSession(null); setNotice('Sua sessão expirou. Entre novamente para continuar.'); };
     return () => { api.onUnauthorized = undefined; };
   }, []);
-  if (loading) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><p role="status">Verificando sua sessão…</p></main>;
-  if (error) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button></main>;
+  if (loading) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><p role="status">Verificando sua sessão…</p><a className="demo-cta" href="/demo">Visualizar demonstração</a></main>;
+  if (error) return <main className="boot"><div className="boot-header"><Brand /><ThemeControl /></div><h1>Não foi possível abrir sua sessão</h1><Alert message={error} /><button className="primary" onClick={() => setAttempt(a => a + 1)}>Tentar novamente</button><a className="demo-cta" href="/demo">Visualizar demonstração</a></main>;
   if (!session) return <AuthForm notice={notice} onSession={value => { setSession(value); setNotice(''); }} />;
   return <Dashboard session={session} onLogout={() => { api.setCsrfToken(null); setSession(null); setNotice(''); }} />;
 }
 
-function Dashboard({ session, onLogout }: { session: Session; onLogout: () => void }) {
+export function Dashboard({ session, onLogout }: { session: Session; onLogout: () => void }) {
+  const api = useApi();
+  const { demo } = useTransport();
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState('');
   const [monitors, setMonitors] = useState<Monitor[]>([]);
@@ -121,6 +127,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
     } catch (err) { setMutationError(errorMessage(err)); } finally { setBusy(''); }
   }
   async function logout() {
+    if (demo) { onLogout(); return; }
     setBusy('logout'); setMutationError('');
     try { await api.request('/auth/logout', 'POST'); onLogout(); }
     catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setMutationError(errorMessage(err)); }
@@ -133,12 +140,12 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
       <Brand href="#main" />
       <div className="sidebar-heading"><h2>Projetos</h2><button className="link" onClick={() => openEditor({ type: 'project' })} disabled={actionsDisabled}>Novo</button></div>
       {projectLoading ? <p role="status" className="quiet">Carregando projetos…</p> : projectError ? <><Alert message={projectError} /><button onClick={() => setReloadProjects(n => n + 1)}>Tentar novamente</button></> : <nav aria-label="Projetos"><ul className="project-list">{projects.map(p => <li key={p.id}><button disabled={Boolean(busy || editorBusy)} aria-current={p.id === projectId ? 'page' : undefined} onClick={() => select(p.id)}>{p.name}</button></li>)}</ul>{projects.length === 0 && <p className="quiet">Seus projetos aparecerão aqui.</p>}</nav>}
-      <div className="account"><span title={session.user.email}>{session.user.email}</span><button className="link" onClick={logout} disabled={Boolean(busy || editorBusy)}>{busy === 'logout' ? 'Saindo…' : 'Sair da conta'}</button></div>
+      <div className="account"><span title={session.user.email}>{session.user.email}</span><button className="link" onClick={logout} disabled={Boolean(busy || editorBusy)}>{busy === 'logout' ? 'Saindo…' : demo ? 'Sair da demonstração' : 'Sair da conta'}</button></div>
     </aside>
     <main id="main" className="workspace" tabIndex={-1}>
       <div className="workspace-top"><div className="workspace-preferences"><span>Visão geral</span><ThemeControl /></div><div className="sync-status">
-        <span role="status">{connected ? 'Atualizações conectadas' : 'Sincronização a cada 30 s'}</span>
-        {refreshBlocked ? <span className="quiet">A consulta automática aguarda a ação em andamento.</span> : !connected && <span className="quiet">Consulta automática a cada 30 s.{project && ' Use Atualizar para consultar agora.'}</span>}
+        <span role="status">{demo ? 'Dados fictícios em memória' : connected ? 'Atualizações conectadas' : 'Sincronização a cada 30 s'}</span>
+        {refreshBlocked ? <span className="quiet">A consulta automática aguarda a ação em andamento.</span> : !demo && !connected && <span className="quiet">Consulta automática a cada 30 s.{project && ' Use Atualizar para consultar agora.'}</span>}
         {project && <span className="quiet">{updatedAt === null ? 'Nenhuma consulta dos monitores concluída.' : <>Última consulta dos monitores às <time dateTime={new Date(updatedAt).toISOString()}>{new Date(updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></>}</span>}
       </div></div>
       <header className="page-heading"><div><h1>{project?.name ?? 'Seus projetos'}</h1><p>{project?.description || (project ? 'Gerencie os endpoints e acompanhe a qualidade das leituras.' : 'Crie um projeto para organizar seus endpoints.')}</p></div>
@@ -152,6 +159,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: () => vo
       {project && <>
         <PublicLink key={`public-${project.id}`} slug={project.public_slug} enabled={project.public_status_enabled} />
         <CheckTiming />
+        {demo && <DemoSimulation key={project.id} monitors={projectMonitors} disabled={actionsDisabled || monitorLoading} onSaved={updated => { setMonitors(items => items.map(m => m.id === updated.id ? updated : m)); setReloadProjects(n => n + 1); setObservationRevision(n => n + 1); }} />}
         <section className="overview" aria-label="Resumo do projeto"><div><span className="quiet">Saúde observada</span><strong>{monitorLoading || monitorError ? 'Indisponível' : summary.health ? healthLabels[summary.health] : 'Ainda sem leitura'}</strong><p>{monitorError ? 'Não foi possível consultar os monitores.' : monitorLoading ? 'Consultando os monitores…' : summary.partial ? 'Resumo parcial. Há monitores sem dados atuais.' : summary.health ? 'Considera apenas monitores com dados atualizados.' : 'Nenhum monitor com medição atual elegível.'}</p></div>
           {!monitorLoading && !monitorError && <dl className="quality-counts">{(['no_data', 'stale', 'paused', 'fresh'] as const).map(state => <div key={state}><dt>{freshnessLabels[state]}</dt><dd>{summary.counts[state]}</dd></div>)}</dl>}
         </section>
