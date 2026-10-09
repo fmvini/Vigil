@@ -21,9 +21,13 @@ describe('fluxos reais da interface com transporte isolado no teste', () => {
     await user.click(await screen.findByRole('button', { name: 'Criar uma conta' }));
     await user.type(screen.getByLabelText('E-mail'), 'tester@example.com');
     await user.type(screen.getByLabelText('Senha'), 'password1234');
+    await user.click(screen.getByRole('checkbox', { name: /Política de Privacidade/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Termos de Uso/ }));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
     expect(await screen.findByText('Conta criada. Entre com seu e-mail e senha.')).toBeVisible();
     expect(screen.getByLabelText('Senha')).toHaveValue('');
+    expect(screen.getByRole('checkbox', { name: /Política de Privacidade/ })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Termos de Uso/ })).not.toBeChecked();
     expect(fetch.mock.calls.filter(([url]) => path(url) === '/auth/login')).toHaveLength(0);
     expect(screen.queryByRole('heading', { name: 'Monitores' })).not.toBeInTheDocument();
   });

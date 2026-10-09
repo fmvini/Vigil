@@ -6,6 +6,7 @@ import { TransportProvider, useApi } from './transport';
 import { errorMessage } from './api';
 import { Alert } from './Forms';
 import type { Monitor } from './types';
+import { NotFound } from './Legal';
 
 const displayIdentity = { user: { id: 'demo-visitor', email: 'Visitante da demonstração' }, csrf_token: '' };
 export function DemoApp() {
@@ -44,7 +45,7 @@ export function DemoApp() {
     </div>
     <div key={revision}>{route === '/demo' || route === '/demo/' ? <Dashboard session={displayIdentity} onLogout={() => window.location.assign('/')} />
       : status && slug ? <PublicStatus key={slug} slug={slug} />
-      : <main className="boot"><h1>Página de demonstração não encontrada</h1><p>Este endereço não existe nos exemplos fictícios.</p><a href="/demo">Voltar à demonstração</a></main>}</div>
+      : <NotFound demo />}</div>
   </div></TransportProvider>;
 }
 

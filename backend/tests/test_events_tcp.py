@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import httpx
 import pytest
+from conftest import LEGAL_VERSIONS
 from redis.asyncio import Redis
 from test_api_replicas import HEADERS, Frames
 from test_api_replicas import replicas as replicas
@@ -23,6 +24,7 @@ async def account(stack, base):
         httpx.AsyncClient(base_url=base, headers=HEADERS, timeout=5)
     )
     credentials = {
+        **LEGAL_VERSIONS,
         "email": f"tcp-{uuid4().hex}@example.com",
         "password": "isolated TCP QA password",
     }

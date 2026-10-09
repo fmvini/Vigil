@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { legalVersions } from './legal-consent.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 
@@ -42,7 +43,7 @@ async function mutate(path, method, data, csrf) {
   return response.status() === 204 ? null : response.json();
 }
 try {
-  const identity = { email: `frontend.live.${Date.now()}@example.com`, password: `Vigil-QA-${Date.now()}-live` };
+  const identity = { email: `frontend.live.${Date.now()}@example.com`, password: `Vigil-QA-${Date.now()}-live`, ...legalVersions };
   await mutate('/auth/register', 'POST', identity);
   const session = await mutate('/auth/login', 'POST', identity);
   const project = await mutate('/projects', 'POST', { name: 'Projeto SSE navegador' }, session.csrf_token);

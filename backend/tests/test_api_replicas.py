@@ -13,6 +13,7 @@ from uuid import uuid4
 import httpx
 import pytest
 import pytest_asyncio
+from conftest import LEGAL_VERSIONS
 from redis.asyncio import Redis
 from sqlalchemy import func, select
 from test_db_postgresql import pg_engine as pg_engine
@@ -237,6 +238,7 @@ async def test_real_api_crash_reconnect_snapshot_and_replacement_rejoins_fanout(
     async with AsyncExitStack() as stack:
         client = await stack.enter_async_context(httpx.AsyncClient(headers=HEADERS, timeout=5))
         credentials = {
+            **LEGAL_VERSIONS,
             "email": f"recovery-{uuid4().hex}@example.com",
             "password": "isolated replica recovery password",
         }
@@ -354,6 +356,7 @@ async def test_real_three_api_replicas_owner_fanout_bounded_queues_and_local_quo
                     )
                 )
                 credentials = {
+                    **LEGAL_VERSIONS,
                     "email": f"replica-{uuid4().hex}@example.com",
                     "password": "a strong isolated QA password",
                 }

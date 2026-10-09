@@ -248,13 +248,11 @@ def test_private_schema_offline_upgrade_and_downgrade(monkeypatch):
     assert sql.index('SET LOCAL search_path TO "vigil"') < sql.index("CREATE TABLE")
     assert "CREATE TABLE vigil.alembic_version" in sql
     assert "INSERT INTO vigil.alembic_version" in sql
-    assert "0002_incident_evidence_indexes" in sql
+    assert "0003_legal_acceptances" in sql
     assert "CREATE SCHEMA" not in sql
     assert "public." not in sql
     output = StringIO()
-    command.downgrade(
-        migration_config(output=output), "0002_incident_evidence_indexes:base", sql=True
-    )
+    command.downgrade(migration_config(output=output), "0003_legal_acceptances:base", sql=True)
     sql = output.getvalue()
     assert 'SET LOCAL search_path TO "vigil"' in sql
     assert "DELETE FROM vigil.alembic_version" in sql
@@ -304,7 +302,7 @@ async def test_private_schema_migration_requires_explicit_bootstrap_and_matches_
                 assert await connection.scalar(text("SELECT current_schema()")) == schema
                 assert (
                     await connection.scalar(text("SELECT version_num FROM alembic_version"))
-                    == "0002_incident_evidence_indexes"
+                    == "0003_legal_acceptances"
                 )
                 assert (
                     await connection.scalar(

@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from app.api.dependencies import DB, Auth, MutationAuth, browser_mutation
 from app.api.errors import ApiError
 from app.api.schemas import AuthOut, Credentials, UserOut
-from app.db.models import Session, User
+from app.db.models import LegalAcceptance, Session, User
 from app.security import DUMMY_HASH, PASSWORD_HASHER, token_hash, utcnow, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,11 +24,21 @@ async def register(data: Credentials, request: Request, db: DB):
     )
     user = User(email=str(data.email), password_hash=password_hash)
     try:
-        async with db.begin_nested():
-            db.add(user)
-            await db.flush()
+        db.add(user)
+        await db.flush()
     except IntegrityError:
         raise ApiError(409, "conflict", "Email is already registered") from None
+    # The request transaction owns both writes, including a failed final commit.
+    db.add(
+        LegalAcceptance(
+            user_id=user.id,
+            terms_version=data.terms_version,
+            privacy_version=data.privacy_version,
+            accepted_at=utcnow(),
+            action="register",
+        )
+    )
+    await db.flush()
     return UserOut.model_validate(user)
 
 
@@ -49,6 +59,15 @@ async def login(data: Credentials, request: Request, response: Response, db: DB)
         )
     settings = request.app.state.settings
     now = utcnow()
+    db.add(
+        LegalAcceptance(
+            user_id=user.id,
+            terms_version=data.terms_version,
+            privacy_version=data.privacy_version,
+            accepted_at=now,
+            action="login",
+        )
+    )
     # Successful login rotates this browser's existing credential; other devices stay valid.
     old_token = request.cookies.get(settings.cookie_name)
     if old_token:

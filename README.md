@@ -31,6 +31,14 @@ Os limites e a prova operacional atual estão no log, sem promessa de prazo.
 
 ## Objetivo
 
+A revisão local de políticas acrescenta páginas públicas `/privacy`, `/terms` e
+`/cookies`, confirmação obrigatória de termos e privacidade no cadastro/login,
+registro de versões na API e aviso de cookies com escolha reversível. Endereços
+de páginas desconhecidas recebem uma 404 personalizada. A migration
+`0003_legal_acceptances` acompanha esse contrato; publicar frontend e API juntos.
+O responsável e o canal de atendimento ainda precisam ser informados para
+finalizar os documentos. Consulte [políticas e publicação](docs/LEGAL.md).
+
 O novo [perfil gratuito online](docs/FREE_CLOUD.md) usa Render Free, Neon separado
 e GitHub Actions público, com disparo externo Cloudflare e agenda GitHub de reserva,
 configuradas a cada 15 minutos; atrasos de horas foram observados no GitHub. A interface

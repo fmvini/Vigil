@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { acceptLegal } from './legal-consent.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 
@@ -47,10 +48,12 @@ try {
   await page.getByRole('button', { name: 'Criar uma conta', exact: true }).click();
   await page.getByLabel('E-mail', { exact: true }).fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(password);
+  await acceptLegal(page);
   await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
   await page.getByText('Conta criada. Entre com seu e-mail e senha.').waitFor();
   assert.equal(await page.getByLabel('Senha', { exact: true }).inputValue(), '');
   await page.getByLabel('Senha', { exact: true }).fill(password);
+  await acceptLegal(page);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await page.getByRole('button', { name: 'Criar primeiro projeto' }).click();
   assert.equal(await page.getByLabel('Publicar página de status').isChecked(), false);

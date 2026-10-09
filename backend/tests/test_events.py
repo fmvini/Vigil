@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import httpx
 import pytest
 from anyio import CancelScope, sleep
-from conftest import authenticate
+from conftest import LEGAL_VERSIONS, authenticate
 from sqlalchemy import event as sqlalchemy_event
 from sqlalchemy import select
 from starlette.requests import ClientDisconnect
@@ -527,7 +527,11 @@ async def test_http_stream_stops_after_committed_session_invalidation(
         elif kind == "rotate":
             response = await authenticated.post(
                 "/api/v1/auth/login",
-                json={"email": "owner@example.com", "password": "a strong test password"},
+                json={
+                    **LEGAL_VERSIONS,
+                    "email": "owner@example.com",
+                    "password": "a strong test password",
+                },
             )
             assert response.status_code == 200
         else:

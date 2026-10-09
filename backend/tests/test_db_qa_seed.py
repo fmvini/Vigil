@@ -145,7 +145,14 @@ async def test_fixture_persists_exact_global_metrics_isolation_and_public_subset
             base_url="https://qa.test",
             headers={"Origin": "https://qa.test", "X-Vigil-Request": "browser"},
         ) as client:
-            login = await client.post("/api/v1/auth/login", json=fixture["login"])
+            login = await client.post(
+                "/api/v1/auth/login",
+                json={
+                    **fixture["login"],
+                    "terms_version": "2026-10-09",
+                    "privacy_version": "2026-10-09",
+                },
+            )
             assert login.status_code == 200
             assert (await client.get(f"/api/v1/projects/{existing_project}")).status_code == 404
             metrics = await client.get(f"/api/v1/monitors/{target['id']}/metrics?period=24h")

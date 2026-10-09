@@ -7,6 +7,7 @@ import { errorMessage } from './api';
 import { defaultConfig, validateMonitor } from './domain';
 import { intervalHelp, useRuntimeConfig, type RuntimeConfig } from './runtimeConfig';
 import type { Monitor, MonitorConfig, Project, Session, User } from './types';
+import { POLICY_VERSION } from './legalContent';
 
 export function Alert({ message }: { message: string }) {
   return <div className="alert" role="alert">{message}</div>;
@@ -20,14 +21,21 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   async function submit(event: FormEvent) {
-    event.preventDefault(); setError(''); setSuccess(''); setBusy(true);
+    event.preventDefault(); setError(''); setSuccess('');
+    if (!privacyAccepted || !termsAccepted) { setError('Leia e aceite separadamente a Política de Privacidade e os Termos de Uso para continuar.'); return; }
+    if (busy) return;
+    setBusy(true);
+    const credentials = { email: email.trim(), password, terms_version: POLICY_VERSION, privacy_version: POLICY_VERSION };
     try {
       if (register) {
-        await api.request<User>('/auth/register', 'POST', { email: email.trim(), password });
+        await api.request<User>('/auth/register', 'POST', credentials);
+        setPrivacyAccepted(false); setTermsAccepted(false);
         setRegister(false); setPassword(''); setSuccess('Conta criada. Entre com seu e-mail e senha.');
       } else {
-        const session = await api.request<Session>('/auth/login', 'POST', { email: email.trim(), password });
+        const session = await api.request<Session>('/auth/login', 'POST', credentials);
         api.setCsrfToken(session.csrf_token); onSession(session);
       }
     } catch (err) { setError(errorMessage(err)); }
@@ -48,9 +56,14 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
         <label htmlFor="email">E-mail</label><input id="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} disabled={busy} />
         <label htmlFor="password">Senha</label><input id="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 10 : 1} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} disabled={busy} aria-describedby={register ? 'password-help' : undefined} />
         {register && <small id="password-help">Use de 10 a 128 caracteres.</small>}
+        <fieldset className="auth-consents" disabled={busy} aria-describedby="consent-help"><legend>Aceites obrigatórios</legend>
+          <label className="check-label" htmlFor="privacy-accepted"><input id="privacy-accepted" type="checkbox" required checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} /><span>Li e aceito a <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.</span></label>
+          <label className="check-label" htmlFor="terms-accepted"><input id="terms-accepted" type="checkbox" required checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} /><span>Li e aceito os <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a>.</span></label>
+          <small id="consent-help">Os links abrem em nova aba e preservam este formulário.</small>
+        </fieldset>
         <button className="primary full" disabled={busy}>{busy ? 'Aguarde…' : register ? 'Criar conta' : 'Entrar'}</button>
       </form>
-      <button className="link auth-switch" disabled={busy} onClick={() => { setRegister(!register); setError(''); setSuccess(''); setPassword(''); }}>{register ? 'Já tenho uma conta' : 'Criar uma conta'}</button>
+      <button className="link auth-switch" disabled={busy} onClick={() => { setRegister(!register); setError(''); setSuccess(''); setPassword(''); setPrivacyAccepted(false); setTermsAccepted(false); }}>{register ? 'Já tenho uma conta' : 'Criar uma conta'}</button>
       <div className="demo-entry"><a className="demo-cta" href="/demo">Visualizar demonstração</a><p className="quiet">Explore todas as funcionalidades com dados fictícios, sem criar uma conta.</p></div>
     </section></div>
   </main>;

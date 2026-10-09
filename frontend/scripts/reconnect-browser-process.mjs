@@ -1,5 +1,6 @@
 // Private QA controller over stdin/stdout. Credentials stay in process memory.
 import { chromium } from 'playwright';
+import { legalVersions } from './legal-consent.mjs';
 import react from '@vitejs/plugin-react';
 import { createServer as createVite } from 'vite';
 import { createServer, request as upstreamRequest } from 'node:http';
@@ -116,7 +117,7 @@ async function save() {
 async function command(input) {
   if (input.command === 'connect') {
     target = ownApi(input.api);
-    const credentials = { email: `reconnect-${randomUUID()}@example.com`, password: randomUUID() + '-QA' };
+    const credentials = { email: `reconnect-${randomUUID()}@example.com`, password: randomUUID() + '-QA', ...legalVersions };
     owner = (await mutate(baseURL, '/auth/register', 'POST', credentials)).id;
     csrf = (await mutate(baseURL, '/auth/login', 'POST', credentials)).csrf_token;
     project = await mutate(baseURL, '/projects', 'POST', { name: 'Projeto antes da queda' });

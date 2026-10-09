@@ -34,6 +34,6 @@ it.each(['/demo/status/vigil-demo', '/demo/status/desconhecida', '/demo/unknown'
   const { fetch, source } = isolated();
   window.history.replaceState({}, '', path); render(<App />);
   if (path.endsWith('vigil-demo')) await screen.findByRole('heading', { name: 'Loja Horizonte' });
-  else await screen.findByRole('heading', { name: path.endsWith('unknown') ? 'Página de demonstração não encontrada' : 'Página não publicada' });
+  else await screen.findByRole('heading', { name: path.endsWith('unknown') ? '404 · Página não encontrada' : 'Página não publicada' });
   expect(fetch).not.toHaveBeenCalled(); expect(source).not.toHaveBeenCalled();
 });

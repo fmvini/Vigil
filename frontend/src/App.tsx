@@ -11,11 +11,18 @@ import { ProcessingFailures } from './ProcessingFailures';
 import { Brand } from './Brand';
 import { ThemeControl } from './ThemeControl';
 import { CheckTiming } from './CheckTiming';
+import { LegalShell, NotFound, PolicyPage } from './Legal';
 
 type Editor = { type: 'project'; value?: Project } | { type: 'monitor'; value?: Monitor } | null;
 type Archive = { type: 'project'; value: Project } | { type: 'monitor'; value: Monitor } | null;
 
 export default function App() {
+  return <LegalShell><AppRoute /></LegalShell>;
+}
+
+function AppRoute() {
+  const policy = window.location.pathname.match(/^\/(privacy|terms|cookies)\/?$/)?.[1];
+  if (policy) return <PolicyPage policy={policy as 'privacy' | 'terms' | 'cookies'} />;
   if (/^\/demo(?:\/|$)/.test(window.location.pathname)) return <DemoApp />;
   const match = window.location.pathname.match(/^\/status\/([^/]+)\/?$/);
   if (match) {
@@ -23,7 +30,7 @@ export default function App() {
     try { slug = decodeURIComponent(slug); } catch { /* Invalid slug returns the API's 404. */ }
     return <PublicStatus slug={slug} />;
   }
-  return <AuthenticatedApp />;
+  return window.location.pathname === '/' ? <AuthenticatedApp /> : <NotFound />;
 }
 
 function AuthenticatedApp() {

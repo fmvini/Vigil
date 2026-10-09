@@ -33,7 +33,7 @@ async def test_readiness_failure_does_not_break_liveness(api_app):
 
 
 async def test_production_cookie_has_host_prefix_and_security_attributes(api_app):
-    from conftest import authenticate
+    from conftest import LEGAL_VERSIONS, authenticate
 
     app = create_app(
         Settings(
@@ -53,7 +53,11 @@ async def test_production_cookie_has_host_prefix_and_security_attributes(api_app
         assert "__Host-vigil_session" in client.cookies
         response = await client.post(
             "/api/v1/auth/login",
-            json={"email": "owner@example.com", "password": "a strong test password"},
+            json={
+                **LEGAL_VERSIONS,
+                "email": "owner@example.com",
+                "password": "a strong test password",
+            },
         )
         cookie = response.headers["set-cookie"]
         assert "Secure" in cookie and "HttpOnly" in cookie and "Path=/" in cookie

@@ -37,7 +37,9 @@ mutação. Monitores legados abaixo do mínimo continuam legíveis.
 | POST | `/monitors/{id}/pause` | Pausa, preservando saúde e histórico |
 | POST | `/monitors/{id}/resume` | Retomada e nova agenda |
 
-Cadastro/login recebem `{email,password}`. Projeto recebe `name`, `description` opcional e `public_status_enabled` (false por padrão). Monitor recebe `name`, `url`, `interval_seconds`, `timeout_ms`, `expected_status`, `failure_threshold`, `retry_count`, `latency_threshold_ms` e `is_public`. O servidor define IDs, proprietário, método GET, versão e agenda.
+Cadastro/login recebem `{email,password,terms_version,privacy_version}`. As versões são strings obrigatórias e estritas, atualmente `2026-10-09` para os dois documentos; ausência, null, valores de outro tipo ou versões diferentes retornam 422 sanitizado. A interface envia esses campos somente após duas confirmações independentes, inicialmente desmarcadas. Cada cadastro/login bem-sucedido registra conta, versões, data do servidor e operação em `legal_acceptances`, na mesma transação da conta/sessão; falhas não persistem aceite. Não são coletados IP ou user agent nesse registro. Sessões existentes e `/auth/me` mantêm o contrato atual. Consulte [LEGAL](LEGAL.md).
+
+Projeto recebe `name`, `description` opcional e `public_status_enabled` (false por padrão). Monitor recebe `name`, `url`, `interval_seconds`, `timeout_ms`, `expected_status`, `failure_threshold`, `retry_count`, `latency_threshold_ms` e `is_public`. O servidor define IDs, proprietário, método GET, versão e agenda.
 
 Senha: 10–128 caracteres; e-mail normalizado por trim/lowercase. Listas: `limit=20` por padrão, máximo 100, `offset` dentro dos limites das convenções. Criações retornam 201; DELETE retorna 204 e é idempotente para recurso já arquivado. Pausa/retomada retornam o monitor atualizado (200). `PATCH /projects/{id}` com `name: null` retorna 422 sanitizado sem modificar o projeto; omitir `name` mantém o nome atual.
 

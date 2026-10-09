@@ -1,6 +1,7 @@
 """Serve an explicitly supplied React build beside the API on the same origin."""
 
 import os
+import re
 from pathlib import Path
 
 from fastapi import Request
@@ -32,8 +33,23 @@ def create_app(*, frontend_dist=None, settings=None, engine=None):
             raise ApiError(404, "not_found", "Not found")
         if candidate.is_file():
             return FileResponse(candidate)
-        if path and ("." in Path(path).name or path.split("/", 1)[0] in {"brand"}):
+        # Keep this route contract aligned with App.tsx and DemoApp.tsx. Unknown
+        # pages still load React's shared 404 screen, with a real HTTP 404 status.
+        known_page = (
+            path == ""
+            or re.fullmatch(r"(?:(?:privacy|terms|cookies|demo)/?|(?:demo/)?status/[^/]+/?)", path)
+            is not None
+        )
+        if (
+            not known_page
+            and path
+            and ("." in Path(path).name or path.split("/", 1)[0] in {"brand"})
+        ):
             raise ApiError(404, "not_found", "Not found")
-        return FileResponse(root / "index.html", headers={"Cache-Control": "no-cache"})
+        return FileResponse(
+            root / "index.html",
+            status_code=200 if known_page else 404,
+            headers={"Cache-Control": "no-cache"},
+        )
 
     return app

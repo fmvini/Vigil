@@ -12,6 +12,8 @@ it('login mostra invalid_credentials em português sem distinguir usuário de se
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('E-mail'), 'tester@example.com');
   await user.type(screen.getByLabelText('Senha'), 'incorrect');
+  await user.click(screen.getByRole('checkbox', { name: /Política de Privacidade/ }));
+  await user.click(screen.getByRole('checkbox', { name: /Termos de Uso/ }));
   await user.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('E-mail ou senha inválidos. Confira os dados e tente novamente.');
   expect(screen.getByRole('alert')).not.toHaveTextContent(/Invalid email|private@example.com|PRIVATE_TOKEN|incorrect/);

@@ -8,7 +8,10 @@ from sqlalchemy import text
 from app.config import Settings
 from app.db.base import Base
 from app.db.session import create_engine
+from app.legal import PRIVACY_VERSION, TERMS_VERSION
 from app.main import create_app
+
+LEGAL_VERSIONS = {"terms_version": TERMS_VERSION, "privacy_version": PRIVACY_VERSION}
 
 
 @pytest.fixture(params=["sqlite", "postgres"])
@@ -52,7 +55,7 @@ async def client(api_app):
 
 
 async def authenticate(client, email="owner@example.com"):
-    credentials = {"email": email, "password": "a strong test password"}
+    credentials = {"email": email, "password": "a strong test password", **LEGAL_VERSIONS}
     registered = await client.post("/api/v1/auth/register", json=credentials)
     assert registered.status_code == 201, registered.text
     login = await client.post("/api/v1/auth/login", json=credentials)

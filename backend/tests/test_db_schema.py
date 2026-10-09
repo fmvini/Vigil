@@ -29,6 +29,7 @@ def test_offline_upgrade_and_downgrade_sql():
     sql = output.getvalue()
     for table in (
         "users",
+        "legal_acceptances",
         "sessions",
         "projects",
         "monitors",
@@ -62,6 +63,7 @@ def test_migration_rejects_sqlite_even_offline():
 def test_schema_uuid_and_timezone_contract():
     assert set(Base.metadata.tables) == {
         "users",
+        "legal_acceptances",
         "sessions",
         "projects",
         "monitors",

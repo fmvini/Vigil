@@ -1,4 +1,5 @@
 import { chromium, request } from 'playwright';
+import { legalVersions } from './legal-consent.mjs';
 import { fileURLToPath } from 'node:url';
 import { correlateUpdate, measurementOrigin, observeNativeProjectSnapshots, summary } from './live-latency-observer.mjs';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -80,7 +81,7 @@ let sessionConfirmed = false;
 let nextUpdateIndex = 0;
 let lastUpdateStart = -Infinity;
 let lastRestStart = -Infinity;
-const identity = { email: `latency.${runId}@example.com`, password: randomBytes(24).toString('base64url') };
+const identity = { email: `latency.${runId}@example.com`, password: randomBytes(24).toString('base64url'), ...legalVersions };
 const description = `Synthetic local QA latency run ${runId}; no external checks.`;
 const nameFor = index => qaUpdateName(runId, index);
 let signals = [], snapshots = [], pendingObservers = new Set();

@@ -44,6 +44,33 @@ class User(UUIDPrimaryKey, AuditTimestamps, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
 
 
+class LegalAcceptance(UUIDPrimaryKey, Base):
+    """One immutable audit entry per successful authentication operation.
+
+    Services append entries in the user/session transaction and supply the UTC
+    timestamp. No uniqueness by user/version: repeated logins retain each entry.
+    """
+
+    __tablename__ = "legal_acceptances"
+    __table_args__ = (
+        CheckConstraint(
+            "length(trim(terms_version)) > 0 AND length(terms_version) <= 32",
+            name="terms_version_nonempty",
+        ),
+        CheckConstraint(
+            "length(trim(privacy_version)) > 0 AND length(privacy_version) <= 32",
+            name="privacy_version_nonempty",
+        ),
+        CheckConstraint("action IN ('register', 'login')", name="action_values"),
+        Index("ix_legal_acceptances_user_accepted_at", "user_id", "accepted_at"),
+    )
+    user_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    terms_version: Mapped[str] = mapped_column(String(32))
+    privacy_version: Mapped[str] = mapped_column(String(32))
+    accepted_at: Mapped[datetime] = mapped_column(TIMESTAMP)
+    action: Mapped[str] = mapped_column(String(16))
+
+
 class Session(UUIDPrimaryKey, Base):
     __tablename__ = "sessions"
     __table_args__ = (

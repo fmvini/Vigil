@@ -53,7 +53,7 @@ describe('contrato HTTP e sessão', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ error: { code: 'invalid_credentials', message: 'Invalid email or password', details: null } }, 401)));
     const api = new ApiClient(); const expired = vi.fn(); api.onUnauthorized = expired;
     let caught: unknown;
-    try { await api.request('/auth/login', 'POST', { email: 'tester@example.com', password: 'incorrect' }); }
+    try { await api.request('/auth/login', 'POST', { email: 'tester@example.com', password: 'incorrect', terms_version: '2026-10-09', privacy_version: '2026-10-09' }); }
     catch (error) { caught = error; }
     expect(caught).toBeInstanceOf(ApiError);
     expect(caught).toMatchObject({ status: 401, code: 'invalid_credentials', message: 'Invalid email or password' });

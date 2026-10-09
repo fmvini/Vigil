@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { acceptLegal } from './legal-consent.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
@@ -158,6 +159,7 @@ try {
     await page.goto(baseURL);
     await page.getByLabel('E-mail', { exact: true }).fill(login.email);
     await page.getByLabel('Senha', { exact: true }).fill(login.password);
+    await acceptLegal(page);
     await page.getByRole('button', { name: 'Entrar', exact: true }).click();
     await page.getByRole('heading', { name: project.name, exact: true }).waitFor();
     const snapshots = { project: {}, target: {}, checks: {} };

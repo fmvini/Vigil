@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.domain.monitors import validate_check_config, validate_url
+from app.legal import PRIVACY_VERSION, TERMS_VERSION
 
 Name = Annotated[str, Field(min_length=1, max_length=100)]
 Interval = Annotated[int, Field(strict=True, ge=60, le=3600)]
@@ -22,6 +23,22 @@ class Input(BaseModel):
 class Credentials(Input):
     email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=10, max_length=128)
+    terms_version: str = Field(strict=True)
+    privacy_version: str = Field(strict=True)
+
+    @field_validator("terms_version")
+    @classmethod
+    def current_terms(cls, value):
+        if value != TERMS_VERSION:
+            raise ValueError("Current terms must be accepted")
+        return value
+
+    @field_validator("privacy_version")
+    @classmethod
+    def current_privacy(cls, value):
+        if value != PRIVACY_VERSION:
+            raise ValueError("Current privacy policy must be accepted")
+        return value
 
     @field_validator("email", mode="before")
     @classmethod

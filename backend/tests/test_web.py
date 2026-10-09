@@ -53,9 +53,43 @@ async def test_same_origin_api_and_spa_keep_missing_assets_and_namespaces_404(tm
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        for path in ["/", "/login", "/status/project", "/project/detail"]:
+        for path in [
+            "/",
+            "/status/project",
+            "/status/project/",
+            "/status/project.name",
+            "/demo",
+            "/demo/",
+            "/demo/status/vigil-demo",
+            "/demo/status/vigil-demo/",
+            "/privacy",
+            "/terms",
+            "/cookies",
+            "/privacy/",
+            "/terms/",
+            "/cookies/",
+        ]:
             response = await client.get(path)
             assert response.status_code == 200 and "Vigil build" in response.text
+            assert response.headers["cache-control"] == "no-cache"
+            assert "set-cookie" not in response.headers
+        for path in [
+            "/login",
+            "/project/detail",
+            "/missing",
+            "/demo/missing",
+            "/privacy/missing",
+            "/status",
+            "/status/project/missing",
+            "/demo/status",
+            "/status//",
+            "/api-lookalike",
+        ]:
+            response = await client.get(path)
+            assert response.status_code == 404 and "Vigil build" in response.text
+            assert response.headers["content-type"].startswith("text/html")
+            assert response.headers["cache-control"] == "no-cache"
+            assert "set-cookie" not in response.headers
         assert (await client.get("/assets/app.js")).text == "window.Vigil = true;"
         assert (await client.get("/favicon.svg")).status_code == 200
         for path in [
@@ -70,6 +104,8 @@ async def test_same_origin_api_and_spa_keep_missing_assets_and_namespaces_404(tm
         ]:
             response = await client.get(path)
             assert response.status_code == 404 and "Vigil build" not in response.text
+            assert response.headers["content-type"].startswith("application/json")
+            assert response.json()["error"]["code"] == "not_found"
         assert (await client.get("/health/live")).json() == {"status": "ok"}
         assert (await client.get("/health/ready")).status_code == 503
         config = await client.get("/api/v1/runtime-config")

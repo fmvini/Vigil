@@ -1,5 +1,50 @@
 # Registro de desenvolvimento
 
+## 2026-10-09 — Políticas, aceites de autenticação e página 404
+
+### Implementado
+- Páginas públicas `/privacy`, `/terms` e `/cookies`, com leitura por seções, navegação, versão `2026-10-09`, temas existentes e acesso pelo rodapé. Conteúdo descreve o serviço real, dados tratados, publicação opcional, fornecedores, retenção e direitos; contato do responsável permanece explicitamente pendente porque não foi informado.
+- Cadastro e login exigem dois aceites independentes, inicialmente desmarcados, com validação HTML e guarda antes da requisição. Links preservam o formulário em outra aba; troca de modo e cadastro concluído limpam os aceites.
+- API exige `terms_version` e `privacy_version` como strings estritas iguais às versões atuais; ausência, tipo incorreto ou versão antiga retorna 422. Cada autenticação bem-sucedida acrescenta registro de aceite na transação da conta/sessão; falhas não produzem aceite nem credencial. Sessões existentes permanecem válidas.
+- Modelo `LegalAcceptance` e migration `0003_legal_acceptances`, descendente de `0002_incident_evidence_indexes`: conta, versões, horário UTC e ação register/login, FK sem cascade e índice não único. Nenhum IP/user agent, aceite retroativo ou deduplicação.
+- Aviso de cookies com aceitar/continuar sem aceitar, reabertura pelo rodapé, preferência local versionada por 180 dias, sincronização entre abas e tolerância a storage indisponível. Somente cookie necessário de sessão e preferências existentes; nenhuma integração de analytics/marketing.
+- Página 404 compartilhada pelo site e demonstração. Rotas reconhecidas recebem HTML 200; páginas desconhecidas recebem HTML 404 sem autenticação; namespaces API/health e arquivos ausentes preservam JSON 404. Scripts QA de autenticação acompanham o novo contrato.
+
+### Arquivos principais alterados
+- `frontend/src/Legal.tsx`, `frontend/src/legalContent.ts`, `frontend/src/cookiePreference.ts`, `frontend/src/App.tsx`, `frontend/src/DemoApp.tsx`, `frontend/src/Forms.tsx`, `frontend/src/styles.css`
+- `frontend/src/test/Legal.test.tsx`, `frontend/src/test/App.test.tsx`, `frontend/src/test/AuthErrors.test.tsx`, `frontend/src/test/DemoApp.test.tsx`, `frontend/src/test/api.test.ts`
+- `frontend/scripts/legal-consent.mjs`, `frontend/scripts/legal-smoke.mjs` e clientes smoke existentes
+- `backend/app/legal.py`, `backend/app/api/auth.py`, `backend/app/api/schemas.py`, `backend/app/web.py`, `backend/app/db/models.py`, `backend/migrations/versions/0003_legal_acceptances.py`
+- `backend/tests/test_legal_auth.py`, `backend/tests/test_db_legal_acceptances.py`, `backend/tests/test_web.py` e fixtures/clientes de autenticação existentes
+- `README.md`, `docs/API.md`, `docs/LEGAL.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Versões centralizadas em frontend/legalContent e backend/legal. Histórico append-only pelo fluxo da aplicação, sem trigger de imutabilidade no banco; cada login registra nova linha. Migration não fabrica consentimento para usuários existentes.
+- A transação externa da requisição inclui usuário/aceite ou sessão/aceite. Removido savepoint do cadastro para garantir rollback SQLite quando o commit final falha; testes também exercitam PostgreSQL real.
+- Ciência da política e aceitação contratual não são consentimento genérico para novas finalidades. Recusar o aviso não impede cookie estritamente necessário ao login solicitado. Preferência do aviso permanece no navegador, independente dos aceites de autenticação.
+- Impeccable usado como extensão da identidade existente. Fontes React/TS compiladas individualmente via esbuild CLI permitiram executar Vitest com config nativa e preserveSymlinks sem alterar assertions, dependências do produto ou fontes para contornar o ambiente.
+- Frontend, Backend e Banco coordenados via Maestri, respeitando propriedade dos arquivos; documentação e Git centralizados no Maestro.
+
+### Estado atual
+- Retomada para commit após liberação de permissão: 143/143 testes oficiais Vitest em 15 arquivos passaram, incluindo 19 casos legais; build TypeScript/Vite aprovado (50 módulos, JS `index-CT3En0jD.js`, CSS `index-O_W-0rcP.css`). As fontes frontend/backend/banco conferem com os hashes das campanhas anteriores. Nenhum push/deploy nesta retomada.
+- Na sessão original, TypeScript e 143/143 testes frontend pelo fallback CLI/Vitest passaram; `npm test` padrão e Vite build eram bloqueados por spawn EPERM. A execução aprovada fora do sandbox resolveu esse bloqueio na retomada. Evidência original com hashes `.cache/verification/legal-frontend-vitest-proof.json` preservada.
+- Banco: 105 testes direcionados e regressão completa de test_db com 165 passed/2 skipped em PostgreSQL18.6 real, cluster QA próprio isolado55435. Skips apenas ensaios com lease PG17. Upgrade preserva integralmente sete tabelas populadas, downgrade/reupgrade, SQL offline, metadata, constraints, FK e rollback verificados. Evidências `.cache/verification/legal-db-targeted.xml` e `.cache/verification/legal-db-regression.xml`.
+- Backend: regressão ampliada 345 passed/8 skipped em 424,08s, mais quatro casos de preservação de sessões aprovados. SQLite e PostgreSQL18.6 verificaram rejeição sem mutação, versões, repetição de aceites, isolamento, rollback de insert/commit/rehash/rotação e sessões legadas/outro dispositivo. Skips incluem locks/concorrência PostgreSQL na variante SQLite e réplicas Redis indisponíveis. Hashes das 12 fontes conferidos contra `.cache/verification/legal-backend-proof.json`; XMLs `backend-legal-regression.xml` e `backend-legal-existing-sessions.xml`. Ruff e diff-check passaram; testes HTTP usam build sentinela, sem comprovar render React.
+- QA funcional rodada1 em bundle CLI sintético local5175 concluiu quatro matrizes (1440x892 e390x836, claro/escuro): login/políticas/404/demo404/rodapé/aviso sem overflow pelo DOM, ações cookies com44px/tratamento equivalente, ambas escolhas/180dias/reabertura/foco e storage bloqueado. Guarda de submit, versões, cadastro/login e reset passaram com transporte sintético sem API/cloud real. Relatório `frontend/.impeccable/review/legal-round1/portal-report.json`,32 snapshots DOM e `auth-functional.json`; fontes freeze com zero divergências de hashes, sintaxe dos sete scripts aprovada. Falha inicial de troca de modo era clique do portal sem ativação; clique DOM acionou o mesmo handler React e provou reset, sem mudança de produto, diagnóstico preservado.
+- Nenhuma screenshot atual válida: captura/check do portal impedidos por janela sem renderização, Playwright launch bloqueado por spawn EPERM. DOM não certifica composição/contraste/teclado físico. Nova aba e storage entre abas foram exercitados em Vitest, sem certificação física no navegador. Nenhuma captura antiga foi usada como prova; revisão visual independente permanece pendente. Preview5175 preservado, portal em `/cookies`, tema Sistema/desktop.
+- Detector Impeccable sem findings primários, somente advisories de tipografia contra documentação existente. Identidade e documentação de design preservadas; sem reparo incidental de drift anterior.
+- Finish reviewer independente conferiu fontes e os 38 hashes frontend sem defeitos materiais verificáveis; disposição `recapture`, sem aprovação visual por ausência de capturas atuais. Documenter independente confirmou extensão do sistema por diff/fontes e anterioridade do drift de borda/tema em HEAD; `PRODUCT.md`, `DESIGN.md`, sidecar e tokens preservados.
+- Banco encerrou somente seu cluster QA55435 após liberação do Backend, com diretório/PID confirmados, nenhum cliente/schema QA restante e socket fechado. pg_ctl foi bloqueado pelo sistema; Stop-Process somente no PID confirmado conseguiu encerrar. Arquivos preservados, com pidfile residual que pode exigir recovery se o cluster descartável for reutilizado. Prova `.cache/verification/legal-db-cleanup.json`; nenhum cluster compartilhado alterado.
+- Recurso local, sem aplicação da migration em produção, push ou deploy. Identificação/e-mail do responsável, prazos de conservação de conta/configurações/aceites e atendimento dos titulares precisam ser definidos antes da publicação definitiva dos documentos; pendências em `docs/LEGAL.md`.
+- Na sessão original, staging explícito dos 42 arquivos relacionados falhou com Permission denied ao criar `.git/index.lock`, com `.git` somente leitura e approval never. Na retomada, o usuário liberou a permissão e solicitou novamente o commit local; implementação, testes e documentação compõem uma única unidade, sem push/deploy.
+
+### Próximos passos
+- Concluir evidência visual atual e nova revisão sobre capturas válidas; a revisão de fontes e a comparação de documentação já terminaram, e o QA de banco foi encerrado.
+- Fornecer nome/e-mail do responsável e atualizar `LEGAL_CONTACT` e os trechos pendentes dos três documentos. Definir conservação e atendimento operacional, confirmar condições dos fornecedores antes de publicação definitiva.
+- Testes e build oficiais aprovados na retomada. Capturar desktop/mobile claro/escuro para concluir a revisão visual; não confundir as evidências DOM anteriores com screenshots válidas.
+- Implementação, testes e este log acompanham um único commit local `feat: adiciona políticas, aceites obrigatórios e página 404`; não executar push automaticamente.
+- Após autorização explícita de envio/publicação, publicar frontend/API juntos, aplicar `alembic upgrade head` e validar aceites, recusas, páginas públicas e HTTP 404 em release. Render usa deploy manual; push sozinho não atualiza o site.
+
 ## 2026-10-09 — Demonstração pública interativa sem login
 
 ### Implementado
