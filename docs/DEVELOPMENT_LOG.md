@@ -1,5 +1,27 @@
 # Registro de desenvolvimento
 
+## 2026-10-10 — Contato do responsável e explicação de cookies
+
+### Implementado
+- E-mail `viniciusfmarrocos@gmail.com` informado pelo usuário como canal do responsável nos Termos, na Política de Privacidade e na Política de Cookies.
+- Aviso explica o identificador usado pelo cookie de sessão e as preferências de tema e escolha guardadas no navegador antes dos botões de aceitar ou continuar sem aceitar.
+
+### Arquivos principais alterados
+- `frontend/src/legalContent.ts`, `frontend/src/Legal.tsx`, `frontend/src/test/Legal.test.tsx`
+- `docs/LEGAL.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Mantida a versão `2026-10-09`: preenchimento do contato e esclarecimento das práticas existentes, sem novas finalidades ou tecnologias. Backend, migrations e registros históricos de aceite permanecem compatíveis.
+- Nome completo do responsável não foi inferido do e-mail. Escolhas de cookies, recusa, reabertura pelo rodapé e autenticação seguem o fluxo existente; o cookie necessário à sessão continua sendo usado ao entrar.
+
+### Estado atual
+- Validação oficial das fontes desta unidade aprovada fora do sandbox: `npm test -- --reporter=dot` com 143/143 testes em 15 arquivos e `npm run build` com TypeScript/Vite. `git diff --check` passou; Maestro revisou os cinco arquivos da unidade. Sem nova campanha visual global, push ou deploy.
+- A unidade não resolve as pendências de identificação completa, conservação de dados e atendimento operacional em `docs/LEGAL.md`, nem o gate visual do redesign.
+
+### Próximos passos
+- Unidade registrada com implementação, testes e documentação no mesmo commit local. Publicar somente na etapa integrada autorizada; o site em produção ainda não recebeu esta atualização.
+- Antes da publicação integrada, concluir as pendências de LEGAL, validar o ambiente de produção e tratar o requisito de fidelidade do redesign conforme o checkpoint anterior.
+
 ## 2026-10-10 — Superfícies DARK aproximadas do comp
 
 ### Implementado

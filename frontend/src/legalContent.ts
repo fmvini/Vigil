@@ -2,7 +2,7 @@ export const POLICY_VERSION = '2026-10-09';
 
 export const LEGAL_CONTACT: { name: string; email: string | null } = {
   name: 'Responsável pelo Vigil — identificação pendente',
-  email: null,
+  email: 'viniciusfmarrocos@gmail.com',
 };
 
 export interface PolicySection {
@@ -83,7 +83,7 @@ export const policies: Record<'privacy' | 'terms' | 'cookies', PolicyDocument> =
         id: 'direitos', title: 'Seus direitos e contato',
         paragraphs: [
           'Você pode solicitar confirmação e acesso aos dados, correção, informações sobre compartilhamento e, nas situações aplicáveis, portabilidade, anonimização, bloqueio, eliminação e revogação de consentimento. Pode também questionar tratamentos em desacordo com a legislação e apresentar pedido à autoridade de proteção de dados. Solicitações podem exigir verificação de identidade para proteger a conta.',
-          'A identificação do responsável e o canal de atendimento de privacidade ainda não foram informados para esta versão. Esses dados precisam ser preenchidos antes de sua publicação definitiva. Não envie senhas ou dados pessoais em comentários públicos do repositório.',
+          `Para dúvidas de privacidade e solicitações sobre seus dados, entre em contato pelo e-mail ${LEGAL_CONTACT.email}. A identificação completa do responsável ainda precisa ser informada antes da publicação definitiva desta política. Não envie senhas ou dados pessoais em comentários públicos do repositório.`,
         ],
       },
       {
@@ -130,7 +130,7 @@ export const policies: Record<'privacy' | 'terms' | 'cookies', PolicyDocument> =
         id: 'dados', title: 'Dados, publicação e encerramento',
         paragraphs: [
           'O tratamento de dados segue a Política de Privacidade. A publicação de uma página de status é opcional; revise o que ficará público antes de ativá-la.',
-          'Você pode pausar ou arquivar monitores e arquivar projetos pela interface. Arquivamento não equivale a eliminação da conta ou de todo o histórico. A interface ainda não oferece exclusão de conta; pedidos devem ser tratados pelo canal de atendimento do responsável, cuja identificação está pendente nesta versão.',
+          `Você pode pausar ou arquivar monitores e arquivar projetos pela interface. Arquivamento não equivale a eliminação da conta ou de todo o histórico. A interface ainda não oferece exclusão de conta; pedidos podem ser enviados pelo e-mail ${LEGAL_CONTACT.email}.`,
           'O responsável pode restringir utilização abusiva ou incompatível com estes termos, observadas a legislação aplicável e as circunstâncias. Os termos não afastam direitos legais do usuário nem responsabilidades que não possam ser limitadas por contrato.',
         ],
       },
@@ -138,7 +138,7 @@ export const policies: Record<'privacy' | 'terms' | 'cookies', PolicyDocument> =
         id: 'versao', title: 'Versão e atendimento',
         paragraphs: [
           'Registramos a versão aceita, a data e a operação de cadastro ou login junto à conta. Alterações nestes termos devem ser informadas por uma nova versão, cuja aceitação será exigida em novo cadastro ou login.',
-          'A identificação do responsável e o contato de atendimento precisam ser preenchidos antes da publicação definitiva destes termos. Estes documentos não estabelecem renúncia genérica a direitos nem autorização para tratamento adicional de dados.',
+          `Para dúvidas e atendimento, entre em contato pelo e-mail ${LEGAL_CONTACT.email}. A identificação completa do responsável ainda precisa ser informada antes da publicação definitiva destes termos. Estes documentos não estabelecem renúncia genérica a direitos nem autorização para tratamento adicional de dados.`,
         ],
       },
     ],
@@ -156,7 +156,7 @@ export const policies: Record<'privacy' | 'terms' | 'cookies', PolicyDocument> =
       {
         id: 'sessao', title: 'Cookie necessário de sessão',
         paragraphs: [
-          'Na instância online, o cookie __Host-vigil_session mantém a autenticação. Ele é restrito à origem do site, possui proteção HttpOnly e Secure, usa SameSite=Lax e pode durar até sete dias. A sessão pode terminar antes por inatividade ou revogação; sair da conta remove o cookie.',
+          'Na instância online, o cookie __Host-vigil_session guarda um identificador de sessão para manter a autenticação. Ele é restrito à origem do site, possui proteção HttpOnly e Secure, usa SameSite=Lax e pode durar até sete dias. A sessão pode terminar antes por inatividade ou revogação; sair da conta remove o cookie.',
           'No ambiente local de desenvolvimento, o nome é vigil_session e a configuração é adaptada ao HTTP local. Não criamos uma sessão autenticada para visitar as políticas, a página 404 ou a demonstração.',
           'Você pode continuar sem aceitar o aviso. O cookie estritamente necessário ainda será usado se decidir entrar na conta. Bloqueá-lo nas configurações do navegador impede a manutenção do login.',
         ],
@@ -180,7 +180,7 @@ export const policies: Record<'privacy' | 'terms' | 'cookies', PolicyDocument> =
         id: 'terceiros', title: 'Infraestrutura, links e contato',
         paragraphs: [
           'Render, Neon, GitHub e Cloudflare participam da infraestrutura conforme descrito na Política de Privacidade. Links externos e endpoints de terceiros têm práticas próprias. O Vigil não controla cookies de outros sites que você visite.',
-          'A identificação do responsável e o canal para dúvidas de privacidade e cookies ainda precisam ser preenchidos antes da publicação definitiva desta política.',
+          `Para dúvidas de privacidade e cookies, entre em contato pelo e-mail ${LEGAL_CONTACT.email}. A identificação completa do responsável ainda precisa ser informada antes da publicação definitiva desta política.`,
         ],
       },
     ],

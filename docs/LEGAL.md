@@ -18,9 +18,11 @@ A aceitação dos termos e a ciência da política não representam consentiment
 
 Os textos descrevem os recursos existentes: senha armazenada como hash, cookie de sessão, tema local, resultados sem corpo da resposta, publicação opcional de status, demonstração em memória e infraestrutura Render/Neon/GitHub/Cloudflare. Arquivamento não equivale a exclusão de conta.
 
+Em 2026-10-10, o usuário informou `viniciusfmarrocos@gmail.com` como contato do responsável. O endereço aparece nos três documentos públicos. O aviso de cookies explica o identificador de sessão e distingue as preferências guardadas no armazenamento local. A versão `2026-10-09` permanece: esta atualização preenche o contato e esclarece práticas já descritas, sem alterar finalidades, tecnologias ou condições de aceite.
+
 ## Pendências editoriais antes de publicar
 
-- Preencher o nome do responsável e o e-mail de atendimento em `LEGAL_CONTACT`; atualizar os trechos de contato nos três documentos. Esses dados foram solicitados ao usuário e não foram inventados.
+- Preencher a identificação completa do responsável em `LEGAL_CONTACT`. O e-mail de atendimento já foi fornecido pelo usuário; o nome completo não foi inferido a partir do endereço.
 - Definir os prazos de conservação para contas, configurações e histórico de aceites e o processo operacional de atendimento a pedidos de titulares. O sistema ainda não exclui contas automaticamente.
 - Confirmar as condições reais dos fornecedores e os procedimentos aplicáveis a processamento internacional. O texto informa a possibilidade de processamento fora do Brasil sem declarar salvaguardas que não tenham sido comprovadas.
 

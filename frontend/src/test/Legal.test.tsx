@@ -76,7 +76,11 @@ describe('políticas públicas e 404', () => {
     expect(screen.getByRole('heading', { name: policies[policy].title, level: 1 })).toBeVisible();
     for (const section of policies[policy].sections) expect(screen.getByRole('heading', { name: section.title, level: 2 })).toBeVisible();
     expect(screen.getByText(LEGAL_CONTACT.name)).toBeVisible();
-    if (!LEGAL_CONTACT.email) expect(screen.getByText('O canal de contato ainda não foi informado.')).toBeVisible();
+    expect(LEGAL_CONTACT.email).toBe('viniciusfmarrocos@gmail.com');
+    expect(screen.getByRole('link', { name: LEGAL_CONTACT.email! })).toHaveAttribute('href', 'mailto:viniciusfmarrocos@gmail.com');
+    expect(screen.getByText(/A identificação completa do responsável ainda precisa ser informada/)).toBeVisible();
+    expect(screen.queryByText('O canal de contato ainda não foi informado.')).not.toBeInTheDocument();
+    expect(POLICY_VERSION).toBe('2026-10-09');
     expect(screen.getByRole('navigation', { name: 'Informações legais' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Cookies e preferências' })).toBeVisible();
     expect(fetch).not.toHaveBeenCalled(); expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
@@ -93,14 +97,21 @@ describe('políticas públicas e 404', () => {
 
 describe('preferências de cookies', () => {
   it.each(['accepted', 'refused'] as const)('salva %s por 180 dias e permite reabrir pelo rodapé', async choice => {
+    const cookiesBefore = document.cookie;
     const user = userEvent.setup(); render(<LegalShell><main><h1>Leitura livre</h1><button>Ler página</button></main></LegalShell>);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Ler página' }));
     const banner = screen.getByRole('region', { name: 'Cookies e preferências' });
+    expect(banner).toHaveTextContent('cookie necessário com um identificador de sessão para manter o login');
+    expect(banner).toHaveTextContent('O armazenamento local deste navegador guarda o tema e sua escolha neste aviso');
     expect(banner).toHaveTextContent('Não usamos analytics nem cookies de marketing');
+    expect(banner).toHaveTextContent('Continuar sem aceitar mantém o acesso público; o cookie necessário será usado se você entrar na conta');
+    expect(within(banner).getByRole('link', { name: /Ler a Política de Cookies/ })).toHaveAttribute('href', '/cookies');
     expect(within(banner).getAllByRole('button')).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: choice === 'accepted' ? 'Aceitar cookies' : 'Continuar sem aceitar' }));
     expect(screen.queryByRole('region', { name: 'Cookies e preferências' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Leitura livre' })).toBeVisible();
+    expect(document.cookie).toBe(cookiesBefore);
     const value = JSON.parse(localStorage.getItem(COOKIE_PREFERENCE_KEY)!);
     expect(value.choice).toBe(choice); expect(value.version).toBe(POLICY_VERSION);
     expect(Date.parse(value.expires_at) - Date.parse(value.timestamp)).toBe(COOKIE_PREFERENCE_LIFETIME);
