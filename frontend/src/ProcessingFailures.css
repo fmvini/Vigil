@@ -1,4 +1,4 @@
-.processing-failures { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.processing-failures { margin-top: 24px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--panel-radius); background: var(--surface); }
 .processing-failures summary { cursor: pointer; min-height: 44px; }
 .processing-failures summary h2 { display: inline; font-size: 1rem; margin: 0; }
 .processing-content { padding-top: 8px; }
@@ -9,6 +9,7 @@
 .processing-failures td { overflow-wrap: anywhere; }
 .processing-failures button { min-height: 44px; }
 @media (max-width: 760px) {
+  .processing-failures { padding: 14px 18px; }
   .processing-filters { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .processing-filters select { font-size: 1rem; }
   .processing-failures td:not(:first-child) { grid-template-columns: 110px minmax(0, 1fr); }

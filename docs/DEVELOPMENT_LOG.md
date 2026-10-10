@@ -1,5 +1,32 @@
 # Registro de desenvolvimento
 
+## 2026-10-10 — Superfícies DARK aproximadas do comp
+
+### Implementado
+- Lote6 material do redesign: 23 tokens de superfícies/chrome/texto DARK restritos ao console e texto principal do cabeçalho da tabela. Painel `#16251f`, trilho `#15231e`, canvas `#0f1d19`, cabeçalho `#1e2b27` e texto principal `#f1f2f2`, com amostras da referência e documentação final dos tokens.
+- Preservados geometria fix5, margem desktop16px, seis monitores, URLs/cadência/metadados, ações, filtros44px, saúde/ressalvas e tema claro. O mobile DARK recebe apenas a mudança tonal.
+
+### Arquivos principais alterados
+- `frontend/src/styles.css`, `frontend/DESIGN.md`, `frontend/.impeccable/design.json`
+- `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Frontend reassumiu explicitamente `frontend/`; não houve agente/reviewer novo. Maestro realizou revisão independente do pacote em `.cache/verification/redesign-fix6-maestro-review.md` e não editou fontes frontend.
+- Tokens derivados de áreas reais do comp, sem gradientes/rasters decorativos, mudanças de caixas/pesos do comparador ou force. Semântica de saúde/qualidade, accent e foco existentes preservados.
+- Encerrado este lote bounded; nenhum microajuste adicional indicado. Continuar exige novo objetivo material ou decisão explícita aceitando design adaptado e liberando reprodução numérica; o pedido de retomada não concedeu essa liberação.
+
+### Estado atual
+- Após liberação de permissão e pedido explícito de commit, testes/build oficiais das mesmas fontes passaram fora do sandbox:143/143 em15arquivos/11,23s e `npm run build` com TypeScript/Vite aprovado. Antes dessa liberação, os comandos encontravam spawnEPERM e o fallback143/143/bundleCLI já haviam passado; nenhuma assertion foi alterada.
+- Freeze6 de38fontes `8e6783b3c6e9eb061790aaada8d99438b722d527052b051366ba5c8e8f1e2a9d`: sóCSS mudou frente ao freeze5. Maestro recalculou os38hashes e os5hashes de capturas sem divergência.
+- Cinco capturas finais válidas em `frontend/.impeccable/review/redesign/final/`, before-fix6 preserva fix5. Primeiro frame1440claro ficou truncado1440x707 durante a interrupção de janela; preservado em fix6-invalid e substituído somente ele uma vez. Finais1440x884,390x836,1586x984; zero diferenças de geometria DOM e nenhum overflow de página reportado. Raster segue8px menor que DOM.
+- Objetivo tonal resolvido na revisão do Maestro; nenhuma regressão introduzida evidenciada nas cinco capturas. Gate continua aberto64,50%<72%, contra63,14% dofix5. Cor80,67→80,19% e detalhe46,29→44,60% caíram; melhora local dos fundos não implica melhora global de todas as métricas. Heroopen/ok:false/forced:null.
+- Sem nova certificação AA, teclado físico, full-page, desempenho/backend. Outras8Operate/25públicas retêm provas anteriores. Usuário solicitou explicitamente commit do estado implementado após liberar permissão: implementação verificada registrada como unidade local por solicitação do usuário, mantendo o requisito de fidelidade aberto. O pedido de commit não libera o gate e não autoriza push/deploy.
+
+### Próximos passos
+- Retomar por `fix6-handoff.md`, `fix6-proof.json` e revisão Maestro; não repetir este lote de capturas/detector nem testes aprovados sem nova mudança ou problema. Frontend permanece proprietário de seus arquivos, sem edição ativa ao entregar.
+- Resolver o requisito de fidelidade por objetivo material verificável que preserve dados/funcionalidade, ou colher decisão explícita do usuário sobre aceitar o design adaptado. Não tratar64,50% como aprovação.
+- Antes de publicar, validar navegação física por teclado, resolver contatos/políticas pendentes em LEGAL e o requisito visual. Testes/build oficiais já passaram para estas fontes. O redesign existente e sua documentação são registrados juntos por pedido explícito, sem push automático; novas mudanças devem formar outra unidade coerente.
+
 ## 2026-10-10 — Backup compatível com aceites e continuidade reconciliada
 
 ### Implementado
@@ -27,6 +54,90 @@
 - Os quatro casos antes bloqueados já passaram. Evoluir o helper PG18 para verificar aceites somente em unidade deliberada, sem tratá-lo como prova equivalente ao manifesto Compose.
 - Fix/testes/documentação reconciliada são registrados juntos conforme pedido explícito, mantendo o redesign em outro commit. Não enviar ao remoto automaticamente.
 - O lote6 DARK já foi revisado pelo Maestro; preservar a pendência de fidelidade até nova prova ou decisão explícita do usuário.
+
+## 2026-10-10 — Redesign interrompido a pedido do usuário
+
+### Implementado
+- Lotes3–5 do mesmo achado de fidelidade: quatro grupos de qualidade com símbolos decorativos, zona de saúde compacta, controles menos pesados, URLs13px, nomes16px, título de saúde20px, colunas alinhadas e fluxo flexível nome/cadência. Corrigida fragmentação evitável em1440px; filtros44px preservados em faixa~71,5px.
+- Último lote altera somente margem desktop entre masthead e heading de22px para16px. Reviewer recomenda manter essa versão pela posição mais próxima do comp, encerrando ajustes de margem.
+
+### Arquivos principais alterados
+- `frontend/src/App.tsx`, `frontend/src/styles.css`
+- `frontend/DESIGN.md`, `frontend/.impeccable/design.json`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Nenhuma mudança backend/API/autenticação/conteúdo legal/dados ou dependência. Seis monitores e todas as ressalvas preservados; sem gráfico fictício, ocultação de linhas ou mudança de caixas do comp.
+- Último score caiu67,74%→63,14% apesar do alinhamento visível mais próximo. Reviewer não atribui causalidade isolada ao CSS: composite inclui timestamps/crops e bandas. Não restaurar versão anterior somente para perseguir score; nenhuma liberação do gate inferida de “pode continuar”.
+
+### Estado atual
+- Usuário pediu encerrar por hoje para dormir e continuar amanhã. Nenhum novo ajuste/QA iniciado após essa instrução; somente checkpoint de continuidade. Sem staging/commit/push/deploy: unidade de redesign ainda aberta.
+- Freeze38 fontes `.cache/verification/redesign-frontend-fix5-source-freeze.json`, agregado `d91496227a47171755ca9fcb6ff7fa0b2b29c0c559ff2e40cdc84bcac9400d1e`; sóCSS mudou contra fix4.143/143 Vitest validou as mesmas fontesTS/TSX; typecheck do lote4 e bundle CLI do lote5 passaram. Teste/build oficiais permanecem bloqueados por spawn EPERM, sem nova tentativa.
+- `frontend/.impeccable/review/redesign/verdict4.md`: três direções resolvidas, fragmentação fechada, sem novas regressões. `verdict5.md`: alinhamento resolvido e nenhuma regressão visível, disposição fix porque gate segue parcial63,14%<72%. Encerrar microajustes de margem; não tratar como aprovação global.
+- Cinco paths Operate finais atuais em `frontend/.impeccable/review/redesign/final/`; before-fix5 preserva fix4. Outros oito Operate/25públicos retêm escopo anterior. Raster8px menor que DOM, sem full-page/AA/teclado físico/backend certificado. Preview sintético5187 preservado, sem conta/API real.
+
+### Próximos passos
+- Retomar por este checkpoint e `verdict5.md`; não repetir context/detector/auditoria global nem testes já aprovados sem nova mudança. Frontend atingiu limite de uso; Maestro assumiu App/CSS explicitamente, verificar disponibilidade/propriedade antes de retomar concorrência.
+- Apresentar ao usuário a pendência de fidelidade e definir objetivo material dirigido pelo comp antes de outra rodada. Encerrar como design adaptado exige decisão explícita liberando o gate; não forçar aprovação. Priorizar conteúdo/funcionalidade sobre pixels fictícios.
+- Após conclusão: conferir build oficial/teclado físico em ambiente capaz, atualizar DESIGN/log e agrupar implementação/docs/testes correspondentes em commit local. `.git` tem restrição de escrita nesta sessão; não contornar permissões nem fazer push automático.
+
+## 2026-10-10 — Aproximação da referência no console
+
+### Implementado
+- Continuação solicitada pelo usuário, restrita ao achado de fidelidade do finish reviewer: cabeçalho de Monitores compacto, endpoint com nome/método/cadência e URL, tipografia desktop ampliada e ícones SVG decorativos nas ações existentes.
+- Terceiro lote: faixa de saúde com zona de220px e quatro grupos de qualidade com símbolos de44px, lettering menos pesado nas ações, URLs de13px e proporções da tabela alinhadas às âncoras do comp em1586px. Quarto lote corrige fragmentação evitável dos nomes em1440px com fluxo flexível de nome/cadência; nomes16px e heading de saúde20px, faixa de filtros~71,5px com controles44px. Dados, seis monitores, labels, handlers, ressalvas e layout mobile preservados.
+
+### Arquivos principais alterados
+- `frontend/src/App.tsx`, `frontend/src/styles.css`, `docs/DEVELOPMENT_LOG.md`
+- `frontend/DESIGN.md` e `frontend/.impeccable/design.json`, revalidados independentemente após o lote.
+
+### Decisões técnicas
+- Sem gráfico fictício, dependência, texto legal ou mudança de contrato. Frontend atingiu limite após lote2; Maestro assumiu App/CSS para os três ajustes indicados pelo reviewer, com propriedade explicitamente comunicada.
+- Em1440px a primeira captura do lote3 revelou overflow local na tabela; distribuição específica1151–1500 corrigiu esse problema. Nenhum novo detector manual ou busca independente de defeitos.
+
+### Estado atual
+- Typecheck aprovado;143/143 testes em15 arquivos via fallback CLI/Vitest em22,18s, sem alterar assertions; bundle CLI fresco aprovado. Loader oficial Vite/Vitest continua bloqueado por spawn EPERM; não afirmar build oficial aprovado.
+- Freeze38 fontes `.cache/verification/redesign-frontend-fix4-source-freeze.json`, agregado `7d83df7705c99c48e69d3c3d0d7f55f3c26a9544d61d4563a8208f6faf3d1024`; somente CSS alterado contra fix3,37 idênticos. Vitest143/143 validou as mesmas fontesTS/TSX do freeze4; mudança posterior somenteCSS validada por typecheck/bundle e capturas. `redesign-proof.json` confirma zero divergências e pixels dos PNGs da marca preservados.
+- Lote3 realizou duas capturas dos mesmos cinco viewports, com correção local entre elas; final é o segundo conjunto. PNGs atuais em `frontend/.impeccable/review/redesign/final/`; before-fix3 guarda o primeiro conjunto deste lote, não o final anterior. Os outros oito PNGs Operate e25 públicos retêm escopo anterior. DOM/raster diferem8px; nenhuma captura full-page ou certificação de teclado físico/AA/backend.
+- Os mesmos cinco paths foram recapturados uma vez no lote4; before-fix4 preserva finalfix3. Nomes maiores agora usam largura disponível antes de realocar cadência; URLs completas podem legitimamente quebrar. Mobile mantém resumo y499–679,19 e Monitores y691–719 no raster836px. Sem overflow horizontal de página amostrado.
+- Score de fidelidade cresceu de62,30% para65,50% e67,74% em `frontend/.impeccable/review/redesign/final-fix4/report.json`, ainda abaixo do gate72%; hero record recusado, sem force/reponderação/mudança de caixas. Verdict3 parcial confirmou strip/pesos, pediu corrigir fragmentação e escala; verdict4 em processamento independente. Sem staging/commit/push/deploy enquanto esta unidade permanece aberta.
+
+### Próximos passos
+- Incorporar `frontend/.impeccable/review/redesign/verdict4.md` e continuar somente seus achados materiais, respeitando o limite de rodadas da skill e a direção do usuário. Preservar gate aberto enquanto falho; não registrar aprovação global.
+- Executar build oficial e teclado físico em ambiente capaz antes de publicar. Agrupar redesign/documentação/testes correspondentes em um commit local quando a unidade estiver concluída, sem push automático.
+
+## 2026-10-09 — Redesign integral Centro de controle
+
+### Implementado
+- Direção visual escolhida pelo usuário com Impeccable e Taste em todo o site: acesso/cadastro, dashboard, demonstração, status pública, políticas, cookies e 404. Superfícies minerais, Public Sans local, marca existente e geometria compartilhada entre temas claro/escuro.
+- Console com trilho de projetos, ações reais no cabeçalho, resumo independente de saúde/qualidade e monitores antes da investigação e configuração. Métricas/incidentes em grid 2:1 no desktop; incidentes em região nomeada/focável com rolagem limitada e paginação preservada.
+- Acesso prioriza formulário e aceites; políticas recebem índice lateral e coluna de leitura. Mobile usa navegação compacta e quatro contagens em duas colunas; resumo completo e título Monitores aparecem dentro da primeira captura. Botões de histórico incluem nome/URL/cadência na mesma área nativa, com 53px medidos no desktop.
+- Contratos de autenticação/API, conteúdo e versões legais, preferências de cookies, DTOs, dados reais e ressalvas históricas preservados. Nenhuma dependência nova ou alteração backend/banco.
+
+### Arquivos principais alterados
+- `frontend/src/App.tsx`, `frontend/src/Forms.tsx`, `frontend/src/Observations.tsx`, `frontend/src/Legal.tsx`, `frontend/src/styles.css`, `frontend/src/ProcessingFailures.css`
+- `frontend/.impeccable/surfaces/src-app-tsx.md`, `frontend/.impeccable/mocks/decision/redesign-control.png` e sidecar JSON de origem/aprovação
+- `frontend/DESIGN.md`, `frontend/.impeccable/design.json`
+- `.gitignore`, `frontend/public/apple-touch-icon.png`, `frontend/public/brand/vigil-logo.png`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Operate governa o console, Read os documentos; Taste orienta apresentação sem inserir convenções de marketing no console. Seed `e183038d`, direção 6, comp escolhido de 1586x992; catálogo remoto indisponível reportado. Public Sans permanece fixada pelo brief.
+- Seis monitores reais, metadados, ações, dados e métricas existentes têm prioridade sobre quatro linhas e gráfico fictícios do conceito. Nenhum avatar/settings/help/sorting/chart foi inferido do mock. Essas adaptações não constituem aprovação de fidelidade exata.
+- Dois PNGs de marca receberam apenas metadados de origem: chunks de pixels conferem com HEAD. Comp escolhido contém prompt exato; scan de três rasters não encontrou origem ausente. Build/review/cache são ignorados no Git.
+
+### Estado atual
+- TypeScript aprovado; 143/143 testes em 15 arquivos passaram novamente após correções, usando esbuild CLI e Vitest com configuração nativa/preserveSymlinks, sem alterar fontes ou assertions dos testes. Bundle CLI fresco compilou. `npm test`/`npm run build` oficiais continuam bloqueados antes da execução pelo loader/esbuild `spawn EPERM` nesta sessão.
+- Freeze final de 38 fontes: `.cache/verification/redesign-frontend-fix-source-freeze.json`, agregado `11d8ba2f19d27990d4d34555ed3e2aff50ebbad1638cb3f4a498c54163e70388`, zero divergências. Provas `redesign-vitest.json` e `redesign-proof.json` na mesma pasta.
+- Preview sintético local `http://127.0.0.1:5187`, sem conta/cloud/API real. Revisão independente abriu 13 capturas Operate + 25 públicas válidas com cobertura representativa desktop/mobile claro/escuro. Cinco imagens nomeadas do console foram recapturadas após o lote material, preservando os originais em `frontend/.impeccable/review/redesign/before-fix1/`.
+- Portal perde 8px no raster: DOM 1440x892/390x844/1586x992 produz PNG 1440x884/390x836/1586x984. São capturas de viewport e trechos rolados; sem full-page, reprodução exata do comp, certificação AA, foco/teclado físico, performance ou integração backend. Capturas anteriores retêm o escopo do primeiro freeze.
+- Finish reviewer em `frontend/.impeccable/review/redesign/finish-review.md` pediu quatro correções: gate do comp, composição mobile, targets desktop e seed em FORM. Veredito `verdict1.md` marcou mobile/targets/seed resolvidos e medições corrigidas; gate parcial/aberto, com score 62,29% abaixo de 72%, sem force. Nenhuma regressão evidenciada nas cinco recapturas; veredito restrito à lista de quatro itens, não aprovação global.
+- Documenter independente substituiu `frontend/DESIGN.md` e `frontend/.impeccable/design.json` por tokens claros/escuros, Public Sans, formas, composição, componentes e limites extraídos das fontes finais. Verificou 108 cores usadas contra CSS, referências, oito seções canônicas e dez snippets; nenhum linter externo de schema foi executado. PRODUCT não foi alterado; drift factual anterior não recebeu reparo incidental.
+- Em 2026-10-09 o usuário pediu explicitamente continuar aproximando da referência, sem liberar o gate. Segundo lote material em andamento: cabeçalho/tabela mais compactos, endpoint em duas linhas com nome/método/cadência e URL, tipografia e chrome de ações reais. Reutiliza o mesmo reviewer e cinco viewports nomeados; não registrar aprovação ou commit intermediário.
+- Detector executado uma vez; output truncado mostrou avisos de rampas contra DESIGN anterior. Não há relatório completo limpo nem segunda execução. Nenhum staging/commit/push/deploy nesta etapa.
+
+### Próximos passos
+- Concluir segundo lote de fidelidade solicitado, reconstruir/testar as fontes, recapturar cinco viewports e enviar ao mesmo reviewer para `verdict2`. Revalidar DESIGN.md/sidecar após o lote. Sem novo detector ou caça de defeitos.
+- Executar testes/build oficiais em ambiente que permita spawn, conferir teclado/focus-visible em navegador ativo e validar release antes de publicação. Não enviar ao remoto automaticamente.
+- Preservar pendências reais de contato/retencão em `docs/LEGAL.md`; redesign não altera conteúdo legal. Git deve agrupar implementação, design e este log em uma unidade concluída.
 
 ## 2026-10-09 — Políticas, aceites de autenticação e página 404
 

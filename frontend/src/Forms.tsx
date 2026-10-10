@@ -42,7 +42,9 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
     finally { setBusy(false); }
   }
   return <main className="auth-page">
-    <div className="auth-story"><div className="auth-header"><Brand href="#auth-form" /><ThemeControl /></div>
+    <header className="auth-header"><Brand href="#auth-form" /><ThemeControl /></header>
+    <div className="auth-layout">
+    <div className="auth-story">
       <div><h1>Seus serviços, <br />sob observação.</h1><p>Organize endpoints em projetos e configure como cada serviço será monitorado.</p>
         <div className="auth-note">Uma leitura honesta do estado dos seus serviços. Dados ausentes ou antigos nunca significam que está tudo bem.</div>
       </div><span className="quiet">Monitoramento HTTP</span>
@@ -66,6 +68,7 @@ export function AuthForm({ onSession, notice }: { onSession: (session: Session) 
       <button className="link auth-switch" disabled={busy} onClick={() => { setRegister(!register); setError(''); setSuccess(''); setPassword(''); setPrivacyAccepted(false); setTermsAccepted(false); }}>{register ? 'Já tenho uma conta' : 'Criar uma conta'}</button>
       <div className="demo-entry"><a className="demo-cta" href="/demo">Visualizar demonstração</a><p className="quiet">Explore todas as funcionalidades com dados fictícios, sem criar uma conta.</p></div>
     </section></div>
+    </div>
   </main>;
 }
 

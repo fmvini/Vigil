@@ -16,9 +16,10 @@ export function PolicyPage({ policy }: { policy: PolicyKey }) {
     <a className="skip-link" href="#policy-main">Pular para o conteúdo</a>
     <header className="legal-header"><Brand href="/" /><ThemeControl /></header>
     <main id="policy-main" tabIndex={-1}>
-      <h1>{content.title}</h1>
-      <p className="quiet">Versão de <time dateTime={POLICY_VERSION}>{POLICY_VERSION.split('-').reverse().join('/')}</time></p>
+      <div className="legal-title"><h1>{content.title}</h1>
+      <p className="quiet">Versão de <time dateTime={POLICY_VERSION}>{POLICY_VERSION.split('-').reverse().join('/')}</time></p></div>
       <nav className="policy-nav" aria-label="Políticas do Vigil">{policyLinks.map(([key, title]) => <a key={key} href={`/${key}`} aria-current={key === policy ? 'page' : undefined}>{title}</a>)}</nav>
+      <div className="policy-layout">
       <nav className="policy-index" aria-label="Nesta política"><h2>Nesta página</h2><ul>{content.sections.map(section => <li key={section.id}><a href={`#${section.id}`}>{section.title}</a></li>)}</ul></nav>
       <article className="policy-content" aria-label={content.title}>{content.sections.map(section => <section key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`}>{section.title}</h2>
@@ -27,6 +28,7 @@ export function PolicyPage({ policy }: { policy: PolicyKey }) {
       </section>)}
         <section aria-labelledby="legal-contact-title"><h2 id="legal-contact-title">Contato</h2><p>{LEGAL_CONTACT.name}</p>{LEGAL_CONTACT.email ? <p><a href={`mailto:${LEGAL_CONTACT.email}`}>{LEGAL_CONTACT.email}</a></p> : <p className="quiet">O canal de contato ainda não foi informado.</p>}</section>
       </article>
+      </div>
       <a className="legal-return" href="/">Voltar ao Vigil</a>
     </main>
   </div>;

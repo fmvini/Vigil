@@ -1,202 +1,1607 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T13:52:34.689100+00:00",
+  "generatedAt": "2026-10-10T15:14:05.907455+00:00",
   "title": "Design System: Vigil",
   "extensions": {
     "colorMeta": {
-      "accent": {
-        "role": "primary",
-        "displayName": "Verde de ação"
-      },
-      "brand-text": {
-        "role": "primary",
-        "displayName": "Verde do wordmark"
-      },
-      "accent-hover": {
-        "role": "primary",
-        "displayName": "Verde de ação em hover"
-      },
-      "muted": {
+      "text": {
         "role": "neutral",
-        "displayName": "Texto auxiliar"
-      },
-      "border": {
-        "role": "neutral",
-        "displayName": "Divisória"
-      },
-      "surface": {
-        "role": "neutral",
-        "displayName": "Superfície branca"
+        "displayName": "Claro: text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01995 169.30)",
+          "oklch(26.43% 0.01995 169.30)",
+          "oklch(37.86% 0.01995 169.30)",
+          "oklch(49.29% 0.01995 169.30)",
+          "oklch(60.71% 0.01995 169.30)",
+          "oklch(72.14% 0.01995 169.30)",
+          "oklch(83.57% 0.01995 169.30)",
+          "oklch(95.00% 0.01995 169.30)"
+        ]
       },
       "canvas": {
         "role": "neutral",
-        "displayName": "Fundo claro"
+        "displayName": "Claro: canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.00615 137.77)",
+          "oklch(26.43% 0.00615 137.77)",
+          "oklch(37.86% 0.00615 137.77)",
+          "oklch(49.29% 0.00615 137.77)",
+          "oklch(60.71% 0.00615 137.77)",
+          "oklch(72.14% 0.00615 137.77)",
+          "oklch(83.57% 0.00615 137.77)",
+          "oklch(95.00% 0.00615 137.77)"
+        ]
       },
-      "text": {
-        "role": "neutral",
-        "displayName": "Texto principal"
-      },
-      "control-text": {
-        "role": "neutral",
-        "displayName": "Texto de botão"
-      },
-      "control-border": {
-        "role": "neutral",
-        "displayName": "Borda de botão"
-      },
-      "control-border-hover": {
-        "role": "neutral",
-        "displayName": "Borda de botão em hover"
-      },
-      "field-border": {
-        "role": "neutral",
-        "displayName": "Borda de campo"
-      },
-      "placeholder": {
-        "role": "neutral",
-        "displayName": "Placeholder"
-      },
-      "subtle": {
-        "role": "neutral",
-        "displayName": "Plano sutil"
-      },
-      "control-active": {
-        "role": "neutral",
-        "displayName": "Botão pressionado"
-      },
-      "disabled-field": {
-        "role": "neutral",
-        "displayName": "Campo desabilitado"
-      },
-      "focus": {
+      "accent": {
         "role": "primary",
-        "displayName": "Foco visível"
+        "displayName": "Claro: accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.08084 164.87)",
+          "oklch(26.43% 0.08084 164.87)",
+          "oklch(37.86% 0.08084 164.87)",
+          "oklch(49.29% 0.08084 164.87)",
+          "oklch(60.71% 0.08084 164.87)",
+          "oklch(72.14% 0.08084 164.87)",
+          "oklch(83.57% 0.08084 164.87)",
+          "oklch(95.00% 0.08084 164.87)"
+        ]
       },
-      "nav-hover": {
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Claro: accent hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.06944 164.33)",
+          "oklch(26.43% 0.06944 164.33)",
+          "oklch(37.86% 0.06944 164.33)",
+          "oklch(49.29% 0.06944 164.33)",
+          "oklch(60.71% 0.06944 164.33)",
+          "oklch(72.14% 0.06944 164.33)",
+          "oklch(83.57% 0.06944 164.33)",
+          "oklch(95.00% 0.06944 164.33)"
+        ]
+      },
+      "muted": {
         "role": "neutral",
-        "displayName": "Projeto em hover"
+        "displayName": "Claro: muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.02205 162.31)",
+          "oklch(26.43% 0.02205 162.31)",
+          "oklch(37.86% 0.02205 162.31)",
+          "oklch(49.29% 0.02205 162.31)",
+          "oklch(60.71% 0.02205 162.31)",
+          "oklch(72.14% 0.02205 162.31)",
+          "oklch(83.57% 0.02205 162.31)",
+          "oklch(95.00% 0.02205 162.31)"
+        ]
       },
-      "selected-bg": {
-        "role": "primary",
-        "displayName": "Fundo do projeto atual"
+      "border": {
+        "role": "neutral",
+        "displayName": "Claro: border",
+        "tonalRamp": [
+          "oklch(15.00% 0.01865 150.53)",
+          "oklch(26.43% 0.01865 150.53)",
+          "oklch(37.86% 0.01865 150.53)",
+          "oklch(49.29% 0.01865 150.53)",
+          "oklch(60.71% 0.01865 150.53)",
+          "oklch(72.14% 0.01865 150.53)",
+          "oklch(83.57% 0.01865 150.53)",
+          "oklch(95.00% 0.01865 150.53)"
+        ]
       },
-      "selected-text": {
-        "role": "primary",
-        "displayName": "Texto do projeto atual"
+      "surface": {
+        "role": "neutral",
+        "displayName": "Claro: surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ]
       },
       "danger": {
         "role": "semantic",
-        "displayName": "Ação destrutiva e saúde offline"
+        "displayName": "Claro: danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.15755 25.65)",
+          "oklch(26.43% 0.15755 25.65)",
+          "oklch(37.86% 0.15755 25.65)",
+          "oklch(49.29% 0.15755 25.65)",
+          "oklch(60.71% 0.15755 25.65)",
+          "oklch(72.14% 0.15755 25.65)",
+          "oklch(83.57% 0.15755 25.65)",
+          "oklch(95.00% 0.15755 25.65)"
+        ]
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "Claro: control border",
+        "tonalRamp": [
+          "oklch(15.00% 0.02051 159.65)",
+          "oklch(26.43% 0.02051 159.65)",
+          "oklch(37.86% 0.02051 159.65)",
+          "oklch(49.29% 0.02051 159.65)",
+          "oklch(60.71% 0.02051 159.65)",
+          "oklch(72.14% 0.02051 159.65)",
+          "oklch(83.57% 0.02051 159.65)",
+          "oklch(95.00% 0.02051 159.65)"
+        ]
+      },
+      "control-text": {
+        "role": "neutral",
+        "displayName": "Claro: control text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02931 159.93)",
+          "oklch(26.43% 0.02931 159.93)",
+          "oklch(37.86% 0.02931 159.93)",
+          "oklch(49.29% 0.02931 159.93)",
+          "oklch(60.71% 0.02931 159.93)",
+          "oklch(72.14% 0.02931 159.93)",
+          "oklch(83.57% 0.02931 159.93)",
+          "oklch(95.00% 0.02931 159.93)"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Claro: subtle",
+        "tonalRamp": [
+          "oklch(15.00% 0.01126 141.26)",
+          "oklch(26.43% 0.01126 141.26)",
+          "oklch(37.86% 0.01126 141.26)",
+          "oklch(49.29% 0.01126 141.26)",
+          "oklch(60.71% 0.01126 141.26)",
+          "oklch(72.14% 0.01126 141.26)",
+          "oklch(83.57% 0.01126 141.26)",
+          "oklch(95.00% 0.01126 141.26)"
+        ]
+      },
+      "rail-bg": {
+        "role": "neutral",
+        "displayName": "Claro: rail bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01126 141.26)",
+          "oklch(26.43% 0.01126 141.26)",
+          "oklch(37.86% 0.01126 141.26)",
+          "oklch(49.29% 0.01126 141.26)",
+          "oklch(60.71% 0.01126 141.26)",
+          "oklch(72.14% 0.01126 141.26)",
+          "oklch(83.57% 0.01126 141.26)",
+          "oklch(95.00% 0.01126 141.26)"
+        ]
+      },
+      "masthead-bg": {
+        "role": "neutral",
+        "displayName": "Claro: masthead bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.00615 137.77)",
+          "oklch(26.43% 0.00615 137.77)",
+          "oklch(37.86% 0.00615 137.77)",
+          "oklch(49.29% 0.00615 137.77)",
+          "oklch(60.71% 0.00615 137.77)",
+          "oklch(72.14% 0.00615 137.77)",
+          "oklch(83.57% 0.00615 137.77)",
+          "oklch(95.00% 0.00615 137.77)"
+        ]
+      },
+      "demo-bg": {
+        "role": "semantic",
+        "displayName": "Claro: demo bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01783 170.06)",
+          "oklch(26.43% 0.01783 170.06)",
+          "oklch(37.86% 0.01783 170.06)",
+          "oklch(49.29% 0.01783 170.06)",
+          "oklch(60.71% 0.01783 170.06)",
+          "oklch(72.14% 0.01783 170.06)",
+          "oklch(83.57% 0.01783 170.06)",
+          "oklch(95.00% 0.01783 170.06)"
+        ]
+      },
+      "demo-text": {
+        "role": "semantic",
+        "displayName": "Claro: demo text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05020 169.77)",
+          "oklch(26.43% 0.05020 169.77)",
+          "oklch(37.86% 0.05020 169.77)",
+          "oklch(49.29% 0.05020 169.77)",
+          "oklch(60.71% 0.05020 169.77)",
+          "oklch(72.14% 0.05020 169.77)",
+          "oklch(83.57% 0.05020 169.77)",
+          "oklch(95.00% 0.05020 169.77)"
+        ]
+      },
+      "control-border-hover": {
+        "role": "neutral",
+        "displayName": "Claro: control border hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.03180 160.74)",
+          "oklch(26.43% 0.03180 160.74)",
+          "oklch(37.86% 0.03180 160.74)",
+          "oklch(49.29% 0.03180 160.74)",
+          "oklch(60.71% 0.03180 160.74)",
+          "oklch(72.14% 0.03180 160.74)",
+          "oklch(83.57% 0.03180 160.74)",
+          "oklch(95.00% 0.03180 160.74)"
+        ]
+      },
+      "control-active": {
+        "role": "neutral",
+        "displayName": "Claro: control active",
+        "tonalRamp": [
+          "oklch(15.00% 0.01247 156.99)",
+          "oklch(26.43% 0.01247 156.99)",
+          "oklch(37.86% 0.01247 156.99)",
+          "oklch(49.29% 0.01247 156.99)",
+          "oklch(60.71% 0.01247 156.99)",
+          "oklch(72.14% 0.01247 156.99)",
+          "oklch(83.57% 0.01247 156.99)",
+          "oklch(95.00% 0.01247 156.99)"
+        ]
       },
       "danger-hover": {
         "role": "semantic",
-        "displayName": "Ação destrutiva em hover"
+        "displayName": "Claro: danger hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.13530 25.52)",
+          "oklch(26.43% 0.13530 25.52)",
+          "oklch(37.86% 0.13530 25.52)",
+          "oklch(49.29% 0.13530 25.52)",
+          "oklch(60.71% 0.13530 25.52)",
+          "oklch(72.14% 0.13530 25.52)",
+          "oklch(83.57% 0.13530 25.52)",
+          "oklch(95.00% 0.13530 25.52)"
+        ]
       },
-      "data-none-bg": {
-        "role": "semantic",
-        "displayName": "Sem dados: fundo"
+      "focus": {
+        "role": "primary",
+        "displayName": "Claro: focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.09228 164.90)",
+          "oklch(26.43% 0.09228 164.90)",
+          "oklch(37.86% 0.09228 164.90)",
+          "oklch(49.29% 0.09228 164.90)",
+          "oklch(60.71% 0.09228 164.90)",
+          "oklch(72.14% 0.09228 164.90)",
+          "oklch(83.57% 0.09228 164.90)",
+          "oklch(95.00% 0.09228 164.90)"
+        ]
       },
-      "data-none-text": {
-        "role": "semantic",
-        "displayName": "Sem dados: texto"
+      "selection-bg": {
+        "role": "primary",
+        "displayName": "Claro: selection bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.03934 163.11)",
+          "oklch(26.43% 0.03934 163.11)",
+          "oklch(37.86% 0.03934 163.11)",
+          "oklch(49.29% 0.03934 163.11)",
+          "oklch(60.71% 0.03934 163.11)",
+          "oklch(72.14% 0.03934 163.11)",
+          "oklch(83.57% 0.03934 163.11)",
+          "oklch(95.00% 0.03934 163.11)"
+        ]
       },
-      "data-stale-bg": {
-        "role": "semantic",
-        "displayName": "Dados antigos: fundo"
+      "selection-text": {
+        "role": "primary",
+        "displayName": "Claro: selection text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05305 163.89)",
+          "oklch(26.43% 0.05305 163.89)",
+          "oklch(37.86% 0.05305 163.89)",
+          "oklch(49.29% 0.05305 163.89)",
+          "oklch(60.71% 0.05305 163.89)",
+          "oklch(72.14% 0.05305 163.89)",
+          "oklch(83.57% 0.05305 163.89)",
+          "oklch(95.00% 0.05305 163.89)"
+        ]
       },
-      "data-stale-text": {
-        "role": "semantic",
-        "displayName": "Dados antigos: texto"
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Claro: field border",
+        "tonalRamp": [
+          "oklch(15.00% 0.03260 157.43)",
+          "oklch(26.43% 0.03260 157.43)",
+          "oklch(37.86% 0.03260 157.43)",
+          "oklch(49.29% 0.03260 157.43)",
+          "oklch(60.71% 0.03260 157.43)",
+          "oklch(72.14% 0.03260 157.43)",
+          "oklch(83.57% 0.03260 157.43)",
+          "oklch(95.00% 0.03260 157.43)"
+        ]
       },
-      "data-paused-bg": {
-        "role": "semantic",
-        "displayName": "Pausa: fundo"
+      "placeholder": {
+        "role": "neutral",
+        "displayName": "Claro: placeholder",
+        "tonalRamp": [
+          "oklch(15.00% 0.02453 158.06)",
+          "oklch(26.43% 0.02453 158.06)",
+          "oklch(37.86% 0.02453 158.06)",
+          "oklch(49.29% 0.02453 158.06)",
+          "oklch(60.71% 0.02453 158.06)",
+          "oklch(72.14% 0.02453 158.06)",
+          "oklch(83.57% 0.02453 158.06)",
+          "oklch(95.00% 0.02453 158.06)"
+        ]
       },
-      "data-paused-text": {
-        "role": "semantic",
-        "displayName": "Pausa: texto"
+      "disabled-field": {
+        "role": "neutral",
+        "displayName": "Claro: disabled field",
+        "tonalRamp": [
+          "oklch(15.00% 0.00581 153.77)",
+          "oklch(26.43% 0.00581 153.77)",
+          "oklch(37.86% 0.00581 153.77)",
+          "oklch(49.29% 0.00581 153.77)",
+          "oklch(60.71% 0.00581 153.77)",
+          "oklch(72.14% 0.00581 153.77)",
+          "oklch(83.57% 0.00581 153.77)",
+          "oklch(95.00% 0.00581 153.77)"
+        ]
       },
-      "data-fresh-bg": {
-        "role": "semantic",
-        "displayName": "Dados atuais: fundo"
-      },
-      "data-fresh-text": {
-        "role": "semantic",
-        "displayName": "Dados atuais: texto"
-      },
-      "health-online": {
-        "role": "semantic",
-        "displayName": "Saúde online"
-      },
-      "health-degraded": {
-        "role": "semantic",
-        "displayName": "Saúde degradada"
-      },
-      "alert-bg": {
-        "role": "semantic",
-        "displayName": "Alerta: fundo"
+      "brand-text": {
+        "role": "primary",
+        "displayName": "Claro: brand text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05041 166.15)",
+          "oklch(26.43% 0.05041 166.15)",
+          "oklch(37.86% 0.05041 166.15)",
+          "oklch(49.29% 0.05041 166.15)",
+          "oklch(60.71% 0.05041 166.15)",
+          "oklch(72.14% 0.05041 166.15)",
+          "oklch(83.57% 0.05041 166.15)",
+          "oklch(95.00% 0.05041 166.15)"
+        ]
       },
       "alert-text": {
         "role": "semantic",
-        "displayName": "Alerta: texto"
+        "displayName": "Claro: alert text",
+        "tonalRamp": [
+          "oklch(15.00% 0.12527 24.61)",
+          "oklch(26.43% 0.12527 24.61)",
+          "oklch(37.86% 0.12527 24.61)",
+          "oklch(49.29% 0.12527 24.61)",
+          "oklch(60.71% 0.12527 24.61)",
+          "oklch(72.14% 0.12527 24.61)",
+          "oklch(83.57% 0.12527 24.61)",
+          "oklch(95.00% 0.12527 24.61)"
+        ]
+      },
+      "alert-bg": {
+        "role": "semantic",
+        "displayName": "Claro: alert bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01742 21.81)",
+          "oklch(26.43% 0.01742 21.81)",
+          "oklch(37.86% 0.01742 21.81)",
+          "oklch(49.29% 0.01742 21.81)",
+          "oklch(60.71% 0.01742 21.81)",
+          "oklch(72.14% 0.01742 21.81)",
+          "oklch(83.57% 0.01742 21.81)",
+          "oklch(95.00% 0.01742 21.81)"
+        ]
       },
       "alert-border": {
         "role": "semantic",
-        "displayName": "Alerta: borda"
-      },
-      "success-bg": {
-        "role": "semantic",
-        "displayName": "Sucesso: fundo"
+        "displayName": "Claro: alert border",
+        "tonalRamp": [
+          "oklch(15.00% 0.05761 26.44)",
+          "oklch(26.43% 0.05761 26.44)",
+          "oklch(37.86% 0.05761 26.44)",
+          "oklch(49.29% 0.05761 26.44)",
+          "oklch(60.71% 0.05761 26.44)",
+          "oklch(72.14% 0.05761 26.44)",
+          "oklch(83.57% 0.05761 26.44)",
+          "oklch(95.00% 0.05761 26.44)"
+        ]
       },
       "success-text": {
         "role": "semantic",
-        "displayName": "Sucesso: texto"
+        "displayName": "Claro: success text",
+        "tonalRamp": [
+          "oklch(15.00% 0.07236 158.19)",
+          "oklch(26.43% 0.07236 158.19)",
+          "oklch(37.86% 0.07236 158.19)",
+          "oklch(49.29% 0.07236 158.19)",
+          "oklch(60.71% 0.07236 158.19)",
+          "oklch(72.14% 0.07236 158.19)",
+          "oklch(83.57% 0.07236 158.19)",
+          "oklch(95.00% 0.07236 158.19)"
+        ]
+      },
+      "success-bg": {
+        "role": "semantic",
+        "displayName": "Claro: success bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01487 158.25)",
+          "oklch(26.43% 0.01487 158.25)",
+          "oklch(37.86% 0.01487 158.25)",
+          "oklch(49.29% 0.01487 158.25)",
+          "oklch(60.71% 0.01487 158.25)",
+          "oklch(72.14% 0.01487 158.25)",
+          "oklch(83.57% 0.01487 158.25)",
+          "oklch(95.00% 0.01487 158.25)"
+        ]
       },
       "success-border": {
         "role": "semantic",
-        "displayName": "Sucesso: borda"
+        "displayName": "Claro: success border",
+        "tonalRamp": [
+          "oklch(15.00% 0.04649 156.08)",
+          "oklch(26.43% 0.04649 156.08)",
+          "oklch(37.86% 0.04649 156.08)",
+          "oklch(49.29% 0.04649 156.08)",
+          "oklch(60.71% 0.04649 156.08)",
+          "oklch(72.14% 0.04649 156.08)",
+          "oklch(83.57% 0.04649 156.08)",
+          "oklch(95.00% 0.04649 156.08)"
+        ]
+      },
+      "story-text": {
+        "role": "neutral",
+        "displayName": "Claro: story text",
+        "tonalRamp": [
+          "oklch(15.00% 0.03622 157.81)",
+          "oklch(26.43% 0.03622 157.81)",
+          "oklch(37.86% 0.03622 157.81)",
+          "oklch(49.29% 0.03622 157.81)",
+          "oklch(60.71% 0.03622 157.81)",
+          "oklch(72.14% 0.03622 157.81)",
+          "oklch(83.57% 0.03622 157.81)",
+          "oklch(95.00% 0.03622 157.81)"
+        ]
+      },
+      "story-border": {
+        "role": "neutral",
+        "displayName": "Claro: story border",
+        "tonalRamp": [
+          "oklch(15.00% 0.02819 160.73)",
+          "oklch(26.43% 0.02819 160.73)",
+          "oklch(37.86% 0.02819 160.73)",
+          "oklch(49.29% 0.02819 160.73)",
+          "oklch(60.71% 0.02819 160.73)",
+          "oklch(72.14% 0.02819 160.73)",
+          "oklch(83.57% 0.02819 160.73)",
+          "oklch(95.00% 0.02819 160.73)"
+        ]
+      },
+      "nav-hover": {
+        "role": "neutral",
+        "displayName": "Claro: nav hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.01250 156.99)",
+          "oklch(26.43% 0.01250 156.99)",
+          "oklch(37.86% 0.01250 156.99)",
+          "oklch(49.29% 0.01250 156.99)",
+          "oklch(60.71% 0.01250 156.99)",
+          "oklch(72.14% 0.01250 156.99)",
+          "oklch(83.57% 0.01250 156.99)",
+          "oklch(95.00% 0.01250 156.99)"
+        ]
+      },
+      "selected-text": {
+        "role": "primary",
+        "displayName": "Claro: selected text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06878 164.24)",
+          "oklch(26.43% 0.06878 164.24)",
+          "oklch(37.86% 0.06878 164.24)",
+          "oklch(49.29% 0.06878 164.24)",
+          "oklch(60.71% 0.06878 164.24)",
+          "oklch(72.14% 0.06878 164.24)",
+          "oklch(83.57% 0.06878 164.24)",
+          "oklch(95.00% 0.06878 164.24)"
+        ]
+      },
+      "selected-bg": {
+        "role": "primary",
+        "displayName": "Claro: selected bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02168 158.56)",
+          "oklch(26.43% 0.02168 158.56)",
+          "oklch(37.86% 0.02168 158.56)",
+          "oklch(49.29% 0.02168 158.56)",
+          "oklch(60.71% 0.02168 158.56)",
+          "oklch(72.14% 0.02168 158.56)",
+          "oklch(83.57% 0.02168 158.56)",
+          "oklch(95.00% 0.02168 158.56)"
+        ]
+      },
+      "account-border": {
+        "role": "neutral",
+        "displayName": "Claro: account border",
+        "tonalRamp": [
+          "oklch(15.00% 0.01771 159.07)",
+          "oklch(26.43% 0.01771 159.07)",
+          "oklch(37.86% 0.01771 159.07)",
+          "oklch(49.29% 0.01771 159.07)",
+          "oklch(60.71% 0.01771 159.07)",
+          "oklch(72.14% 0.01771 159.07)",
+          "oklch(83.57% 0.01771 159.07)",
+          "oklch(95.00% 0.01771 159.07)"
+        ]
+      },
+      "account-text": {
+        "role": "neutral",
+        "displayName": "Claro: account text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02870 158.14)",
+          "oklch(26.43% 0.02870 158.14)",
+          "oklch(37.86% 0.02870 158.14)",
+          "oklch(49.29% 0.02870 158.14)",
+          "oklch(60.71% 0.02870 158.14)",
+          "oklch(72.14% 0.02870 158.14)",
+          "oklch(83.57% 0.02870 158.14)",
+          "oklch(95.00% 0.02870 158.14)"
+        ]
+      },
+      "data-none-bg": {
+        "role": "semantic",
+        "displayName": "Claro: data none bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.00665 160.07)",
+          "oklch(26.43% 0.00665 160.07)",
+          "oklch(37.86% 0.00665 160.07)",
+          "oklch(49.29% 0.00665 160.07)",
+          "oklch(60.71% 0.00665 160.07)",
+          "oklch(72.14% 0.00665 160.07)",
+          "oklch(83.57% 0.00665 160.07)",
+          "oklch(95.00% 0.00665 160.07)"
+        ]
+      },
+      "data-none-text": {
+        "role": "semantic",
+        "displayName": "Claro: data none text",
+        "tonalRamp": [
+          "oklch(15.00% 0.03039 157.24)",
+          "oklch(26.43% 0.03039 157.24)",
+          "oklch(37.86% 0.03039 157.24)",
+          "oklch(49.29% 0.03039 157.24)",
+          "oklch(60.71% 0.03039 157.24)",
+          "oklch(72.14% 0.03039 157.24)",
+          "oklch(83.57% 0.03039 157.24)",
+          "oklch(95.00% 0.03039 157.24)"
+        ]
+      },
+      "data-stale-bg": {
+        "role": "semantic",
+        "displayName": "Claro: data stale bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04242 84.58)",
+          "oklch(26.43% 0.04242 84.58)",
+          "oklch(37.86% 0.04242 84.58)",
+          "oklch(49.29% 0.04242 84.58)",
+          "oklch(60.71% 0.04242 84.58)",
+          "oklch(72.14% 0.04242 84.58)",
+          "oklch(83.57% 0.04242 84.58)",
+          "oklch(95.00% 0.04242 84.58)"
+        ]
+      },
+      "data-stale-text": {
+        "role": "semantic",
+        "displayName": "Claro: data stale text",
+        "tonalRamp": [
+          "oklch(15.00% 0.09327 76.98)",
+          "oklch(26.43% 0.09327 76.98)",
+          "oklch(37.86% 0.09327 76.98)",
+          "oklch(49.29% 0.09327 76.98)",
+          "oklch(60.71% 0.09327 76.98)",
+          "oklch(72.14% 0.09327 76.98)",
+          "oklch(83.57% 0.09327 76.98)",
+          "oklch(95.00% 0.09327 76.98)"
+        ]
+      },
+      "data-paused-bg": {
+        "role": "semantic",
+        "displayName": "Claro: data paused bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01617 262.75)",
+          "oklch(26.43% 0.01617 262.75)",
+          "oklch(37.86% 0.01617 262.75)",
+          "oklch(49.29% 0.01617 262.75)",
+          "oklch(60.71% 0.01617 262.75)",
+          "oklch(72.14% 0.01617 262.75)",
+          "oklch(83.57% 0.01617 262.75)",
+          "oklch(95.00% 0.01617 262.75)"
+        ]
+      },
+      "data-paused-text": {
+        "role": "semantic",
+        "displayName": "Claro: data paused text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06786 256.69)",
+          "oklch(26.43% 0.06786 256.69)",
+          "oklch(37.86% 0.06786 256.69)",
+          "oklch(49.29% 0.06786 256.69)",
+          "oklch(60.71% 0.06786 256.69)",
+          "oklch(72.14% 0.06786 256.69)",
+          "oklch(83.57% 0.06786 256.69)",
+          "oklch(95.00% 0.06786 256.69)"
+        ]
+      },
+      "data-fresh-bg": {
+        "role": "semantic",
+        "displayName": "Claro: data fresh bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02318 157.58)",
+          "oklch(26.43% 0.02318 157.58)",
+          "oklch(37.86% 0.02318 157.58)",
+          "oklch(49.29% 0.02318 157.58)",
+          "oklch(60.71% 0.02318 157.58)",
+          "oklch(72.14% 0.02318 157.58)",
+          "oklch(83.57% 0.02318 157.58)",
+          "oklch(95.00% 0.02318 157.58)"
+        ]
+      },
+      "data-fresh-text": {
+        "role": "semantic",
+        "displayName": "Claro: data fresh text",
+        "tonalRamp": [
+          "oklch(15.00% 0.08095 154.83)",
+          "oklch(26.43% 0.08095 154.83)",
+          "oklch(37.86% 0.08095 154.83)",
+          "oklch(49.29% 0.08095 154.83)",
+          "oklch(60.71% 0.08095 154.83)",
+          "oklch(72.14% 0.08095 154.83)",
+          "oklch(83.57% 0.08095 154.83)",
+          "oklch(95.00% 0.08095 154.83)"
+        ]
+      },
+      "health-online": {
+        "role": "semantic",
+        "displayName": "Claro: health online",
+        "tonalRamp": [
+          "oklch(15.00% 0.08581 157.86)",
+          "oklch(26.43% 0.08581 157.86)",
+          "oklch(37.86% 0.08581 157.86)",
+          "oklch(49.29% 0.08581 157.86)",
+          "oklch(60.71% 0.08581 157.86)",
+          "oklch(72.14% 0.08581 157.86)",
+          "oklch(83.57% 0.08581 157.86)",
+          "oklch(95.00% 0.08581 157.86)"
+        ]
+      },
+      "health-degraded": {
+        "role": "semantic",
+        "displayName": "Claro: health degraded",
+        "tonalRamp": [
+          "oklch(15.00% 0.10416 74.38)",
+          "oklch(26.43% 0.10416 74.38)",
+          "oklch(37.86% 0.10416 74.38)",
+          "oklch(49.29% 0.10416 74.38)",
+          "oklch(60.71% 0.10416 74.38)",
+          "oklch(72.14% 0.10416 74.38)",
+          "oklch(83.57% 0.10416 74.38)",
+          "oklch(95.00% 0.10416 74.38)"
+        ]
+      },
+      "archive-bg": {
+        "role": "semantic",
+        "displayName": "Claro: archive bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.01425 57.59)",
+          "oklch(26.43% 0.01425 57.59)",
+          "oklch(37.86% 0.01425 57.59)",
+          "oklch(49.29% 0.01425 57.59)",
+          "oklch(60.71% 0.01425 57.59)",
+          "oklch(72.14% 0.01425 57.59)",
+          "oklch(83.57% 0.01425 57.59)",
+          "oklch(95.00% 0.01425 57.59)"
+        ]
+      },
+      "archive-border": {
+        "role": "semantic",
+        "displayName": "Claro: archive border",
+        "tonalRamp": [
+          "oklch(15.00% 0.04723 62.89)",
+          "oklch(26.43% 0.04723 62.89)",
+          "oklch(37.86% 0.04723 62.89)",
+          "oklch(49.29% 0.04723 62.89)",
+          "oklch(60.71% 0.04723 62.89)",
+          "oklch(72.14% 0.04723 62.89)",
+          "oklch(83.57% 0.04723 62.89)",
+          "oklch(95.00% 0.04723 62.89)"
+        ]
+      },
+      "archive-text": {
+        "role": "semantic",
+        "displayName": "Claro: archive text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05542 56.58)",
+          "oklch(26.43% 0.05542 56.58)",
+          "oklch(37.86% 0.05542 56.58)",
+          "oklch(49.29% 0.05542 56.58)",
+          "oklch(60.71% 0.05542 56.58)",
+          "oklch(72.14% 0.05542 56.58)",
+          "oklch(83.57% 0.05542 56.58)",
+          "oklch(95.00% 0.05542 56.58)"
+        ]
+      },
+      "skeleton": {
+        "role": "neutral",
+        "displayName": "Claro: skeleton",
+        "tonalRamp": [
+          "oklch(15.00% 0.00832 157.08)",
+          "oklch(26.43% 0.00832 157.08)",
+          "oklch(37.86% 0.00832 157.08)",
+          "oklch(49.29% 0.00832 157.08)",
+          "oklch(60.71% 0.00832 157.08)",
+          "oklch(72.14% 0.00832 157.08)",
+          "oklch(83.57% 0.00832 157.08)",
+          "oklch(95.00% 0.00832 157.08)"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "Claro: on accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ]
+      },
+      "on-danger": {
+        "role": "neutral",
+        "displayName": "Claro: on danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ]
+      },
+      "dark-text": {
+        "role": "neutral",
+        "displayName": "Escuro: text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01248 156.99)",
+          "oklch(26.43% 0.01248 156.99)",
+          "oklch(37.86% 0.01248 156.99)",
+          "oklch(49.29% 0.01248 156.99)",
+          "oklch(60.71% 0.01248 156.99)",
+          "oklch(72.14% 0.01248 156.99)",
+          "oklch(83.57% 0.01248 156.99)",
+          "oklch(95.00% 0.01248 156.99)"
+        ]
+      },
+      "dark-canvas": {
+        "role": "neutral",
+        "displayName": "Escuro: canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.02091 168.25)",
+          "oklch(26.43% 0.02091 168.25)",
+          "oklch(37.86% 0.02091 168.25)",
+          "oklch(49.29% 0.02091 168.25)",
+          "oklch(60.71% 0.02091 168.25)",
+          "oklch(72.14% 0.02091 168.25)",
+          "oklch(83.57% 0.02091 168.25)",
+          "oklch(95.00% 0.02091 168.25)"
+        ]
+      },
+      "dark-accent": {
+        "role": "primary",
+        "displayName": "Escuro: accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.11592 157.24)",
+          "oklch(26.43% 0.11592 157.24)",
+          "oklch(37.86% 0.11592 157.24)",
+          "oklch(49.29% 0.11592 157.24)",
+          "oklch(60.71% 0.11592 157.24)",
+          "oklch(72.14% 0.11592 157.24)",
+          "oklch(83.57% 0.11592 157.24)",
+          "oklch(95.00% 0.11592 157.24)"
+        ]
+      },
+      "dark-accent-hover": {
+        "role": "primary",
+        "displayName": "Escuro: accent hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.09095 158.05)",
+          "oklch(26.43% 0.09095 158.05)",
+          "oklch(37.86% 0.09095 158.05)",
+          "oklch(49.29% 0.09095 158.05)",
+          "oklch(60.71% 0.09095 158.05)",
+          "oklch(72.14% 0.09095 158.05)",
+          "oklch(83.57% 0.09095 158.05)",
+          "oklch(95.00% 0.09095 158.05)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Escuro: muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.02160 161.33)",
+          "oklch(26.43% 0.02160 161.33)",
+          "oklch(37.86% 0.02160 161.33)",
+          "oklch(49.29% 0.02160 161.33)",
+          "oklch(60.71% 0.02160 161.33)",
+          "oklch(72.14% 0.02160 161.33)",
+          "oklch(83.57% 0.02160 161.33)",
+          "oklch(95.00% 0.02160 161.33)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Escuro: border",
+        "tonalRamp": [
+          "oklch(15.00% 0.03254 161.42)",
+          "oklch(26.43% 0.03254 161.42)",
+          "oklch(37.86% 0.03254 161.42)",
+          "oklch(49.29% 0.03254 161.42)",
+          "oklch(60.71% 0.03254 161.42)",
+          "oklch(72.14% 0.03254 161.42)",
+          "oklch(83.57% 0.03254 161.42)",
+          "oklch(95.00% 0.03254 161.42)"
+        ]
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Escuro: surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.02926 161.86)",
+          "oklch(26.43% 0.02926 161.86)",
+          "oklch(37.86% 0.02926 161.86)",
+          "oklch(49.29% 0.02926 161.86)",
+          "oklch(60.71% 0.02926 161.86)",
+          "oklch(72.14% 0.02926 161.86)",
+          "oklch(83.57% 0.02926 161.86)",
+          "oklch(95.00% 0.02926 161.86)"
+        ]
+      },
+      "dark-danger": {
+        "role": "semantic",
+        "displayName": "Escuro: danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.09263 25.11)",
+          "oklch(26.43% 0.09263 25.11)",
+          "oklch(37.86% 0.09263 25.11)",
+          "oklch(49.29% 0.09263 25.11)",
+          "oklch(60.71% 0.09263 25.11)",
+          "oklch(72.14% 0.09263 25.11)",
+          "oklch(83.57% 0.09263 25.11)",
+          "oklch(95.00% 0.09263 25.11)"
+        ]
+      },
+      "dark-control-border": {
+        "role": "neutral",
+        "displayName": "Escuro: control border",
+        "tonalRamp": [
+          "oklch(15.00% 0.03962 160.28)",
+          "oklch(26.43% 0.03962 160.28)",
+          "oklch(37.86% 0.03962 160.28)",
+          "oklch(49.29% 0.03962 160.28)",
+          "oklch(60.71% 0.03962 160.28)",
+          "oklch(72.14% 0.03962 160.28)",
+          "oklch(83.57% 0.03962 160.28)",
+          "oklch(95.00% 0.03962 160.28)"
+        ]
+      },
+      "dark-control-text": {
+        "role": "neutral",
+        "displayName": "Escuro: control text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02089 156.79)",
+          "oklch(26.43% 0.02089 156.79)",
+          "oklch(37.86% 0.02089 156.79)",
+          "oklch(49.29% 0.02089 156.79)",
+          "oklch(60.71% 0.02089 156.79)",
+          "oklch(72.14% 0.02089 156.79)",
+          "oklch(83.57% 0.02089 156.79)",
+          "oklch(95.00% 0.02089 156.79)"
+        ]
+      },
+      "dark-subtle": {
+        "role": "neutral",
+        "displayName": "Escuro: subtle",
+        "tonalRamp": [
+          "oklch(15.00% 0.03165 162.02)",
+          "oklch(26.43% 0.03165 162.02)",
+          "oklch(37.86% 0.03165 162.02)",
+          "oklch(49.29% 0.03165 162.02)",
+          "oklch(60.71% 0.03165 162.02)",
+          "oklch(72.14% 0.03165 162.02)",
+          "oklch(83.57% 0.03165 162.02)",
+          "oklch(95.00% 0.03165 162.02)"
+        ]
+      },
+      "dark-rail-bg": {
+        "role": "neutral",
+        "displayName": "Escuro: rail bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02760 163.15)",
+          "oklch(26.43% 0.02760 163.15)",
+          "oklch(37.86% 0.02760 163.15)",
+          "oklch(49.29% 0.02760 163.15)",
+          "oklch(60.71% 0.02760 163.15)",
+          "oklch(72.14% 0.02760 163.15)",
+          "oklch(83.57% 0.02760 163.15)",
+          "oklch(95.00% 0.02760 163.15)"
+        ]
+      },
+      "dark-masthead-bg": {
+        "role": "neutral",
+        "displayName": "Escuro: masthead bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02091 168.25)",
+          "oklch(26.43% 0.02091 168.25)",
+          "oklch(37.86% 0.02091 168.25)",
+          "oklch(49.29% 0.02091 168.25)",
+          "oklch(60.71% 0.02091 168.25)",
+          "oklch(72.14% 0.02091 168.25)",
+          "oklch(83.57% 0.02091 168.25)",
+          "oklch(95.00% 0.02091 168.25)"
+        ]
+      },
+      "dark-demo-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: demo bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.03602 192.69)",
+          "oklch(26.43% 0.03602 192.69)",
+          "oklch(37.86% 0.03602 192.69)",
+          "oklch(49.29% 0.03602 192.69)",
+          "oklch(60.71% 0.03602 192.69)",
+          "oklch(72.14% 0.03602 192.69)",
+          "oklch(83.57% 0.03602 192.69)",
+          "oklch(95.00% 0.03602 192.69)"
+        ]
+      },
+      "dark-demo-text": {
+        "role": "semantic",
+        "displayName": "Escuro: demo text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01625 172.63)",
+          "oklch(26.43% 0.01625 172.63)",
+          "oklch(37.86% 0.01625 172.63)",
+          "oklch(49.29% 0.01625 172.63)",
+          "oklch(60.71% 0.01625 172.63)",
+          "oklch(72.14% 0.01625 172.63)",
+          "oklch(83.57% 0.01625 172.63)",
+          "oklch(95.00% 0.01625 172.63)"
+        ]
+      },
+      "dark-control-border-hover": {
+        "role": "neutral",
+        "displayName": "Escuro: control border hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.04363 158.21)",
+          "oklch(26.43% 0.04363 158.21)",
+          "oklch(37.86% 0.04363 158.21)",
+          "oklch(49.29% 0.04363 158.21)",
+          "oklch(60.71% 0.04363 158.21)",
+          "oklch(72.14% 0.04363 158.21)",
+          "oklch(83.57% 0.04363 158.21)",
+          "oklch(95.00% 0.04363 158.21)"
+        ]
+      },
+      "dark-control-active": {
+        "role": "neutral",
+        "displayName": "Escuro: control active",
+        "tonalRamp": [
+          "oklch(15.00% 0.03124 155.25)",
+          "oklch(26.43% 0.03124 155.25)",
+          "oklch(37.86% 0.03124 155.25)",
+          "oklch(49.29% 0.03124 155.25)",
+          "oklch(60.71% 0.03124 155.25)",
+          "oklch(72.14% 0.03124 155.25)",
+          "oklch(83.57% 0.03124 155.25)",
+          "oklch(95.00% 0.03124 155.25)"
+        ]
+      },
+      "dark-danger-hover": {
+        "role": "semantic",
+        "displayName": "Escuro: danger hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.07364 25.91)",
+          "oklch(26.43% 0.07364 25.91)",
+          "oklch(37.86% 0.07364 25.91)",
+          "oklch(49.29% 0.07364 25.91)",
+          "oklch(60.71% 0.07364 25.91)",
+          "oklch(72.14% 0.07364 25.91)",
+          "oklch(83.57% 0.07364 25.91)",
+          "oklch(95.00% 0.07364 25.91)"
+        ]
+      },
+      "dark-focus": {
+        "role": "primary",
+        "displayName": "Escuro: focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.09717 161.12)",
+          "oklch(26.43% 0.09717 161.12)",
+          "oklch(37.86% 0.09717 161.12)",
+          "oklch(49.29% 0.09717 161.12)",
+          "oklch(60.71% 0.09717 161.12)",
+          "oklch(72.14% 0.09717 161.12)",
+          "oklch(83.57% 0.09717 161.12)",
+          "oklch(95.00% 0.09717 161.12)"
+        ]
+      },
+      "dark-selection-bg": {
+        "role": "primary",
+        "displayName": "Escuro: selection bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.06707 156.21)",
+          "oklch(26.43% 0.06707 156.21)",
+          "oklch(37.86% 0.06707 156.21)",
+          "oklch(49.29% 0.06707 156.21)",
+          "oklch(60.71% 0.06707 156.21)",
+          "oklch(72.14% 0.06707 156.21)",
+          "oklch(83.57% 0.06707 156.21)",
+          "oklch(95.00% 0.06707 156.21)"
+        ]
+      },
+      "dark-selection-text": {
+        "role": "primary",
+        "displayName": "Escuro: selection text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01969 154.91)",
+          "oklch(26.43% 0.01969 154.91)",
+          "oklch(37.86% 0.01969 154.91)",
+          "oklch(49.29% 0.01969 154.91)",
+          "oklch(60.71% 0.01969 154.91)",
+          "oklch(72.14% 0.01969 154.91)",
+          "oklch(83.57% 0.01969 154.91)",
+          "oklch(95.00% 0.01969 154.91)"
+        ]
+      },
+      "dark-field-border": {
+        "role": "neutral",
+        "displayName": "Escuro: field border",
+        "tonalRamp": [
+          "oklch(15.00% 0.03918 158.97)",
+          "oklch(26.43% 0.03918 158.97)",
+          "oklch(37.86% 0.03918 158.97)",
+          "oklch(49.29% 0.03918 158.97)",
+          "oklch(60.71% 0.03918 158.97)",
+          "oklch(72.14% 0.03918 158.97)",
+          "oklch(83.57% 0.03918 158.97)",
+          "oklch(95.00% 0.03918 158.97)"
+        ]
+      },
+      "dark-placeholder": {
+        "role": "neutral",
+        "displayName": "Escuro: placeholder",
+        "tonalRamp": [
+          "oklch(15.00% 0.02694 158.01)",
+          "oklch(26.43% 0.02694 158.01)",
+          "oklch(37.86% 0.02694 158.01)",
+          "oklch(49.29% 0.02694 158.01)",
+          "oklch(60.71% 0.02694 158.01)",
+          "oklch(72.14% 0.02694 158.01)",
+          "oklch(83.57% 0.02694 158.01)",
+          "oklch(95.00% 0.02694 158.01)"
+        ]
+      },
+      "dark-disabled-field": {
+        "role": "neutral",
+        "displayName": "Escuro: disabled field",
+        "tonalRamp": [
+          "oklch(15.00% 0.02566 158.15)",
+          "oklch(26.43% 0.02566 158.15)",
+          "oklch(37.86% 0.02566 158.15)",
+          "oklch(49.29% 0.02566 158.15)",
+          "oklch(60.71% 0.02566 158.15)",
+          "oklch(72.14% 0.02566 158.15)",
+          "oklch(83.57% 0.02566 158.15)",
+          "oklch(95.00% 0.02566 158.15)"
+        ]
+      },
+      "dark-brand-text": {
+        "role": "primary",
+        "displayName": "Escuro: brand text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05222 158.15)",
+          "oklch(26.43% 0.05222 158.15)",
+          "oklch(37.86% 0.05222 158.15)",
+          "oklch(49.29% 0.05222 158.15)",
+          "oklch(60.71% 0.05222 158.15)",
+          "oklch(72.14% 0.05222 158.15)",
+          "oklch(83.57% 0.05222 158.15)",
+          "oklch(95.00% 0.05222 158.15)"
+        ]
+      },
+      "dark-alert-text": {
+        "role": "semantic",
+        "displayName": "Escuro: alert text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06772 27.52)",
+          "oklch(26.43% 0.06772 27.52)",
+          "oklch(37.86% 0.06772 27.52)",
+          "oklch(49.29% 0.06772 27.52)",
+          "oklch(60.71% 0.06772 27.52)",
+          "oklch(72.14% 0.06772 27.52)",
+          "oklch(83.57% 0.06772 27.52)",
+          "oklch(95.00% 0.06772 27.52)"
+        ]
+      },
+      "dark-alert-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: alert bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.03684 19.54)",
+          "oklch(26.43% 0.03684 19.54)",
+          "oklch(37.86% 0.03684 19.54)",
+          "oklch(49.29% 0.03684 19.54)",
+          "oklch(60.71% 0.03684 19.54)",
+          "oklch(72.14% 0.03684 19.54)",
+          "oklch(83.57% 0.03684 19.54)",
+          "oklch(95.00% 0.03684 19.54)"
+        ]
+      },
+      "dark-alert-border": {
+        "role": "semantic",
+        "displayName": "Escuro: alert border",
+        "tonalRamp": [
+          "oklch(15.00% 0.07940 27.33)",
+          "oklch(26.43% 0.07940 27.33)",
+          "oklch(37.86% 0.07940 27.33)",
+          "oklch(49.29% 0.07940 27.33)",
+          "oklch(60.71% 0.07940 27.33)",
+          "oklch(72.14% 0.07940 27.33)",
+          "oklch(83.57% 0.07940 27.33)",
+          "oklch(95.00% 0.07940 27.33)"
+        ]
+      },
+      "dark-success-text": {
+        "role": "semantic",
+        "displayName": "Escuro: success text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06778 156.65)",
+          "oklch(26.43% 0.06778 156.65)",
+          "oklch(37.86% 0.06778 156.65)",
+          "oklch(49.29% 0.06778 156.65)",
+          "oklch(60.71% 0.06778 156.65)",
+          "oklch(72.14% 0.06778 156.65)",
+          "oklch(83.57% 0.06778 156.65)",
+          "oklch(95.00% 0.06778 156.65)"
+        ]
+      },
+      "dark-success-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: success bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04495 155.44)",
+          "oklch(26.43% 0.04495 155.44)",
+          "oklch(37.86% 0.04495 155.44)",
+          "oklch(49.29% 0.04495 155.44)",
+          "oklch(60.71% 0.04495 155.44)",
+          "oklch(72.14% 0.04495 155.44)",
+          "oklch(83.57% 0.04495 155.44)",
+          "oklch(95.00% 0.04495 155.44)"
+        ]
+      },
+      "dark-success-border": {
+        "role": "semantic",
+        "displayName": "Escuro: success border",
+        "tonalRamp": [
+          "oklch(15.00% 0.07783 154.93)",
+          "oklch(26.43% 0.07783 154.93)",
+          "oklch(37.86% 0.07783 154.93)",
+          "oklch(49.29% 0.07783 154.93)",
+          "oklch(60.71% 0.07783 154.93)",
+          "oklch(72.14% 0.07783 154.93)",
+          "oklch(83.57% 0.07783 154.93)",
+          "oklch(95.00% 0.07783 154.93)"
+        ]
+      },
+      "dark-story-text": {
+        "role": "neutral",
+        "displayName": "Escuro: story text",
+        "tonalRamp": [
+          "oklch(15.00% 0.03230 157.05)",
+          "oklch(26.43% 0.03230 157.05)",
+          "oklch(37.86% 0.03230 157.05)",
+          "oklch(49.29% 0.03230 157.05)",
+          "oklch(60.71% 0.03230 157.05)",
+          "oklch(72.14% 0.03230 157.05)",
+          "oklch(83.57% 0.03230 157.05)",
+          "oklch(95.00% 0.03230 157.05)"
+        ]
+      },
+      "dark-story-border": {
+        "role": "neutral",
+        "displayName": "Escuro: story border",
+        "tonalRamp": [
+          "oklch(15.00% 0.04441 154.90)",
+          "oklch(26.43% 0.04441 154.90)",
+          "oklch(37.86% 0.04441 154.90)",
+          "oklch(49.29% 0.04441 154.90)",
+          "oklch(60.71% 0.04441 154.90)",
+          "oklch(72.14% 0.04441 154.90)",
+          "oklch(83.57% 0.04441 154.90)",
+          "oklch(95.00% 0.04441 154.90)"
+        ]
+      },
+      "dark-nav-hover": {
+        "role": "neutral",
+        "displayName": "Escuro: nav hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.03422 155.66)",
+          "oklch(26.43% 0.03422 155.66)",
+          "oklch(37.86% 0.03422 155.66)",
+          "oklch(49.29% 0.03422 155.66)",
+          "oklch(60.71% 0.03422 155.66)",
+          "oklch(72.14% 0.03422 155.66)",
+          "oklch(83.57% 0.03422 155.66)",
+          "oklch(95.00% 0.03422 155.66)"
+        ]
+      },
+      "dark-selected-text": {
+        "role": "primary",
+        "displayName": "Escuro: selected text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06308 158.37)",
+          "oklch(26.43% 0.06308 158.37)",
+          "oklch(37.86% 0.06308 158.37)",
+          "oklch(49.29% 0.06308 158.37)",
+          "oklch(60.71% 0.06308 158.37)",
+          "oklch(72.14% 0.06308 158.37)",
+          "oklch(83.57% 0.06308 158.37)",
+          "oklch(95.00% 0.06308 158.37)"
+        ]
+      },
+      "dark-selected-bg": {
+        "role": "primary",
+        "displayName": "Escuro: selected bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04599 155.33)",
+          "oklch(26.43% 0.04599 155.33)",
+          "oklch(37.86% 0.04599 155.33)",
+          "oklch(49.29% 0.04599 155.33)",
+          "oklch(60.71% 0.04599 155.33)",
+          "oklch(72.14% 0.04599 155.33)",
+          "oklch(83.57% 0.04599 155.33)",
+          "oklch(95.00% 0.04599 155.33)"
+        ]
+      },
+      "dark-account-border": {
+        "role": "neutral",
+        "displayName": "Escuro: account border",
+        "tonalRamp": [
+          "oklch(15.00% 0.03984 153.80)",
+          "oklch(26.43% 0.03984 153.80)",
+          "oklch(37.86% 0.03984 153.80)",
+          "oklch(49.29% 0.03984 153.80)",
+          "oklch(60.71% 0.03984 153.80)",
+          "oklch(72.14% 0.03984 153.80)",
+          "oklch(83.57% 0.03984 153.80)",
+          "oklch(95.00% 0.03984 153.80)"
+        ]
+      },
+      "dark-account-text": {
+        "role": "neutral",
+        "displayName": "Escuro: account text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02822 157.24)",
+          "oklch(26.43% 0.02822 157.24)",
+          "oklch(37.86% 0.02822 157.24)",
+          "oklch(49.29% 0.02822 157.24)",
+          "oklch(60.71% 0.02822 157.24)",
+          "oklch(72.14% 0.02822 157.24)",
+          "oklch(83.57% 0.02822 157.24)",
+          "oklch(95.00% 0.02822 157.24)"
+        ]
+      },
+      "dark-data-none-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: data none bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02436 156.61)",
+          "oklch(26.43% 0.02436 156.61)",
+          "oklch(37.86% 0.02436 156.61)",
+          "oklch(49.29% 0.02436 156.61)",
+          "oklch(60.71% 0.02436 156.61)",
+          "oklch(72.14% 0.02436 156.61)",
+          "oklch(83.57% 0.02436 156.61)",
+          "oklch(95.00% 0.02436 156.61)"
+        ]
+      },
+      "dark-data-none-text": {
+        "role": "semantic",
+        "displayName": "Escuro: data none text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02298 155.84)",
+          "oklch(26.43% 0.02298 155.84)",
+          "oklch(37.86% 0.02298 155.84)",
+          "oklch(49.29% 0.02298 155.84)",
+          "oklch(60.71% 0.02298 155.84)",
+          "oklch(72.14% 0.02298 155.84)",
+          "oklch(83.57% 0.02298 155.84)",
+          "oklch(95.00% 0.02298 155.84)"
+        ]
+      },
+      "dark-data-stale-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: data stale bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04711 83.29)",
+          "oklch(26.43% 0.04711 83.29)",
+          "oklch(37.86% 0.04711 83.29)",
+          "oklch(49.29% 0.04711 83.29)",
+          "oklch(60.71% 0.04711 83.29)",
+          "oklch(72.14% 0.04711 83.29)",
+          "oklch(83.57% 0.04711 83.29)",
+          "oklch(95.00% 0.04711 83.29)"
+        ]
+      },
+      "dark-data-stale-text": {
+        "role": "semantic",
+        "displayName": "Escuro: data stale text",
+        "tonalRamp": [
+          "oklch(15.00% 0.10255 85.63)",
+          "oklch(26.43% 0.10255 85.63)",
+          "oklch(37.86% 0.10255 85.63)",
+          "oklch(49.29% 0.10255 85.63)",
+          "oklch(60.71% 0.10255 85.63)",
+          "oklch(72.14% 0.10255 85.63)",
+          "oklch(83.57% 0.10255 85.63)",
+          "oklch(95.00% 0.10255 85.63)"
+        ]
+      },
+      "dark-data-paused-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: data paused bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04669 260.88)",
+          "oklch(26.43% 0.04669 260.88)",
+          "oklch(37.86% 0.04669 260.88)",
+          "oklch(49.29% 0.04669 260.88)",
+          "oklch(60.71% 0.04669 260.88)",
+          "oklch(72.14% 0.04669 260.88)",
+          "oklch(83.57% 0.04669 260.88)",
+          "oklch(95.00% 0.04669 260.88)"
+        ]
+      },
+      "dark-data-paused-text": {
+        "role": "semantic",
+        "displayName": "Escuro: data paused text",
+        "tonalRamp": [
+          "oklch(15.00% 0.04252 258.37)",
+          "oklch(26.43% 0.04252 258.37)",
+          "oklch(37.86% 0.04252 258.37)",
+          "oklch(49.29% 0.04252 258.37)",
+          "oklch(60.71% 0.04252 258.37)",
+          "oklch(72.14% 0.04252 258.37)",
+          "oklch(83.57% 0.04252 258.37)",
+          "oklch(95.00% 0.04252 258.37)"
+        ]
+      },
+      "dark-data-fresh-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: data fresh bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.04563 154.27)",
+          "oklch(26.43% 0.04563 154.27)",
+          "oklch(37.86% 0.04563 154.27)",
+          "oklch(49.29% 0.04563 154.27)",
+          "oklch(60.71% 0.04563 154.27)",
+          "oklch(72.14% 0.04563 154.27)",
+          "oklch(83.57% 0.04563 154.27)",
+          "oklch(95.00% 0.04563 154.27)"
+        ]
+      },
+      "dark-data-fresh-text": {
+        "role": "semantic",
+        "displayName": "Escuro: data fresh text",
+        "tonalRamp": [
+          "oklch(15.00% 0.06778 156.65)",
+          "oklch(26.43% 0.06778 156.65)",
+          "oklch(37.86% 0.06778 156.65)",
+          "oklch(49.29% 0.06778 156.65)",
+          "oklch(60.71% 0.06778 156.65)",
+          "oklch(72.14% 0.06778 156.65)",
+          "oklch(83.57% 0.06778 156.65)",
+          "oklch(95.00% 0.06778 156.65)"
+        ]
+      },
+      "dark-health-online": {
+        "role": "semantic",
+        "displayName": "Escuro: health online",
+        "tonalRamp": [
+          "oklch(15.00% 0.09308 155.84)",
+          "oklch(26.43% 0.09308 155.84)",
+          "oklch(37.86% 0.09308 155.84)",
+          "oklch(49.29% 0.09308 155.84)",
+          "oklch(60.71% 0.09308 155.84)",
+          "oklch(72.14% 0.09308 155.84)",
+          "oklch(83.57% 0.09308 155.84)",
+          "oklch(95.00% 0.09308 155.84)"
+        ]
+      },
+      "dark-health-degraded": {
+        "role": "semantic",
+        "displayName": "Escuro: health degraded",
+        "tonalRamp": [
+          "oklch(15.00% 0.10569 84.80)",
+          "oklch(26.43% 0.10569 84.80)",
+          "oklch(37.86% 0.10569 84.80)",
+          "oklch(49.29% 0.10569 84.80)",
+          "oklch(60.71% 0.10569 84.80)",
+          "oklch(72.14% 0.10569 84.80)",
+          "oklch(83.57% 0.10569 84.80)",
+          "oklch(95.00% 0.10569 84.80)"
+        ]
+      },
+      "dark-archive-bg": {
+        "role": "semantic",
+        "displayName": "Escuro: archive bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02703 66.51)",
+          "oklch(26.43% 0.02703 66.51)",
+          "oklch(37.86% 0.02703 66.51)",
+          "oklch(49.29% 0.02703 66.51)",
+          "oklch(60.71% 0.02703 66.51)",
+          "oklch(72.14% 0.02703 66.51)",
+          "oklch(83.57% 0.02703 66.51)",
+          "oklch(95.00% 0.02703 66.51)"
+        ]
+      },
+      "dark-archive-border": {
+        "role": "semantic",
+        "displayName": "Escuro: archive border",
+        "tonalRamp": [
+          "oklch(15.00% 0.06719 66.65)",
+          "oklch(26.43% 0.06719 66.65)",
+          "oklch(37.86% 0.06719 66.65)",
+          "oklch(49.29% 0.06719 66.65)",
+          "oklch(60.71% 0.06719 66.65)",
+          "oklch(72.14% 0.06719 66.65)",
+          "oklch(83.57% 0.06719 66.65)",
+          "oklch(95.00% 0.06719 66.65)"
+        ]
+      },
+      "dark-archive-text": {
+        "role": "semantic",
+        "displayName": "Escuro: archive text",
+        "tonalRamp": [
+          "oklch(15.00% 0.05746 65.22)",
+          "oklch(26.43% 0.05746 65.22)",
+          "oklch(37.86% 0.05746 65.22)",
+          "oklch(49.29% 0.05746 65.22)",
+          "oklch(60.71% 0.05746 65.22)",
+          "oklch(72.14% 0.05746 65.22)",
+          "oklch(83.57% 0.05746 65.22)",
+          "oklch(95.00% 0.05746 65.22)"
+        ]
+      },
+      "dark-skeleton": {
+        "role": "neutral",
+        "displayName": "Escuro: skeleton",
+        "tonalRamp": [
+          "oklch(15.00% 0.02844 154.59)",
+          "oklch(26.43% 0.02844 154.59)",
+          "oklch(37.86% 0.02844 154.59)",
+          "oklch(49.29% 0.02844 154.59)",
+          "oklch(60.71% 0.02844 154.59)",
+          "oklch(72.14% 0.02844 154.59)",
+          "oklch(83.57% 0.02844 154.59)",
+          "oklch(95.00% 0.02844 154.59)"
+        ]
+      },
+      "dark-on-accent": {
+        "role": "primary",
+        "displayName": "Escuro: on accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.04383 157.13)",
+          "oklch(26.43% 0.04383 157.13)",
+          "oklch(37.86% 0.04383 157.13)",
+          "oklch(49.29% 0.04383 157.13)",
+          "oklch(60.71% 0.04383 157.13)",
+          "oklch(72.14% 0.04383 157.13)",
+          "oklch(83.57% 0.04383 157.13)",
+          "oklch(95.00% 0.04383 157.13)"
+        ]
+      },
+      "dark-on-danger": {
+        "role": "neutral",
+        "displayName": "Escuro: on danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.05137 25.01)",
+          "oklch(26.43% 0.05137 25.01)",
+          "oklch(37.86% 0.05137 25.01)",
+          "oklch(49.29% 0.05137 25.01)",
+          "oklch(60.71% 0.05137 25.01)",
+          "oklch(72.14% 0.05137 25.01)",
+          "oklch(83.57% 0.05137 25.01)",
+          "oklch(95.00% 0.05137 25.01)"
+        ]
       }
     },
     "typographyMeta": {
-      "brand": {
-        "displayName": "Nome Vigil",
-        "purpose": "Wordmark textual em Public Sans 700; somente a sidebar mobile reduz para 1.75rem. Olho decorativo separado do nome acessível."
-      },
       "display": {
-        "displayName": "Mensagem de autenticação",
-        "purpose": "Título da apresentação de login/cadastro."
+        "displayName": "display",
+        "purpose": "Apresentação de autenticação."
       },
       "headline": {
-        "displayName": "Título principal",
-        "purpose": "Nome do projeto e títulos principais."
+        "displayName": "headline",
+        "purpose": "Título do projeto e títulos públicos maiores."
       },
       "title": {
-        "displayName": "Título de seção",
-        "purpose": "Monitores e editores inline."
+        "displayName": "title",
+        "purpose": "Seções e painéis."
       },
       "body": {
-        "displayName": "Texto corrente",
-        "purpose": "Conteúdo com entrelinha global, sem tamanho de fonte global explícito."
+        "displayName": "body",
+        "purpose": "Base global; tamanho não fixado pelo CSS."
       },
       "label": {
-        "displayName": "Rótulo",
-        "purpose": "Rótulos de campos associados."
+        "displayName": "label",
+        "purpose": "Rótulos compactos."
       },
       "caption": {
-        "displayName": "Texto auxiliar",
-        "purpose": "Ajuda de campos e contexto."
+        "displayName": "caption",
+        "purpose": "Ajuda, URLs e contexto."
       },
       "button": {
-        "displayName": "Ação",
-        "purpose": "Tipografia e entrelinha próprias dos botões."
+        "displayName": "button",
+        "purpose": "Ações nativas."
+      },
+      "brand": {
+        "displayName": "brand",
+        "purpose": "Wordmark existente."
+      },
+      "dashboard-headline": {
+        "displayName": "dashboard-headline",
+        "purpose": "Título do projeto a partir de 1151px, sem mudar títulos públicos."
+      },
+      "dashboard-description": {
+        "displayName": "dashboard-description",
+        "purpose": "Descrição do projeto a partir de 1151px."
+      },
+      "monitor-data": {
+        "displayName": "monitor-data",
+        "purpose": "Células da tabela de monitores a partir de 1151px."
+      },
+      "operational-button": {
+        "displayName": "operational-button",
+        "purpose": "Botões do cabeçalho e ações de linha a partir de 1151px."
+      },
+      "operational-button-secondary": {
+        "displayName": "operational-button-secondary",
+        "purpose": "Ações comuns do cabeçalho e de linha a partir de 1151px."
+      },
+      "summary-label": {
+        "displayName": "summary-label",
+        "purpose": "Rótulo de saúde observado na faixa desktop."
+      },
+      "summary-health": {
+        "displayName": "summary-health",
+        "purpose": "Valor de saúde observado na faixa desktop."
+      },
+      "summary-count": {
+        "displayName": "summary-count",
+        "purpose": "Contagens existentes da faixa desktop."
+      },
+      "monitor-url": {
+        "displayName": "monitor-url",
+        "purpose": "URL completa da tabela desktop; pode quebrar conforme a coluna."
+      },
+      "monitor-name": {
+        "displayName": "monitor-name",
+        "purpose": "Nome completo de endpoint no desktop; largura flexível sem quota fixa à cadência."
       }
     },
     "shadows": [],
     "motion": [
       {
-        "name": "button-state-transition",
+        "name": "control-transition",
         "value": "background 160ms, border-color 160ms",
-        "purpose": "Transição observada em botões; removida por prefers-reduced-motion."
+        "purpose": "Estados existentes de botão, sem deslocamento."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }",
+        "purpose": "Tratamento de preferência existente, extraído de styles.css."
       }
     ],
     "breakpoints": [
@@ -207,132 +1612,595 @@
       {
         "name": "mobile",
         "value": "760px"
+      },
+      {
+        "name": "expanded-desktop",
+        "value": "1151px",
+        "query": "min-width"
+      },
+      {
+        "name": "narrow-expanded-desktop",
+        "value": "1500px",
+        "query": "max-width, combinado com min-width:1151px"
       }
-    ]
+    ],
+    "focus": {
+      "selector": ":focus-visible",
+      "value": "outline: 3px solid var(--focus); outline-offset: 3px;"
+    },
+    "themeBindings": {
+      "defaultSelector": ":root",
+      "darkSelector": ":root[data-theme=\"dark\"]",
+      "darkColorRefs": {
+        "text": "{colors.dark-text}",
+        "canvas": "{colors.dark-canvas}",
+        "accent": "{colors.dark-accent}",
+        "accent-hover": "{colors.dark-accent-hover}",
+        "muted": "{colors.dark-muted}",
+        "border": "{colors.dark-border}",
+        "surface": "{colors.dark-surface}",
+        "danger": "{colors.dark-danger}",
+        "control-border": "{colors.dark-control-border}",
+        "control-text": "{colors.dark-control-text}",
+        "subtle": "{colors.dark-subtle}",
+        "rail-bg": "{colors.dark-rail-bg}",
+        "masthead-bg": "{colors.dark-masthead-bg}",
+        "demo-bg": "{colors.dark-demo-bg}",
+        "demo-text": "{colors.dark-demo-text}",
+        "control-border-hover": "{colors.dark-control-border-hover}",
+        "control-active": "{colors.dark-control-active}",
+        "danger-hover": "{colors.dark-danger-hover}",
+        "focus": "{colors.dark-focus}",
+        "selection-bg": "{colors.dark-selection-bg}",
+        "selection-text": "{colors.dark-selection-text}",
+        "field-border": "{colors.dark-field-border}",
+        "placeholder": "{colors.dark-placeholder}",
+        "disabled-field": "{colors.dark-disabled-field}",
+        "brand-text": "{colors.dark-brand-text}",
+        "alert-text": "{colors.dark-alert-text}",
+        "alert-bg": "{colors.dark-alert-bg}",
+        "alert-border": "{colors.dark-alert-border}",
+        "success-text": "{colors.dark-success-text}",
+        "success-bg": "{colors.dark-success-bg}",
+        "success-border": "{colors.dark-success-border}",
+        "story-text": "{colors.dark-story-text}",
+        "story-border": "{colors.dark-story-border}",
+        "nav-hover": "{colors.dark-nav-hover}",
+        "selected-text": "{colors.dark-selected-text}",
+        "selected-bg": "{colors.dark-selected-bg}",
+        "account-border": "{colors.dark-account-border}",
+        "account-text": "{colors.dark-account-text}",
+        "data-none-bg": "{colors.dark-data-none-bg}",
+        "data-none-text": "{colors.dark-data-none-text}",
+        "data-stale-bg": "{colors.dark-data-stale-bg}",
+        "data-stale-text": "{colors.dark-data-stale-text}",
+        "data-paused-bg": "{colors.dark-data-paused-bg}",
+        "data-paused-text": "{colors.dark-data-paused-text}",
+        "data-fresh-bg": "{colors.dark-data-fresh-bg}",
+        "data-fresh-text": "{colors.dark-data-fresh-text}",
+        "health-online": "{colors.dark-health-online}",
+        "health-degraded": "{colors.dark-health-degraded}",
+        "archive-bg": "{colors.dark-archive-bg}",
+        "archive-border": "{colors.dark-archive-border}",
+        "archive-text": "{colors.dark-archive-text}",
+        "skeleton": "{colors.dark-skeleton}",
+        "on-accent": "{colors.dark-on-accent}",
+        "on-danger": "{colors.dark-on-danger}"
+      },
+      "preferenceSource": "frontend/src/ThemeControl.tsx",
+      "preferenceValues": [
+        "system",
+        "light",
+        "dark"
+      ],
+      "storageKey": "vigil.theme"
+    },
+    "rampProvenance": "As faixas OKLCH são metadados derivados dos hex extraídos, com oito passos de 15% a 95% de luminosidade e croma/matiz constantes; não são tokens, estilos ou prova de contraste do produto.",
+    "sourceEvidence": {
+      "mode": "scan",
+      "approval": {
+        "direction": "Centro de controle",
+        "assignedDirection": 6,
+        "seed": "e183038d",
+        "surface": "frontend/.impeccable/surfaces/src-app-tsx.md",
+        "comp": "frontend/.impeccable/mocks/decision/redesign-control.png",
+        "decision": "frontend/.impeccable/mocks/decision/redesign-control.json"
+      },
+      "freeze": {
+        "path": ".cache/verification/redesign-frontend-fix6-source-freeze.json",
+        "sourceCount": 38,
+        "aggregateSha256": "8e6783b3c6e9eb061790aaada8d99438b722d527052b051366ba5c8e8f1e2a9d",
+        "previous": {
+          "path": ".cache/verification/redesign-frontend-fix5-source-freeze.json",
+          "sourceCount": 38,
+          "aggregateSha256": "d91496227a47171755ca9fcb6ff7fa0b2b29c0c559ff2e40cdc84bcac9400d1e",
+          "previous": {
+            "path": ".cache/verification/redesign-frontend-fix4-source-freeze.json",
+            "sourceCount": 38,
+            "aggregateSha256": "7d83df7705c99c48e69d3c3d0d7f55f3c26a9544d61d4563a8208f6faf3d1024",
+            "previous": {
+              "path": ".cache/verification/redesign-frontend-fix3-source-freeze.json",
+              "sourceCount": 38,
+              "aggregateSha256": "9b8f712dcdfdd3642b0ded5a244cf1623b01792bc5ca0d719333fa365e5e1b8e",
+              "previous": {
+                "path": ".cache/verification/redesign-frontend-fix2-source-freeze.json",
+                "sourceCount": 38,
+                "aggregateSha256": "0157f83a78db8c4ffefed60327aeeb05a855a9f51b14dd69030af81ed2d8d9af",
+                "previous": {
+                  "path": ".cache/verification/redesign-frontend-fix-source-freeze.json",
+                  "sourceCount": 38,
+                  "aggregateSha256": "11d8ba2f19d27990d4d34555ed3e2aff50ebbad1638cb3f4a498c54163e70388"
+                }
+              }
+            }
+          }
+        }
+      },
+      "files": [
+        {
+          "path": "frontend/src/styles.css",
+          "sha256": "9dc3d2f6cfef1880c06ec16664806bf23b93c9249f68dcf693416a63e2c88d07"
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "sha256": "b9b032502a88433314784156036c5cbd07cc9af26c2545fedd30483025db7e05"
+        },
+        {
+          "path": "frontend/src/Forms.tsx",
+          "sha256": "ff35db2608977a1ed8e74b3203ce88580eecd3fa7a24a3ab349d5f276002c50e"
+        },
+        {
+          "path": "frontend/src/Observations.tsx",
+          "sha256": "570373a8fe706c6c30b87a831143fb1ca18a580e49fe5c4cbdfff19fd24978e2"
+        },
+        {
+          "path": "frontend/src/Legal.tsx",
+          "sha256": "151d181076706adaf9ed448a89ff78ef4d4c0a47ac83624b97555253e2272a16"
+        },
+        {
+          "path": "frontend/src/ProcessingFailures.css",
+          "sha256": "a0486516cf8748c7c2bd31f83c1be86140ee8f8c9432c2c45aac712de76be983"
+        },
+        {
+          "path": "frontend/src/ThemeControl.tsx",
+          "sha256": "ebd7d9169630c9a4f4ec4e9141ee53b51ee5d92ee6adc8d3bef6f129ee7f092f"
+        },
+        {
+          "path": "frontend/src/main.tsx",
+          "sha256": "87246d361843ac90e561eb52bbe0ebb1bb478733379fd86f960c466eea0e4af1"
+        },
+        {
+          "path": "frontend/src/Brand.tsx",
+          "sha256": "7609abe2e2a13971f0da1f915c6fd5572713cbd3491a4b77b06f78bdcb5f7abb"
+        }
+      ],
+      "basisStatus": "Lote6: only styles.css differs from freeze5,37 sources unchanged. CSS color-only addition."
+    },
+    "reviewEvidence": {
+      "finishReview": "frontend/.impeccable/review/redesign/finish-review.md",
+      "status": "Lote6 tonal conclu?do e documentado, aguardando revis?o independente Maestro; gate64.50%<72%, heroopen/okfalse/forcednull. N?o ? aprova??o global.",
+      "previousEvidence": "Verdict 4 resolveu fluxo responsivo, escala dos títulos e band de monitores sem regressão evidenciada; seu score 67.74% permanece histórico em final-fix4. Verdict 5 resolveu o alinhamento desktop de 6px e orienta manter a versão atual, apesar da queda do composto para 63.14%. Ambos mantêm o gate aberto.",
+      "renderLimits": [
+        "Viewport synthetic demo, raster8px shorter than DOM; no full-page/physical keyboard/AA/performance/backend certification. Other8Operate/25public remain previous evidence.",
+        "Contraste calculado somente nos pares de tokens novos; n?o certifica AA global.",
+        "Official npm build/test attempted once and blocked spawn EPERM; native CLI fallback documented.",
+        "Uma captura1440light inv?lida1440x707 foi preservada e substitu?da; os cinco PNG atuais correspondem aos metadados nomeados.",
+        "PRODUCT drift unrelated preserved."
+      ],
+      "snippetLimits": "Os dez snippets isolados representam estilos existentes, não implementam comportamento React/API. Utilizam CSS vars herdáveis com fallback claro; o tema escuro exige herdar os tokens da aplicação. A Public Sans exige a fonte local carregada pelo host. Conteúdo demonstrativo não é uma medição.",
+      "shippingRasterObligation": "Nenhum novo raster de produto foi criado. O comp aprovado é conceito sintético com decisão/proveniência própria.",
+      "fixEvidence": {
+        "sourceAggregateSha256": "8e6783b3c6e9eb061790aaada8d99438b722d527052b051366ba5c8e8f1e2a9d",
+        "sourceDrift": 0,
+        "mobileOverviewY": "499–679.19px",
+        "mobileAllCountsBottomY": "666.19px",
+        "mobileMonitorsHeadingY": "691.19–719.19px",
+        "mobileRasterHeight": "836px",
+        "desktopHistoryTargetHeights": "Comp 1586: 44px nos seis alvos. Desktop 1440: 44px ou 58.77px; todos mantêm mínimo 44px.",
+        "correctedCompSpecRegions": 28,
+        "platesOwed": 0,
+        "compScore": 0.645,
+        "requiredGate": 0.72,
+        "gateState": "open",
+        "gateOk": false,
+        "verdictDisposition": "pending-Maestro-review",
+        "recaptures": [
+          "frontend/.impeccable/review/redesign/final/1440-light-demo.png",
+          "frontend/.impeccable/review/redesign/final/1440-dark-demo.png",
+          "frontend/.impeccable/review/redesign/final/390-light-demo.png",
+          "frontend/.impeccable/review/redesign/final/390-dark-demo.png",
+          "frontend/.impeccable/review/redesign/final/comp-1586-dark.png"
+        ],
+        "desktopMonitorToolbarHeight": "71.5px medidos; conteúdo e padding, sem token de altura fixa",
+        "comparisonInvestigationY": "858.15625px em DOM1586×992",
+        "desktopRowHeights": "Comp 1586: 60.5–61px e última 73.69px. Desktop 1440: 60.5–61px,73.69px ou 75.77px; altura deriva de texto completo.",
+        "metadata": [
+          "frontend/.impeccable/review/redesign/final/fix6-captures.json",
+          "frontend/.impeccable/review/redesign/final/1440-light-demo.json",
+          "frontend/.impeccable/review/redesign/final/1440-dark-demo.json",
+          "frontend/.impeccable/review/redesign/final/390-light-demo.json",
+          "frontend/.impeccable/review/redesign/final/390-dark-demo.json",
+          "frontend/.impeccable/review/redesign/final/comp-1586-dark.json"
+        ],
+        "desktop1440InvestigationY": "887.6875px em DOM1440×892",
+        "comparisonSummaryHeight": "109.09375px",
+        "compReport": "frontend/.impeccable/review/redesign/final-fix6/report.json",
+        "resolvedDirections": [
+          "Batch6 scoped DARK surfaces/text implemented; geometry unchanged in five DOM comparisons; independent disposition remains Maestro."
+        ],
+        "comparisonOverviewY": "223.78125px",
+        "desktopTableLabelsY": "421.375px",
+        "historicalCompScoreFix4": 0.6774,
+        "historicalFix5": {
+          "sourceAggregateSha256": "d91496227a47171755ca9fcb6ff7fa0b2b29c0c559ff2e40cdc84bcac9400d1e",
+          "sourceDrift": 0,
+          "mobileOverviewY": "499–679.19px",
+          "mobileAllCountsBottomY": "666.19px",
+          "mobileMonitorsHeadingY": "691.19–719.19px",
+          "mobileRasterHeight": "836px",
+          "desktopHistoryTargetHeights": "Comp 1586: 44px nos seis alvos. Desktop 1440: 44px ou 58.77px; todos mantêm mínimo 44px.",
+          "correctedCompSpecRegions": 28,
+          "platesOwed": 0,
+          "compScore": 0.6314,
+          "requiredGate": 0.72,
+          "gateState": "open",
+          "gateOk": false,
+          "verdictDisposition": "fix",
+          "recaptures": [
+            "frontend/.impeccable/review/redesign/final/1440-light-demo.png",
+            "frontend/.impeccable/review/redesign/final/1440-dark-demo.png",
+            "frontend/.impeccable/review/redesign/final/390-light-demo.png",
+            "frontend/.impeccable/review/redesign/final/390-dark-demo.png",
+            "frontend/.impeccable/review/redesign/final/comp-1586-dark.png"
+          ],
+          "desktopMonitorToolbarHeight": "71.5px medidos; conteúdo e padding, sem token de altura fixa",
+          "comparisonInvestigationY": "858.15625px em DOM1586×992",
+          "desktopRowHeights": "Comp 1586: 60.5–61px e última 73.69px. Desktop 1440: 60.5–61px,73.69px ou 75.77px; altura deriva de texto completo.",
+          "metadata": [
+            "frontend/.impeccable/review/redesign/final/fix5-captures.json",
+            "frontend/.impeccable/review/redesign/final/1440-light-demo.json",
+            "frontend/.impeccable/review/redesign/final/1440-dark-demo.json",
+            "frontend/.impeccable/review/redesign/final/390-light-demo.json",
+            "frontend/.impeccable/review/redesign/final/390-dark-demo.json",
+            "frontend/.impeccable/review/redesign/final/comp-1586-dark.json"
+          ],
+          "desktop1440InvestigationY": "887.6875px em DOM1440×892",
+          "comparisonSummaryHeight": "109.09375px",
+          "compReport": "frontend/.impeccable/review/redesign/final-fix5/report.json",
+          "resolvedDirections": [
+            "As três direções do verdict 4 permanecem resolvidas no escopo pontuado.",
+            "Margem desktop 22→16px: aproximação das origens da página resolvida sem regressão evidenciada."
+          ],
+          "comparisonOverviewY": "223.78125px",
+          "desktopTableLabelsY": "421.375px",
+          "historicalCompScoreFix4": 0.6774
+        }
+      },
+      "functionalEvidence": "TypeScript passed in official npm run build, then Vite blocked spawn EPERM; npm test also blocked before any test. Both attempted once this session. Native esbuild CLI bundle passed; existing CLI/native Vitest fallback143/143 in15files,23.60s, unchanged assertions.",
+      "previousVerdict": "frontend/.impeccable/review/redesign/verdict5.md",
+      "captureCampaignScope": "Single5frame batch completed in two portions after minimized-window interruption. First1440light PNG1440x707 was invalid/truncated; preserved in fix6-invalid and recaptured alone once. No valid frame repeated. No CSS correction after inspection, no new detector/global audit. Viewport synthetic demo, raster8px shorter than DOM; no full-page/physical keyboard/AA/performance/backend certification. Other8Operate/25public remain previous evidence.",
+      "verdict": "Pending Maestro independent batch6 review; verdict5 remains historical.",
+      "sessionCheckpoint": {
+        "date": "2026-10-10",
+        "state": "resumed-scoped-dark-tonal-batch6",
+        "reason": "Usuário vai dormir e pediu continuar amanhã.",
+        "currentVersion": "fix6",
+        "approvalInferred": false,
+        "numericalRequirementWaived": false,
+        "resumeFrom": [
+          "Maestro reviews only batch6 source diff and5frames/crops/fix6 evidence.",
+          "Numerical gate remains open64.50%<72%; no waiver/force inferred.",
+          "Next material scope or explicit acceptance decision belongs to Maestro/user; no margin tuning."
+        ]
+      },
+      "batch6Proof": "frontend/.impeccable/review/redesign/fix6-proof.json"
+    },
+    "desktopLayout": {
+      "query": "(min-width: 1151px)",
+      "healthZone": "220px",
+      "healthToQualityGap": "16px",
+      "qualitySymbol": "44px × 44px",
+      "qualitySvg": "18px × 18px; stroke1.75",
+      "tableLayout": "fixed",
+      "columnOrder": [
+        "Endpoint",
+        "Dados",
+        "Última saúde",
+        "Último check",
+        "Ações"
+      ],
+      "columnsAbove1500px": [
+        "24.2%",
+        "15.3%",
+        "16.5%",
+        "16.5%",
+        "27.5%"
+      ],
+      "columns1151to1500px": [
+        "24.2%",
+        "15.3%",
+        "13.5%",
+        "15.5%",
+        "31.5%"
+      ],
+      "rowHeightPolicy": "Altura derivada do texto completo e padding; não fixada.",
+      "healthStack": "Rótulo, saúde e ressalva em linhas próprias; gap 2px, label/health line-height 1.2 e ressalva 1.35.",
+      "endpointFlow": "flex-wrap; nome flex:1 1 auto; método/cadência flex:0 0 auto; URL flex:0 0 100%, order:2; gap:0 8px. Sem faixa fixa para a cadência.",
+      "monitorToolbarPadding": "4px 20px 4px 0",
+      "monitorHeadingPadding": "8px 20px",
+      "mastheadBottomMargin": "16px a partir de 1151px; adaptação mobile existente preservada."
+    },
+    "consoleDark": {
+      "selector": ":root[data-theme=\"dark\"]:has(.app-shell)",
+      "tokens": {
+        "canvas": "#0f1d19",
+        "rail-bg": "#15231e",
+        "masthead-bg": "#0f1d19",
+        "surface": "#16251f",
+        "subtle": "#1e2b27",
+        "border": "#2d3e36",
+        "text": "#f1f2f2",
+        "muted": "#adb7b3",
+        "control-text": "#f1f2f2",
+        "control-border": "#334a40",
+        "control-border-hover": "#60766b",
+        "control-active": "#243b30",
+        "field-border": "#61766d",
+        "placeholder": "#adb7b3",
+        "disabled-field": "#1e2b27",
+        "nav-hover": "#1e342a",
+        "selected-bg": "#1e342a",
+        "selected-text": "#f1f2f2",
+        "account-border": "#2d3e36",
+        "account-text": "#adb7b3",
+        "brand-text": "#f1f2f2",
+        "demo-bg": "#1c3638",
+        "demo-text": "#f1f2f2"
+      },
+      "previousTokens": {
+        "canvas": "#0f1c17",
+        "rail-bg": "#14251d",
+        "masthead-bg": "#0f1c17",
+        "surface": "#192b22",
+        "subtle": "#20342a",
+        "border": "#30453a",
+        "text": "#e2ebe5",
+        "muted": "#b0c0b7",
+        "control-text": "#d6e5db",
+        "control-border": "#536e5f",
+        "control-border-hover": "#90af9c",
+        "control-active": "#2c3e32",
+        "field-border": "#6e8979",
+        "placeholder": "#a5b8ac",
+        "disabled-field": "#25342b",
+        "nav-hover": "#2a3e31",
+        "selected-bg": "#2d4937",
+        "selected-text": "#c2f2d5",
+        "account-border": "#48604f",
+        "account-text": "#b5c9bc",
+        "brand-text": "#c0e7cf",
+        "demo-bg": "#1b3938",
+        "demo-text": "#e1efea"
+      },
+      "tableHeaderText": "var(--text)",
+      "reference": "frontend/.impeccable/mocks/decision/redesign-control.png",
+      "referenceSamples": {
+        "canvas": {
+          "box": [
+            245,
+            125,
+            1200,
+            135
+          ],
+          "mode": "#0f1d19"
+        },
+        "rail-bg": {
+          "box": [
+            2,
+            300,
+            220,
+            850
+          ],
+          "mode": "#15231e"
+        },
+        "masthead-bg": {
+          "box": [
+            240,
+            45,
+            1300,
+            110
+          ],
+          "mode": "#0f1d19"
+        },
+        "surface": {
+          "box": [
+            265,
+            230,
+            1500,
+            325
+          ],
+          "mode": "#16251f"
+        },
+        "subtle": {
+          "box": [
+            265,
+            420,
+            1500,
+            458
+          ],
+          "mode": "#1e2b27"
+        },
+        "selected-bg": {
+          "box": [
+            20,
+            184,
+            210,
+            210
+          ],
+          "mode": "#1e342a"
+        },
+        "demo-bg": {
+          "box": [
+            400,
+            3,
+            1300,
+            35
+          ],
+          "mode": "#1c3638"
+        },
+        "control-border": {
+          "source": "spec.palette",
+          "reference": "#334a40"
+        },
+        "text": {
+          "source": "final-fix5/report.json monitor-title ink",
+          "reference": "#f1f2f2"
+        },
+        "muted": {
+          "source": "spec.palette neutral ink",
+          "reference": "#a5aeae",
+          "implementation": "#adb7b3 retains a slight mineral green tint and readable small metadata"
+        }
+      },
+      "tonalEvidence": "frontend/.impeccable/review/redesign/fix6-tonal-evidence.json",
+      "contrastRatios": {
+        "principal_panel": 14.2,
+        "secondary_panel": 7.737,
+        "secondary_header": 7.133,
+        "placeholder_field": 7.737,
+        "field_boundary": 3.277,
+        "reference_principal_panel": 14.2,
+        "reference_secondary_panel": 7.027,
+        "before_principal_panel": 12.233,
+        "before_secondary_panel": 7.851
+      },
+      "unchanged": "Light/public/auth token values, fix5 geometry, sizes/weights, six rows, handlers, metadata/caveats, semantic colors, accent and focus",
+      "qaStatus": "Completed bounded5frame batch; no CSS correction; invalid1440light capture replaced once. Awaiting Maestro independent review.",
+      "rasterTones": "frontend/.impeccable/review/redesign/fix6-raster-tones.json"
+    }
   },
   "components": [
     {
-      "name": "Marca Vigil",
-      "kind": "custom",
-      "refersTo": "brand",
-      "description": "Olho estático de observação e nome acessível vigil. Fonte: src/Brand.tsx, src/styles.css e public/brand/vigil-eye.svg. Links têm altura mínima44px; símbolo36px e espaço10px. Não indica saúde ou atividade. Assets/wordmark em contornos e licença: public/brand/; ícones: public/favicon.svg, public/favicon.ico e public/apple-touch-icon.png.",
-      "html": "<a class=\"ds-brand\" href=\"/\"><svg class=\"ds-brand-eye\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"36\" height=\"36\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 32C12 20 21 14 32 14s20 6 27 18c-7 12-16 18-27 18S12 44 5 32Z\" stroke=\"var(--accent,#145c43)\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"32\" cy=\"32\" r=\"8\" fill=\"var(--accent,#145c43)\"/></svg><span>vigil</span></a>",
-      "css": ".ds-brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:#143a2c;font-family:'Public Sans',sans-serif;font-size:2rem;font-weight:700;letter-spacing:-.04em;line-height:1;text-decoration:none;}.ds-brand-eye{display:block;width:36px;height:36px;flex-shrink:0;}.ds-brand:focus-visible{outline:3px solid #26785a;outline-offset:3px;}@media(max-width:760px){.ds-brand.ds-brand-sidebar{font-size:1.75rem;}}"
-    },
-    {
-      "name": "Botão principal",
+      "name": "Ação principal",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Salvar monitor. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
-      "html": "<button type=\"button\" class=\"ds-button-primary\">Salvar monitor</button>",
-      "css": ".ds-button-primary{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--accent,#145c43);border-color:var(--accent,#145c43);color:#fff;}.ds-button-primary:hover{background:#edf2ef;border-color:#90a79a;background:var(--accent-hover,#0e4934);border-color:var(--accent-hover,#0e4934);}.ds-button-primary:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none!important;}}"
+      "description": "Ação do cabeçalho do console; ícone SVG decorativo aparece a partir de 1151px, preservando o rótulo existente.",
+      "html": "<button class=\"ds-button-primary\"><svg class=\"ds-action-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 5v14M5 12h14\" /></svg>Novo monitor</button>",
+      "css": ".ds-button-primary{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--accent,#145c43);border-color:var(--accent,#145c43);color:var(--on-accent,#fff);}.ds-button-primary:hover{background:var(--subtle,#eaf0e9);border-color:var(--control-border-hover,#90a79a);}.ds-button-primary:active{background:var(--accent,#145c43);}.ds-button-primary:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}.ds-button-primary:hover{background:var(--accent-hover,#0e4934);border-color:var(--accent-hover,#0e4934);}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none!important;}}.ds-action-icon{display:none;}@media(min-width:1151px){.ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500;}.ds-action-icon{display:block;width:16px;height:16px;flex:0 0 16px;}}"
     },
     {
-      "name": "Botão secundário",
+      "name": "Ação secundária",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Cancelar. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
-      "html": "<button type=\"button\" class=\"ds-button-secondary\">Cancelar</button>",
-      "css": ".ds-button-secondary{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;}.ds-button-secondary:hover{background:#edf2ef;border-color:#90a79a;}.ds-button-secondary:active{background:#e3ece6;}.ds-button-secondary:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-secondary:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none!important;}}"
+      "description": "Ação do cabeçalho do console; ícone SVG decorativo aparece a partir de 1151px, preservando o rótulo existente.",
+      "html": "<button class=\"ds-button-secondary\"><svg class=\"ds-action-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M20 7v5h-5\" /><path d=\"M19 12a7 7 0 1 0-2 5\" /></svg>Atualizar</button>",
+      "css": ".ds-button-secondary{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;}.ds-button-secondary:hover{background:var(--subtle,#eaf0e9);border-color:var(--control-border-hover,#90a79a);}.ds-button-secondary:active{background:var(--control-active,#e3ece6);}.ds-button-secondary:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-button-secondary:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none!important;}}.ds-action-icon{display:none;}@media(min-width:1151px){.ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:400;}.ds-action-icon{display:block;width:16px;height:16px;flex:0 0 16px;}}"
     },
     {
-      "name": "Confirmação destrutiva",
+      "name": "Confirmação de arquivamento",
       "kind": "button",
       "refersTo": "button-danger",
-      "description": "Confirmar arquivamento. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
-      "html": "<button type=\"button\" class=\"ds-button-danger\">Confirmar arquivamento</button>",
-      "css": ".ds-button-danger{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--danger,#a12828);border-color:var(--danger,#a12828);color:#fff;}.ds-button-danger:hover{background:#edf2ef;border-color:#90a79a;background:#842020;}.ds-button-danger:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-danger:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none!important;}}"
+      "description": "Confirmação de arquivamento existente; exemplo isolado dos estados visuais.",
+      "html": "<button class=\"ds-button-danger\">Confirmar arquivamento</button>",
+      "css": ".ds-button-danger{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;background:var(--danger,#a12828);border-color:var(--danger,#a12828);color:var(--on-danger,#fff);}.ds-button-danger:hover{background:var(--subtle,#eaf0e9);border-color:var(--control-border-hover,#90a79a);}.ds-button-danger:active{background:var(--danger,#a12828);}.ds-button-danger:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-button-danger:disabled{opacity:.55;cursor:not-allowed;}.ds-button-danger:hover{background:var(--danger-hover,#842020);}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none!important;}}"
     },
     {
-      "name": "Ação destrutiva discreta",
+      "name": "Ação destrutiva de texto",
       "kind": "button",
       "refersTo": "button-danger-text",
-      "description": "Arquivar projeto. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
-      "html": "<button type=\"button\" class=\"ds-button-danger-text\">Arquivar projeto</button>",
-      "css": ".ds-button-danger-text{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;color:var(--danger,#a12828);}.ds-button-danger-text:hover{background:#edf2ef;border-color:#90a79a;}.ds-button-danger-text:active{background:#e3ece6;}.ds-button-danger-text:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-danger-text:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-danger-text{transition:none!important;}}"
+      "description": "Ação destrutiva de texto existente; exemplo isolado dos estados visuais.",
+      "html": "<button class=\"ds-button-danger-text\">Arquivar</button>",
+      "css": ".ds-button-danger-text{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;color:var(--danger,#a12828);}.ds-button-danger-text:hover{background:var(--subtle,#eaf0e9);border-color:var(--control-border-hover,#90a79a);}.ds-button-danger-text:active{background:var(--control-active,#e3ece6);}.ds-button-danger-text:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-button-danger-text:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-danger-text{transition:none!important;}}"
     },
     {
-      "name": "Botão de texto",
+      "name": "Ação de link",
       "kind": "button",
       "refersTo": "button-link",
-      "description": "Sair da conta. Variante implementada em src/styles.css e usada em src/App.tsx ou src/Forms.tsx.",
-      "html": "<button type=\"button\" class=\"ds-button-link\">Sair da conta</button>",
-      "css": ".ds-button-link{font-family:'Public Sans',sans-serif;padding:9px 14px;border:1px solid #bccbc2;background:var(--surface,#fff);color:#283a30;border-radius:var(--radius,6px);cursor:pointer;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;padding:4px 0;border:0;border-radius:2px;background:none;color:var(--accent,#145c43);}.ds-button-link:hover{background:#edf2ef;border-color:#90a79a;background:none;text-decoration:underline;text-underline-offset:4px;}.ds-button-link:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-button-link:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-link{transition:none!important;}}"
+      "description": "Ação de link existente; exemplo isolado dos estados visuais.",
+      "html": "<button class=\"ds-button-link\">Limpar filtros</button>",
+      "css": ".ds-button-link{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;padding:4px 0;border:0;border-radius:2px;background:none;color:var(--accent,#145c43);}.ds-button-link:hover{background:var(--subtle,#eaf0e9);border-color:var(--control-border-hover,#90a79a);}.ds-button-link:active{background:none;}.ds-button-link:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-button-link:disabled{opacity:.55;cursor:not-allowed;}.ds-button-link:hover{background:none;text-decoration:underline;text-underline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-button-link{transition:none!important;}}"
     },
     {
-      "name": "Campo com rótulo",
+      "name": "Campo de texto",
       "kind": "input",
       "refersTo": "input",
-      "description": "Campo com rótulo associado, borda e foco global; o exemplo não envia dados. Fonte: src/Forms.tsx e src/styles.css.",
-      "html": "<label class=\"ds-field-label\" for=\"ds-monitor-name\">Nome do monitor</label><input class=\"ds-field\" id=\"ds-monitor-name\" type=\"text\" maxlength=\"100\" required>",
-      "css": ".ds-field-label{display:block;margin:18px 0 6px;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;color:#202d28;line-height:1.5;}.ds-field{width:100%;min-height:42px;padding:10px 12px;border:1px solid #aebfb4;border-radius:var(--radius,6px);background:#fff;color:#202d28;caret-color:var(--accent,#145c43);font-family:Public Sans,sans-serif;font-weight:400;line-height:1.5;}.ds-field::placeholder{color:#64746a;opacity:1;}.ds-field:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-field:disabled{background:#edf1ee;}"
+      "description": "Busca rotulada com tratamento existente de placeholder, foco e disabled.",
+      "html": "<label class=\"ds-label\" for=\"ds-search\">Buscar monitores</label><input class=\"ds-input\" id=\"ds-search\" type=\"search\" placeholder=\"Nome ou URL\">",
+      "css": ".ds-label{display:block;line-height:1.5;margin:0;font-family:Public Sans,sans-serif;font-size:.75rem;font-weight:600;color:var(--text,#202d28);}.ds-input{width:100%;font-size:.875rem;margin-top:4px;min-height:44px;padding:10px 12px;border:1px solid var(--field-border,#7b9183);border-radius:var(--radius,6px);background:var(--surface,#fff);color:var(--text,#202d28);caret-color:var(--accent,#145c43);font-family:Public Sans,sans-serif;}.ds-input::placeholder{color:var(--placeholder,#64746a);opacity:1;}.ds-input:disabled{background:var(--disabled-field,#edf1ee);}.ds-input:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}@media(min-width:1151px){.ds-label{font-size:.875rem;line-height:1.25;}.ds-input{margin-top:2px;}}@media(max-width:760px){.ds-input{font-size:1rem;}}"
     },
     {
-      "name": "Navegação de projetos",
+      "name": "Projeto selecionado",
       "kind": "nav",
       "refersTo": "nav-project",
-      "description": "Projeto atual indicado por aria-current e seleção tonal. Fonte: src/App.tsx; a interação de seleção pertence ao runtime React.",
-      "html": "<nav class=\"ds-project-nav\" aria-label=\"Projetos\"><ul class=\"ds-project-list\"><li><button type=\"button\" class=\"ds-project\" aria-current=\"page\">Projeto atual</button></li><li><button type=\"button\" class=\"ds-project\">Outro projeto</button></li></ul></nav>",
-      "css": ".ds-project-nav{background:#edf2ef;padding:20px;}.ds-project-list{list-style:none;margin:-12px 0 0;padding:0;}.ds-project{font-family:Public Sans,sans-serif;font-size:.875rem;line-height:1.4;border:none;border-radius:var(--radius,6px);padding:11px 12px;background:transparent;color:#283a30;width:100%;text-align:left;overflow-wrap:anywhere;font-weight:500;cursor:pointer;transition:background 160ms,border-color 160ms;}.ds-project:hover{background:#e0e9e3;}.ds-project:active{background:#e3ece6;}.ds-project[aria-current]{color:#124b36;background:#d7e7dd;font-weight:600;}.ds-project:focus-visible{outline:3px solid #26785a;outline-offset:3px;}.ds-project:disabled{opacity:.55;cursor:not-allowed;}@media(max-width:760px){.ds-project-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:0;}.ds-project-list li{max-width:100%;}.ds-project{padding:8px 12px;}}@media(prefers-reduced-motion:reduce){.ds-project{transition:none!important;}}"
+      "description": "Projeto atual, seleção tonal e borda de acento; alvo inteiro acionável.",
+      "html": "<nav aria-label=\"Projetos\"><button class=\"ds-project\" aria-current=\"page\">Loja Horizonte</button></nav>",
+      "css": ".ds-project{min-height:44px;padding:9px 14px;border:1px solid var(--control-border,#bccbc2);background:var(--surface,#fff);color:var(--control-text,#283a30);border-radius:var(--radius,6px);cursor:pointer;font-family:Public Sans,sans-serif;font-size:.875rem;font-weight:600;line-height:1.4;transition:background 160ms,border-color 160ms;border:none;padding:11px 12px;background:transparent;width:100%;text-align:left;overflow-wrap:anywhere;font-weight:500;}.ds-project:hover{background:var(--nav-hover,#e0e9e3);}.ds-project[aria-current]{color:var(--selected-text,#124b36);background:var(--selected-bg,#d7e7dd);font-weight:600;border-left:1px solid var(--accent,#145c43);}.ds-project:active{background:transparent;}.ds-project[aria-current]:active{background:var(--selected-bg,#d7e7dd);}.ds-project:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-project:disabled{opacity:.55;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-project{transition:none!important;}}"
     },
     {
       "name": "Qualidade dos dados",
       "kind": "chip",
-      "refersTo": "badge-no-data",
-      "description": "Quatro estados presentes no código; rótulos estáticos sem hover, foco ou ação. Não são medições do endpoint. Fonte: src/App.tsx e src/styles.css.",
-      "html": "<span class=\"ds-badge ds-no-data\">Sem dados</span> <span class=\"ds-badge ds-stale\">Desatualizados</span> <span class=\"ds-badge ds-paused\">Pausado</span> <span class=\"ds-badge ds-fresh\">Atualizados</span>",
-      "css": ".ds-badge{display:inline-block;padding:3px 8px;border-radius:4px;white-space:nowrap;font-family:Public Sans,sans-serif;font-size:.75rem;font-weight:500;line-height:1.5;}.ds-no-data{background:#e9eeeb;color:#485b4f;}.ds-stale{background:#fff0d2;color:#77520b;}.ds-paused{background:#e7edf8;color:#385276;}.ds-fresh{background:#dff0e5;color:#235b3a;}"
+      "refersTo": "badge-fresh",
+      "description": "Badges estáticos de qualidade na tabela; variante desktop a partir de 1151px.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-none\">Sem dados</span><span class=\"ds-badge ds-stale\">Desatualizados</span><span class=\"ds-badge ds-paused\">Pausado</span><span class=\"ds-badge ds-fresh\">Atualizados</span></div>",
+      "css": ".ds-badges{display:flex;flex-wrap:wrap;gap:8px;}.ds-badge{display:inline-block;padding:6px 10px;border-radius:4px;white-space:nowrap;font-family:Public Sans,sans-serif;font-size:.75rem;font-weight:500;line-height:1.5;}.ds-none{background:var(--data-none-bg,#e9eeeb);color:var(--data-none-text,#485b4f);}.ds-stale{background:var(--data-stale-bg,#fff0d2);color:var(--data-stale-text,#77520b);}.ds-paused{background:var(--data-paused-bg,#e7edf8);color:var(--data-paused-text,#385276);}.ds-fresh{background:var(--data-fresh-bg,#dff0e5);color:var(--data-fresh-text,#235b3a);}@media(min-width:1151px){.ds-badge{font-size:.875rem;line-height:1.4;}}"
     },
     {
-      "name": "Editor inline",
+      "name": "Painel de observação",
       "kind": "card",
-      "refersTo": "editor",
-      "description": "Superfície real de ProjectForm/MonitorForm. O snippet apresenta apenas o container, sem simular salvamento ou validação.",
-      "html": "<section class=\"ds-editor\" aria-labelledby=\"ds-editor-title\"><h2 id=\"ds-editor-title\">Novo monitor</h2><p>O método é GET. Alterar as regras de check reinicia a leitura de saúde.</p></section>",
-      "css": ".ds-editor{background:#fff;color:#202d28;border:1px solid var(--border,#dbe3de);border-radius:12px;padding:28px;margin-bottom:32px;font-family:Public Sans,sans-serif;line-height:1.5;}.ds-editor h2{margin:0 0 6px;font-size:1.25rem;line-height:1.4;letter-spacing:-.02em;font-weight:600;}.ds-editor p{margin-top:0;max-width:70ch;font-size:.875rem;color:var(--muted,#5c6b63);}@media(max-width:760px){.ds-editor{padding:20px;}}"
+      "refersTo": "panel",
+      "description": "Superfície fosca, borda fina e detalhes nativos, sem elevação.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-title\">Disponibilidade por amostras</h2><p class=\"ds-note\">Sem medições para o período selecionado.</p><details class=\"ds-details\"><summary>Detalhes técnicos</summary><p class=\"ds-note\">Nenhuma série disponível.</p></details></section>",
+      "css": ".ds-panel{padding:24px;border:1px solid var(--border,#d3dfd5);border-radius:var(--panel-radius,8px);background:var(--surface,#fff);color:var(--text,#202d28);font-family:Public Sans,sans-serif;line-height:1.5;min-width:0;}.ds-title{font-size:1.25rem;font-weight:600;line-height:1.4;letter-spacing:-.02em;margin:0 0 6px;}.ds-note{color:var(--muted,#5c6b63);font-size:.75rem;line-height:1.5;margin:10px 0 18px;}.ds-details summary{cursor:pointer;color:var(--accent,#145c43);font-size:.8125rem;padding:10px 0;min-height:44px;font-weight:500;}.ds-details summary:focus-visible{outline:3px solid var(--focus,#26785a);outline-offset:3px;}.ds-details[open]>summary{margin-bottom:10px;}@media(max-width:760px){.ds-panel{padding:18px;}}"
     },
     {
-      "name": "Linha de monitor responsiva",
+      "name": "Resumo de saúde e qualidade",
       "kind": "custom",
-      "refersTo": "monitor-row",
-      "description": "A estrutura de MonitorRow conserva tabela no desktop e campos rotulados no mobile. Exemplo sem medição; nomes e URL são placeholders.",
-      "html": "<table class=\"ds-monitor-table\"><caption class=\"ds-table-caption\">Estrutura de um monitor sem medição</caption><thead><tr><th scope=\"col\">Endpoint</th><th scope=\"col\">Dados</th><th scope=\"col\">Última saúde</th><th scope=\"col\">Último check</th></tr></thead><tbody><tr><td data-label=\"Endpoint\"><strong class=\"ds-monitor-name\">Nome do monitor</strong><span class=\"ds-endpoint\">https://api.seuservico.com/health</span></td><td data-label=\"Dados\"><span class=\"ds-row-badge\">Sem dados</span></td><td data-label=\"Última saúde\"><span class=\"ds-row-quiet\">Não avaliada</span></td><td data-label=\"Último check\"><span class=\"ds-row-quiet\">Nenhum check</span></td></tr></tbody></table>",
-      "css": ".ds-monitor-table{width:100%;border-collapse:collapse;text-align:left;font-family:Public Sans,sans-serif;font-size:.8125rem;line-height:1.5;color:#202d28;}.ds-table-caption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}.ds-monitor-table th{font-weight:500;color:var(--muted,#5c6b63);font-size:.75rem;padding:12px 16px;background:#edf2ef;white-space:nowrap;}.ds-monitor-table td{padding:20px 16px;border-bottom:1px solid var(--border,#dbe3de);vertical-align:top;font-variant-numeric:tabular-nums;}.ds-monitor-table td:first-child{min-width:190px;max-width:300px;}.ds-monitor-name{font-size:.875rem;font-weight:600;display:block;overflow-wrap:anywhere;}.ds-endpoint{display:block;color:var(--muted,#5c6b63);font-size:.75rem;overflow-wrap:anywhere;margin:4px 0;}.ds-row-quiet{color:var(--muted,#5c6b63);}.ds-row-badge{display:inline-block;padding:3px 8px;border-radius:4px;white-space:nowrap;font-size:.75rem;font-weight:500;background:#e9eeeb;color:#485b4f;}@media(max-width:760px){.ds-monitor-table,.ds-monitor-table tbody,.ds-monitor-table tr,.ds-monitor-table td{display:block;width:100%;}.ds-monitor-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}.ds-monitor-table tr{background:white;border:1px solid var(--border,#dbe3de);border-radius:12px;padding:18px;margin-bottom:12px;}.ds-monitor-table td{border-bottom:0;padding:8px 0;}.ds-monitor-table td:not(:first-child){display:grid;grid-template-columns:106px minmax(0,1fr);column-gap:12px;}.ds-monitor-table td:not(:first-child)::before{content:attr(data-label);color:var(--muted,#5c6b63);font-size:.75rem;}.ds-monitor-table td:first-child{min-width:0;max-width:none;padding:0 0 12px;margin-bottom:8px;border-bottom:1px solid var(--border,#dbe3de);}.ds-row-badge{justify-self:start;}}"
+      "refersTo": "overview",
+      "description": "Faixa desktop com zona de saúde 220px e quatro grupos com SVG decorativo; no mobile conserva pares inline. Valores do snippet são ausência explícita, sem medição.",
+      "html": "<section class=\"ds-overview\" aria-label=\"Resumo do projeto\"><div class=\"ds-summary-health\"><span class=\"ds-quiet\">Saúde observada</span><strong>Ainda sem leitura</strong><p>Nenhum monitor com medição atual elegível.</p></div><dl class=\"ds-counts\"><div class=\"ds-quality-none\"><span class=\"ds-quality-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"M12 11v6\"/><path d=\"M12 7h.01\"/></svg></span><dt>Sem dados</dt><dd>0</dd></div><div class=\"ds-quality-stale\"><span class=\"ds-quality-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"M12 7v6\"/><path d=\"M12 17h.01\"/></svg></span><dt>Desatualizados</dt><dd>0</dd></div><div class=\"ds-quality-paused\"><span class=\"ds-quality-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M9 7v10M15 7v10\"/></svg></span><dt>Pausado</dt><dd>0</dd></div><div class=\"ds-quality-fresh\"><span class=\"ds-quality-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"m6 12 4 4 8-8\"/></svg></span><dt>Atualizados</dt><dd>0</dd></div></dl></section>",
+      "css": ".ds-overview{border:1px solid var(--border,#d3dfd5);border-radius:var(--panel-radius,8px);background:var(--surface,#fff);color:var(--text,#202d28);padding:12px 20px;display:grid;grid-template-columns:minmax(280px,1fr) 2.75fr;gap:20px;align-items:center;min-height:104px;font-family:Public Sans,sans-serif;line-height:1.5;}.ds-quiet{font-size:.8125rem;color:var(--muted,#5c6b63);}.ds-overview strong{display:block;font-size:1.25rem;font-weight:600;margin:4px 0;}.ds-overview p{font-size:.8125rem;line-height:1.4;color:var(--muted,#5c6b63);margin:0;}.ds-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin:0;}.ds-counts>div{padding-left:20px;border-left:1px solid var(--border,#d3dfd5);}.ds-counts dt{font-size:.75rem;color:var(--muted,#5c6b63);}.ds-counts dd{margin:6px 0 0;font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums;}@media(max-width:1150px){.ds-overview{grid-template-columns:1fr;gap:18px;}.ds-counts>div:first-child{border-left:0;padding-left:0;}}@media(max-width:760px){.ds-overview{padding:12px;gap:12px;}.ds-counts{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 16px;width:100%;}.ds-counts>div{display:flex;align-items:center;justify-content:space-between;gap:8px;border-left:0;padding-left:0;}.ds-counts dd{margin:0;font-size:1.125rem;}}.ds-quality-symbol{display:none;}@media(min-width:1151px){.ds-overview{grid-template-columns:220px minmax(0,1fr);gap:16px;padding-block:10px;}.ds-summary-health{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:2px;}.ds-summary-health>.ds-quiet{font-size:1.25rem;font-weight:600;line-height:1.2;}.ds-summary-health>strong{margin:0;font-size:1.25rem;line-height:1.2;}.ds-summary-health>p{margin:0;line-height:1.35;}.ds-counts{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:center;}.ds-counts>div{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:16px;padding-left:20px;}.ds-counts>div:first-child{padding-left:0;border-left:0;}.ds-counts dt{grid-column:2;grid-row:1;font-size:.875rem;}.ds-counts dd{grid-column:2;grid-row:2;font-size:1.75rem;margin-top:4px;}.ds-quality-symbol{display:grid;place-items:center;grid-column:1;grid-row:1/3;width:44px;height:44px;border-radius:6px;}.ds-quality-symbol svg{width:18px;height:18px;}.ds-quality-none .ds-quality-symbol{background:var(--data-none-bg,#e9eeeb);color:var(--data-none-text,#485b4f);}.ds-quality-stale .ds-quality-symbol{background:var(--data-stale-bg,#fff0d2);color:var(--data-stale-text,#77520b);}.ds-quality-paused .ds-quality-symbol{background:var(--data-paused-bg,#e7edf8);color:var(--data-paused-text,#385276);}.ds-quality-fresh .ds-quality-symbol{background:var(--data-fresh-bg,#dff0e5);color:var(--data-fresh-text,#235b3a);}.ds-quality-fresh dd{color:var(--health-online,#236443);}.ds-quality-stale dd{color:var(--health-degraded,#875a07);}.ds-quality-paused dd{color:var(--data-paused-text,#385276);}}"
     }
   ],
   "narrative": {
-    "northStar": "Console de operações",
-    "overview": "O Vigil apresenta um console claro e sóbrio para administrar projetos e monitores HTTP. Texto, divisórias e uma única cor de ação organizam o trabalho; a densidade permite comparar endpoints sem esconder o contexto de cada leitura.\n\nEste documento registra decisões observadas neste incremento em `src/styles.css`, `src/App.tsx` e `src/Forms.tsx`. A direção deriva do brief e da autorização de implementação em `PRODUCT.md`; não representa uma preferência pessoal declarada pelo usuário. A separação entre saúde e qualidade dos dados orienta a apresentação de estados.",
+    "northStar": "Centro de controle",
+    "overview": "O Vigil usa uma linguagem de centro de controle: campos verdes minerais, painéis foscos, separadores finos e ações compactas. A direção escolhida pelo usuário substitui o visual anterior; o sistema mantém a marca existente e a Public Sans local, com a mesma geometria nos temas claro e escuro.\n\nA densidade privilegia leitura de observações e operação de monitores. O contraste de tom, peso e espaço estabelece hierarquia; cores semânticas reforçam rótulos explícitos de saúde e qualidade dos dados. As escolhas globais vêm do código implementado. A composição específica do console permanece no contrato de superfície.",
     "keyCharacteristics": [
-      "Superfícies claras, bordas discretas e nenhuma sombra.",
-      "Public Sans local com hierarquia compacta.",
-      "Verde profundo nas ações principais e seleção de projetos.",
-      "Saúde e atualização dos dados em campos distintos.",
-      "Formulários inline e lista adaptada à largura disponível."
+      "Paleta verde mineral com tema claro e escuro de geometria compartilhada.",
+      "Public Sans local; algarismos tabulares em contagens e dados.",
+      "Painéis foscos, bordas finas e nenhuma sombra.",
+      "Controles compactos com altura mínima de 44px e foco visível.",
+      "Saúde e qualidade dos dados em campos distintos; formulários inline."
     ],
     "rules": [
       {
         "name": "The Independent States Rule",
-        "body": "Mostre a saúde e a qualidade dos dados separadamente; ausência ou idade da leitura não comunica um serviço saudável.",
+        "body": "Mostre saúde e qualidade dos dados separadamente; ausência ou idade da leitura não confirma disponibilidade.",
+        "section": "colors"
+      },
+      {
+        "name": "The Shared Geometry Rule",
+        "body": "A troca de tema altera os tokens de cor, preservando malha, formas e ordem de leitura.",
         "section": "colors"
       },
       {
         "name": "The Flat Surfaces Rule",
-        "body": "Preserve a separação por tom e borda das superfícies existentes.",
+        "body": "Separe regiões por tom, borda e espaço; mantenha os painéis sem sombra.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** preserve a hierarquia de texto, bordas e superfícies claras observada no código.",
-      "**Do** mantenha rótulos de saúde e qualidade dos dados independentes.",
-      "**Do** preserve foco visível, rótulos de formulário e estados de envio desabilitados.",
-      "**Do** adapte tabela, formulários e navegação nos breakpoints existentes."
+      "**Do** use os tokens do tema ativo, preservando a geometria compartilhada.",
+      "**Do** mantenha rótulos de saúde e qualidade dos dados independentes e visíveis.",
+      "**Do** preserve controles de 44px, foco visível, campos associados e estados de envio desabilitados.",
+      "**Do** mantenha no mobile os quatro pares de qualidade em duas colunas compactas, com rótulo e número na mesma linha.",
+      "**Do** preserve a marca, as rotas, os textos legais e os aceites separados existentes."
     ],
     "donts": [
-      "**Don't** apresente dados ausentes ou desatualizados como confirmação de saúde.",
-      "**Don't** acrescente medições, uptime ou gráficos sem dados reais disponíveis.",
-      "**Don't** acrescente sombras ou decoração que substituam a organização por tom e borda deste incremento.",
-      "**Don't** trate o horário de consulta da configuração como o horário de um check."
+      "**Don't** apresente dados ausentes ou antigos como confirmação de saúde.",
+      "**Don't** fabrique métricas, gráficos ou controles a partir do mock aprovado.",
+      "**Don't** introduza brilho, gradientes, sombras ou imagens raster decorativas nesta linguagem mineral fosca.",
+      "**Don't** reduza alvos de histórico e ações de linha abaixo da altura mínima implementada.",
+      "**Don't** trate o horário da consulta de configuração como o horário de um check."
     ]
   }
 }

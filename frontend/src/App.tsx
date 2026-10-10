@@ -150,13 +150,9 @@ export function Dashboard({ session, onLogout }: { session: Session; onLogout: (
       <div className="account"><span title={session.user.email}>{session.user.email}</span><button className="link" onClick={logout} disabled={Boolean(busy || editorBusy)}>{busy === 'logout' ? 'Saindo…' : demo ? 'Sair da demonstração' : 'Sair da conta'}</button></div>
     </aside>
     <main id="main" className="workspace" tabIndex={-1}>
-      <div className="workspace-top"><div className="workspace-preferences"><span>Visão geral</span><ThemeControl /></div><div className="sync-status">
-        <span role="status">{demo ? 'Dados fictícios em memória' : connected ? 'Atualizações conectadas' : 'Sincronização a cada 30 s'}</span>
-        {refreshBlocked ? <span className="quiet">A consulta automática aguarda a ação em andamento.</span> : !demo && !connected && <span className="quiet">Consulta automática a cada 30 s.{project && ' Use Atualizar para consultar agora.'}</span>}
-        {project && <span className="quiet">{updatedAt === null ? 'Nenhuma consulta dos monitores concluída.' : <>Última consulta dos monitores às <time dateTime={new Date(updatedAt).toISOString()}>{new Date(updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></>}</span>}
-      </div></div>
+      <div className="workspace-top"><span>Visão geral</span><ThemeControl /></div>
       <header className="page-heading"><div><h1>{project?.name ?? 'Seus projetos'}</h1><p>{project?.description || (project ? 'Gerencie os endpoints e acompanhe a qualidade das leituras.' : 'Crie um projeto para organizar seus endpoints.')}</p></div>
-        {project && <div className="button-group"><button onClick={() => openEditor({ type: 'project', value: project })} disabled={actionsDisabled}>Editar projeto</button><button className="danger-text" onClick={() => { setArchive({ type: 'project', value: project }); setNotice(''); }} disabled={actionsDisabled}>Arquivar projeto</button></div>}
+        {project && <div className="button-group"><button disabled={monitorLoading || actionsDisabled} onClick={() => { setReloadMonitors(n => n + 1); setObservationRevision(n => n + 1); }}><ActionIcon kind="refresh" />Atualizar</button><button className="primary" disabled={actionsDisabled || monitorLoading || Boolean(monitorError)} onClick={() => openEditor({ type: 'monitor' })}><ActionIcon kind="add" />Novo monitor</button></div>}
       </header>
       {mutationError && <Alert message={mutationError} />}{notice && <p className="success" role="status">{notice}</p>}
       {archive && <section className="archive-confirm" aria-labelledby="archive-title"><h2 id="archive-title">Arquivar {archive.value.name}?</h2><p>{archive.type === 'project' ? 'O projeto e seus monitores deixarão as listagens ativas. O histórico será preservado.' : 'O monitor deixará a listagem ativa e não executará novos checks. O histórico será preservado.'} Este incremento não permite restaurar itens arquivados.</p><div className="form-actions"><button className="danger" onClick={confirmArchive} disabled={Boolean(busy)}>{busy ? 'Arquivando…' : 'Confirmar arquivamento'}</button><button onClick={() => { setArchive(null); setMutationError(''); }} disabled={Boolean(busy)}>Cancelar</button></div></section>}
@@ -164,39 +160,64 @@ export function Dashboard({ session, onLogout }: { session: Session; onLogout: (
       {editor?.type === 'monitor' && project && <MonitorForm key={editor.value?.id ?? 'new-monitor'} value={editor.value} projectId={project.id} onBusyChange={setEditorBusy} onCancel={() => setEditor(null)} onSaved={saved => { setMonitors(items => items.some(m => m.id === saved.id) ? items.map(m => m.id === saved.id ? saved : m) : [...items, saved]); setEditor(null); setObservationRevision(n => n + 1); setNotice('Monitor salvo.'); }} />}
       {!project && !projectLoading && !projectError && editor?.type !== 'project' && <section className="empty"><h2>Comece com um projeto</h2><p>Um projeto reúne os monitores de uma aplicação. Depois, adicione os endpoints que deseja acompanhar.</p><button className="primary" onClick={() => openEditor({ type: 'project' })}>Criar primeiro projeto</button></section>}
       {project && <>
-        <PublicLink key={`public-${project.id}`} slug={project.public_slug} enabled={project.public_status_enabled} />
-        <CheckTiming />
-        {demo && <DemoSimulation key={project.id} monitors={projectMonitors} disabled={actionsDisabled || monitorLoading} onSaved={updated => { setMonitors(items => items.map(m => m.id === updated.id ? updated : m)); setReloadProjects(n => n + 1); setObservationRevision(n => n + 1); }} />}
         <section className="overview" aria-label="Resumo do projeto"><div><span className="quiet">Saúde observada</span><strong>{monitorLoading || monitorError ? 'Indisponível' : summary.health ? healthLabels[summary.health] : 'Ainda sem leitura'}</strong><p>{monitorError ? 'Não foi possível consultar os monitores.' : monitorLoading ? 'Consultando os monitores…' : summary.partial ? 'Resumo parcial. Há monitores sem dados atuais.' : summary.health ? 'Considera apenas monitores com dados atualizados.' : 'Nenhum monitor com medição atual elegível.'}</p></div>
-          {!monitorLoading && !monitorError && <dl className="quality-counts">{(['no_data', 'stale', 'paused', 'fresh'] as const).map(state => <div key={state}><dt>{freshnessLabels[state]}</dt><dd>{summary.counts[state]}</dd></div>)}</dl>}
+          {!monitorLoading && !monitorError && <dl className="quality-counts">{(['no_data', 'stale', 'paused', 'fresh'] as const).map(state => <div key={state} className={`quality-count ${state}`}><QualitySymbol state={state} /><dt>{freshnessLabels[state]}</dt><dd>{summary.counts[state]}</dd></div>)}</dl>}
         </section>
         {detail ? <MonitorDetail key={detail.id} monitor={detail} revision={observationRevision} onBack={() => setDetailId('')} /> : <>
-        <MetricsPanel key={`metrics-${project.id}`} path={`/projects/${project.id}/metrics`} revision={observationRevision} />
-        <section className="monitor-section" aria-labelledby="monitors-title"><div className="section-heading"><div><h2 id="monitors-title">Monitores {!monitorLoading && !monitorError && <span className="count">{projectMonitors.length}</span>}</h2><p>Saúde e qualidade dos dados são estados independentes.</p></div><div className="button-group"><button disabled={monitorLoading || actionsDisabled} onClick={() => { setReloadMonitors(n => n + 1); setObservationRevision(n => n + 1); }}>Atualizar</button><button className="primary" disabled={actionsDisabled || monitorLoading || Boolean(monitorError)} onClick={() => openEditor({ type: 'monitor' })}>Novo monitor</button></div></div>
+        <section className="monitor-section" aria-labelledby="monitors-title"><div className="section-heading"><div><h2 id="monitors-title">Monitores {!monitorLoading && !monitorError && <span className="count">{projectMonitors.length}</span>}</h2><div className="monitor-context"><p>Saúde e qualidade dos dados são estados independentes.</p>{!monitorLoading && !monitorError && <div className="filter-summary"><span className="quiet">{visible.length} de {projectMonitors.length} {projectMonitors.length === 1 ? 'monitor' : 'monitores'}</span>{hasFilters && <button type="button" className="link" onClick={clearFilters}>Limpar filtros</button>}</div>}</div></div></div>
           {monitorLoading ? <div className="loading" role="status">Carregando monitores…<div className="skeleton" /><div className="skeleton" /></div> : monitorError ? <><Alert message={monitorError} /><button onClick={() => setReloadMonitors(n => n + 1)}>Tentar novamente</button></> : <>
             <div className="list-toolbar" role="group" aria-label="Filtros de monitores">
               <label className="search-label" htmlFor="monitor-search">Buscar monitores<input ref={searchInput} id="monitor-search" type="search" placeholder="Nome ou URL" value={search} onChange={e => setSearch(e.target.value)} aria-controls="monitor-results" /></label>
               <label className="quality-filter" htmlFor="monitor-quality">Qualidade dos dados<select id="monitor-quality" value={quality} onChange={e => setQuality(e.target.value as Freshness | 'all')} aria-controls="monitor-results"><option value="all">Todos</option><option value="fresh">Atualizados</option><option value="stale">Desatualizados</option><option value="no_data">Sem dados</option><option value="paused">Pausados</option></select></label>
-              <div className="filter-summary"><span className="quiet">{visible.length} de {projectMonitors.length} {projectMonitors.length === 1 ? 'monitor' : 'monitores'}</span>{hasFilters && <button type="button" className="link" onClick={clearFilters}>Limpar filtros</button>}</div>
             </div>
             <div id="monitor-results">{projectMonitors.length === 0 ? <div className="empty compact"><h3>Nenhum endpoint configurado</h3><p>Adicione seu primeiro monitor. Ele aparecerá como “Sem dados” até receber uma medição real.</p></div> : visible.length === 0 ? <p className="empty compact" role="status">Nenhum monitor corresponde aos filtros. Limpe os filtros para ver todos os monitores.</p> : <div className="table-wrap"><table><caption className="sr-only">Monitores do projeto {project.name}</caption><thead><tr><th scope="col">Endpoint</th><th scope="col">Dados</th><th scope="col">Última saúde</th><th scope="col">Último check</th><th scope="col">Ações</th></tr></thead><tbody>{visible.map(m => <MonitorRow key={m.id} monitor={m} now={now} disabled={actionsDisabled} busy={busy === m.id} onDetail={() => setDetailId(m.id)} onPause={() => pause(m)} onEdit={() => openEditor({ type: 'monitor', value: m })} onArchive={() => { setArchive({ type: 'monitor', value: m }); setNotice(''); }} />)}</tbody></table></div>}</div>
           </>}
         </section>
-        <IncidentList key={`incidents-${project.id}`} path={`/projects/${project.id}/incidents`} revision={observationRevision} />
+        <div className="investigation-layout">
+          <MetricsPanel key={`metrics-${project.id}`} path={`/projects/${project.id}/metrics`} revision={observationRevision} />
+          <IncidentList key={`incidents-${project.id}`} path={`/projects/${project.id}/incidents`} revision={observationRevision} scrollable />
+        </div>
         </>}
+        <section className="project-context" aria-label="Contexto do projeto">
+          <div className="project-management"><div className="button-group"><button onClick={() => openEditor({ type: 'project', value: project })} disabled={actionsDisabled}>Editar projeto</button><button className="danger-text" onClick={() => { setArchive({ type: 'project', value: project }); setNotice(''); }} disabled={actionsDisabled}>Arquivar projeto</button></div><PublicLink key={`public-${project.id}`} slug={project.public_slug} enabled={project.public_status_enabled} /></div>
+          <CheckTiming />
+          {demo && <DemoSimulation key={project.id} monitors={projectMonitors} disabled={actionsDisabled || monitorLoading} onSaved={updated => { setMonitors(items => items.map(m => m.id === updated.id ? updated : m)); setReloadProjects(n => n + 1); setObservationRevision(n => n + 1); }} />}
+        </section>
         <ProcessingFailures key={`processing-${project.id}`} projectId={project.id} monitors={projectMonitors} revision={observationRevision} blocked={refreshBlocked} />
         <p className="pipeline-note">Métricas e histórico representam apenas ciclos persistidos. Sem medições, os valores permanecem sem dados; lacunas não significam disponibilidade.</p>
       </>}
+      <div className="sync-status">
+        <span role="status">{demo ? 'Dados fictícios em memória' : connected ? 'Atualizações conectadas' : 'Sincronização a cada 30 s'}</span>
+        {refreshBlocked ? <span className="quiet">A consulta automática aguarda a ação em andamento.</span> : !demo && !connected && <span className="quiet">Consulta automática a cada 30 s.{project && ' Use Atualizar para consultar agora.'}</span>}
+        {project && <span className="quiet">{updatedAt === null ? 'Nenhuma consulta dos monitores concluída.' : <>Última consulta dos monitores às <time dateTime={new Date(updatedAt).toISOString()}>{new Date(updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></>}</span>}
+      </div>
     </main>
   </div>;
 }
 
 function MonitorRow({ monitor: m, now, disabled, busy, onDetail, onPause, onEdit, onArchive }: { monitor: Monitor; now: number; disabled: boolean; busy: boolean; onDetail: () => void; onPause: () => void; onEdit: () => void; onArchive: () => void }) {
   const freshness = currentFreshness(m, now);
-  return <tr><td data-label="Endpoint"><button className="link monitor-name" onClick={onDetail} disabled={disabled} aria-label={`Ver histórico de ${m.name}`}>{m.name}</button><span className="endpoint-url" title={m.url}>{m.url}</span><small>GET · a cada {m.interval_seconds}s</small></td>
+  return <tr><td data-label="Endpoint"><button className="link monitor-name" onClick={onDetail} disabled={disabled} aria-label={`Ver histórico de ${m.name}`}><span className="monitor-title">{m.name}</span><span className="endpoint-url" title={m.url}>{m.url}</span><small>GET · a cada {m.interval_seconds}s</small></button></td>
     <td data-label="Dados"><span className={`badge ${freshness}`}>{freshnessLabels[freshness]}</span></td>
     <td data-label="Última saúde"><span className={m.health_status ? `health ${m.health_status}` : 'quiet'}>{m.health_status ? healthLabels[m.health_status] : 'Não avaliada'}</span>{freshness !== 'fresh' && m.health_status && <small>Leitura histórica</small>}</td>
     <td data-label="Último check">{m.last_checked_at ? <><time dateTime={m.last_checked_at}>{new Date(m.last_checked_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</time><small>{m.last_http_status === null ? 'Sem resposta HTTP' : `HTTP ${m.last_http_status}`}{m.last_latency_ms === null ? '' : ` · ${Math.round(m.last_latency_ms)} ms`}</small></> : <><span className="quiet">Nenhum check</span><small>{freshness === 'paused' ? 'Retome para permitir a primeira medição.' : 'Aguardando a primeira medição.'}</small></>}</td>
-    <td data-label="Ações"><div className="row-actions"><button disabled={disabled} onClick={onPause} aria-label={`${freshness === 'paused' ? 'Retomar' : 'Pausar'} ${m.name}`}>{busy ? 'Aguarde…' : freshness === 'paused' ? 'Retomar' : 'Pausar'}</button><button disabled={disabled} onClick={onEdit} aria-label={`Editar ${m.name}`}>Editar</button><button className="danger-text" disabled={disabled} onClick={onArchive} aria-label={`Arquivar ${m.name}`}>Arquivar</button></div></td>
+    <td data-label="Ações"><div className="row-actions"><button disabled={disabled} onClick={onPause} aria-label={`${freshness === 'paused' ? 'Retomar' : 'Pausar'} ${m.name}`}><ActionIcon kind={freshness === 'paused' ? 'resume' : 'pause'} />{busy ? 'Aguarde…' : freshness === 'paused' ? 'Retomar' : 'Pausar'}</button><button disabled={disabled} onClick={onEdit} aria-label={`Editar ${m.name}`}><ActionIcon kind="edit" />Editar</button><button className="danger-text" disabled={disabled} onClick={onArchive} aria-label={`Arquivar ${m.name}`}><ActionIcon kind="archive" />Arquivar</button></div></td>
   </tr>;
+}
+
+function QualitySymbol({ state }: { state: Freshness }) {
+  return <span className="quality-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    {state === 'paused' ? <><path d="M9 7v10M15 7v10" /></> : state === 'fresh' ? <path d="m6 12 4 4 8-8" /> : <><circle cx="12" cy="12" r="8" />{state === 'stale' ? <><path d="M12 7v6" /><path d="M12 17h.01" /></> : <><path d="M12 11v6" /><path d="M12 7h.01" /></>}</>}
+  </svg></span>;
+}
+
+function ActionIcon({ kind }: { kind: 'refresh' | 'add' | 'pause' | 'resume' | 'edit' | 'archive' }) {
+  return <svg className="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    {kind === 'refresh' ? <><path d="M20 7v5h-5" /><path d="M19 12a7 7 0 1 0-2 5" /></> :
+      kind === 'add' ? <path d="M12 5v14M5 12h14" /> :
+      kind === 'pause' ? <path d="M9 5v14M15 5v14" /> :
+      kind === 'resume' ? <path d="m8 5 11 7-11 7Z" /> :
+      kind === 'edit' ? <><path d="m15 4 5 5-11 11H4v-5Z" /><path d="m12 7 5 5" /></> :
+      <><path d="M4 5h16v4H4ZM6 9v11h12V9" /><path d="M10 13h4" /></>}
+  </svg>;
 }

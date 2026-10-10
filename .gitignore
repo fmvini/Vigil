@@ -23,3 +23,4 @@ artifacts/
 test-results/
 playwright-report/
 .impeccable/review/
+**/.impeccable/build/
