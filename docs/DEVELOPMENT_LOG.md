@@ -1,5 +1,33 @@
 # Registro de desenvolvimento
 
+## 2026-10-10 — Backup compatível com aceites e continuidade reconciliada
+
+### Implementado
+- Corrigido inventário do manifesto de backup Compose, que recusava o schema atualizado pela migration `0003_legal_acceptances`. Agora inclui oito tabelas de produto mais `alembic_version`, calculando digest dos aceites por `id` e comparando seu catálogo sem deduplicar logins repetidos.
+- Regressões confrontam o inventário com os models, exercitam manifesto/digest com dois aceites e detectam alteração de conteúdo com contagem igual, tabela ausente/extra e drift de colunas/constraints/índices.
+- DATABASE descreve LegalAcceptance/cadeia atual; ARCHITECTURE distingue transporte, cache planejado, SSE, heartbeat e batch implementados; ROADMAP registra a etapa atual e suas pendências. OPERATIONS explica o inventário atualizado e limites de ambos os helpers de backup.
+
+### Arquivos principais alterados
+- `scripts/backup_restore_check.py`, `scripts/tests/test_backup_restore_check.py`
+- `docs/DATABASE.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/OPERATIONS.md`, `docs/DEVELOPMENT_LOG.md`
+
+### Decisões técnicas
+- Mantido inventário estático e exato em ordem alfabética: destinos anteriores à tabela de aceites são recusados, sem migration automática, descoberta permissiva ou nova dependência de aplicação no runtime do tooling.
+- Preservados snapshot/export, validação de cluster/labels/PG17, restore UUID e cleanup. Uma linha de revisão Alembic e igualdade origem/restauração não certificam head instalado ou paridade global de schema.
+- Maestro reutilizou Frontend, Backend e Banco de Dados existentes. Frontend reassumiu propriedade exclusiva de `frontend/`; Maestro possui scripts/documentação. Nenhum modelo/migration/backend de produto foi alterado.
+
+### Estado atual
+- Correção revisada e aprovada somente leitura pelo Banco de Dados. Backend revisou a documentação; corrigidas duas formulações sobre prazos do heartbeat/diagnóstico e atividade na abertura do SSE.
+- Após liberação de permissão, `pytest` do módulo completo:36 passed/2skipped por ausência de PG17, sem deselections ou falhas. Os quatro casos de subprocessos/temp anteriormente bloqueados também passaram. XML: `.cache/verification/backup-commit-approved-20261010.xml`. Ruff com configuração backend e whitespace passaram; dump/restore físico ainda não foi executado.
+- Docker/PG17 indisponíveis; nenhum cluster compartilhado iniciado, migration aplicada, endpoint externo executado ou estado cloud consultado. O wrapper PG18 anterior continua consultando apenas as sete tabelas pré-aceites, embora faça dump de `public` inteiro.
+- Implementação do fix concluída e validada. Usuário liberou permissão e solicitou commit local; Maestro registra o fix com seus testes/documentação em unidade separada do redesign. Sem push ou deploy.
+
+### Próximos passos
+- Quando PG17/Compose estiver disponível, executar `scripts/test-compose-backup-restore.ps1` em destino QA explicitamente verificado com schema0003 e aceites repetidos; conferir nove entradas, hashes/catálogo, snapshot e cleanup confirmado.
+- Os quatro casos antes bloqueados já passaram. Evoluir o helper PG18 para verificar aceites somente em unidade deliberada, sem tratá-lo como prova equivalente ao manifesto Compose.
+- Fix/testes/documentação reconciliada são registrados juntos conforme pedido explícito, mantendo o redesign em outro commit. Não enviar ao remoto automaticamente.
+- O lote6 DARK já foi revisado pelo Maestro; preservar a pendência de fidelidade até nova prova ou decisão explícita do usuário.
+
 ## 2026-10-09 — Políticas, aceites de autenticação e página 404
 
 ### Implementado

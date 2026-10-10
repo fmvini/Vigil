@@ -16,6 +16,100 @@ import backup_restore_check as backup  # noqa: E402
 URL = "postgresql+asyncpg://vigil:qa_password@127.0.0.1:55433/vigil"
 
 
+def schema_tables(monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2] / "backend"))
+    from app.db.models import Base
+
+    return tuple(sorted((*Base.metadata.tables, "alembic_version")))
+
+
+def test_backup_inventory_covers_current_application_schema(monkeypatch):
+    assert backup.TABLES == schema_tables(monkeypatch)
+
+
+@pytest.mark.asyncio
+async def test_manifest_fingerprints_legal_rows_and_schema(monkeypatch):
+    tables = schema_tables(monkeypatch)
+
+    class Connection:
+        legal_rows = [
+            json.dumps(
+                {
+                    "id": "acceptance-" + str(index),
+                    "user_id": "owner-id",
+                    "terms_version": "2026-10-09",
+                    "privacy_version": "2026-10-09",
+                    "accepted_at": "2026-10-10T12:00:00+00:00",
+                    "action": "login",
+                }
+            )
+            for index in (1, 2)
+        ]
+
+        def is_in_transaction(self):
+            return True
+
+        async def fetchval(self, query):
+            return tables
+
+        async def fetch(self, query, *args):
+            if "SELECT version_num" in query:
+                return [("0003_legal_acceptances",)]
+            if args[0] not in {"legal_acceptances", "public.legal_acceptances"}:
+                return []
+            if "information_schema.columns" in query:
+                return [
+                    {"column_name": name}
+                    for name in (
+                        "id", "user_id", "terms_version", "privacy_version", "accepted_at", "action"
+                    )
+                ]
+            if "pg_constraint" in query:
+                return [{"contype": "f", "definition": "FOREIGN KEY (user_id) REFERENCES users(id)"}]
+            return [{"indexname": "ix_legal_acceptances_user_accepted_at"}]
+
+        async def cursor(self, query, **kwargs):
+            if '"legal_acceptances"' in query:
+                assert query.endswith('ORDER BY "id"')
+                for row in self.legal_rows:
+                    yield (row,)
+
+    db = Connection()
+    original = await backup.manifest(db)
+    assert original["revision"] == "0003_legal_acceptances"
+    legal = original["tables"]["legal_acceptances"]
+    assert legal["rows"] == 2
+    assert len(legal["columns"]) == 6
+    assert legal["constraints"] and legal["indexes"]
+    backup.compare_manifests(original, copy.deepcopy(original))
+    row = json.loads(db.legal_rows[0])
+    row["privacy_version"] = "2026-10-10"
+    db.legal_rows = [json.dumps(row), db.legal_rows[1]]
+    changed = await backup.manifest(db)
+    assert changed["tables"]["legal_acceptances"]["rows"] == legal["rows"]
+    assert changed["tables"]["legal_acceptances"]["sha256"] != legal["sha256"]
+    with pytest.raises(ValueError, match="differ"):
+        backup.compare_manifests(original, changed)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("change", ["missing_legal", "unexpected_table"])
+async def test_manifest_rejects_schema_drift(monkeypatch, change):
+    tables = schema_tables(monkeypatch)
+    names = (
+        tuple(name for name in tables if name != "legal_acceptances")
+        if change == "missing_legal"
+        else tuple(sorted((*tables, "unreviewed_table")))
+    )
+
+    class Connection:
+        async def fetchval(self, query):
+            return names
+
+    with pytest.raises(ValueError, match="known Vigil tables"):
+        await backup.manifest(Connection())
+
+
 @pytest.mark.parametrize(
     "url",
     [
@@ -63,12 +157,13 @@ def test_sql_identifier_cannot_inject_statements(identifier):
         backup.identifier(identifier)
 
 
+@pytest.mark.parametrize("table", ["users", "legal_acceptances"])
 @pytest.mark.parametrize("field", ["sha256", "columns", "indexes", "constraints"])
-def test_validation_rejects_same_count_with_changed_rows_or_schema(field):
+def test_validation_rejects_same_count_with_changed_rows_or_schema(field, table):
     original = {
-        "revision": "0001_initial",
+        "revision": "0003_legal_acceptances",
         "tables": {
-            "users": {
+            table: {
                 "rows": 2,
                 "sha256": "original",
                 "columns": [],
@@ -78,8 +173,8 @@ def test_validation_rejects_same_count_with_changed_rows_or_schema(field):
         },
     }
     restored = copy.deepcopy(original)
-    restored["tables"]["users"][field] = "changed"
-    assert original["tables"]["users"]["rows"] == restored["tables"]["users"]["rows"]
+    restored["tables"][table][field] = "changed"
+    assert original["tables"][table]["rows"] == restored["tables"][table]["rows"]
     with pytest.raises(ValueError, match="differ"):
         backup.compare_manifests(original, restored)
 

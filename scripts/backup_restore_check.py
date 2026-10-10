@@ -25,6 +25,7 @@ TABLES = (
     "check_jobs",
     "check_results",
     "incidents",
+    "legal_acceptances",
     "monitors",
     "projects",
     "sessions",

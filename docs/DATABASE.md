@@ -1,19 +1,19 @@
-# Modelo de dados inicial
+# Modelo de dados
 
-Proposta para PostgreSQL; não contém SQL executável nem migrations. Semântica: [REQUIREMENTS](REQUIREMENTS.md). API e workers compartilharão a camada de persistência.
+Contrato de persistência PostgreSQL, implementado em `backend/app/db/models.py` e compartilhado pela API e pelos executores. Semântica: [REQUIREMENTS](REQUIREMENTS.md). A cadeia Alembic instalada é `0001_initial` → `0002_incident_evidence_indexes` → `0003_legal_acceptances`, com único head `0003_legal_acceptances`. Essa descrição das fontes não comprova a revisão de um banco em execução; readiness e o procedimento de operação verificam o destino explicitamente.
 
 ## Convenções
 
 - PKs UUID, exceto quando um identificador natural já cumpre função própria. Datas `timestamptz` em UTC.
 - Durações/latências em ms, intervalos em segundos; usar nomes que explicitem unidades.
-- Textos de enum podem ser implementados com `CHECK` ou enum PostgreSQL na fase de migrations; contratos já definem valores permitidos.
+- Valores de enum são textos com constraints `CHECK` nos models/migrations.
 - `created_at/updated_at` nos registros mutáveis; resultados são imutáveis após finalização.
 - IDs enviados pelo cliente não permitem alterar owner/FKs; a autorização deriva de `Project.owner_id`.
-- Índices abaixo são propostas mínimas, a validar com consultas reais. Não indexar cada campo nem todo JSONB.
+- As tabelas abaixo descrevem o contrato; nomes e definições exatas de índices/constraints estão nos models/migrations. Seu uso e custo devem ser confirmados com planos e volume representativos. Não indexar cada campo nem todo JSONB.
 
 ## Entidades necessárias
 
-As cinco entidades do domínio são User, Project, Monitor, CheckResult e Incident. Acrescentam-se **Session**, para autenticação revogável, e **CheckJob**, para identidade do ciclo e publicação recuperável. Não são necessárias tabelas Service, Team, Alert, StatusPage, Metric ou CheckAttempt no MVP.
+As cinco entidades do domínio são User, Project, Monitor, CheckResult e Incident. Acrescentam-se **Session**, para autenticação revogável, **CheckJob**, para identidade do ciclo e publicação recuperável, e **LegalAcceptance**, para registrar os aceites de autenticação. São oito tabelas de produto, além de `alembic_version`. Não são necessárias tabelas Service, Team, Alert, StatusPage, Metric ou CheckAttempt no MVP.
 
 ### User — `users`
 
@@ -44,6 +44,20 @@ Responsabilidade: sessão de navegador revogável sem JWT.
 | `revoked_at` | timestamptz nullable | Logout/revogação |
 
 Inatividade de 24 h também invalida sessão. Índices: único `token_hash`, `(user_id, revoked_at)` e `expires_at` para limpeza. Relação N:1 User; remover sessões expiradas/revogadas após 7 dias. Sem IP/user-agent persistidos no MVP.
+
+### LegalAcceptance — `legal_acceptances`
+
+Responsabilidade: registrar cada cadastro/login bem-sucedido na mesma transação da conta/sessão, sem aceites retroativos. Implementada pela migration `0003_legal_acceptances`.
+
+| Campo | Tipo | Observação |
+| --- | --- | --- |
+| `id` | UUID PK | Identidade de cada operação |
+| `user_id` | UUID FK | Conta; FK para `users.id`, sem cascade |
+| `terms_version`, `privacy_version` | varchar(32) | Versões obrigatórias e não vazias |
+| `accepted_at` | timestamptz | Horário UTC fornecido pela aplicação, sem default do banco |
+| `action` | varchar(16) | `register` ou `login` |
+
+Todas as seis colunas são NOT NULL. O índice não único `ix_legal_acceptances_user_accepted_at` cobre `(user_id, accepted_at)`. Repetir login com as mesmas versões acrescenta outra linha; não há deduplicação, IP ou user agent. O fluxo da aplicação apenas acrescenta registros, sem trigger que impeça mutação SQL direta. A retenção atual não apaga aceites; a política de conservação permanece pendente em [LEGAL](LEGAL.md). Backups precisam preservar dados, FK, checks e índice dessa tabela.
 
 ### Project — `projects`
 
@@ -160,7 +174,7 @@ Responsabilidade: histórico imutável do resultado final de um ciclo avaliado.
 
 Tentativas não contêm body, URL, IP detalhado, headers ou erro remoto bruto. Se uma execução técnica anterior caiu, seus GETs podem não ter sido registrados; `attempt_count` não promete contar todas as chamadas físicas feitas em uma queda.
 
-Relacionamentos: N:1 Monitor e 1:1 CheckJob quando há resultado. Índices: único job_id; `(monitor_id, scheduled_at DESC, id DESC)` para histórico e métricas; `completed_at` para retenção. Sem tabela Metric inicial e sem índice JSONB automático. Corresponder monitor/job via FK composta ou validação transacional; escolher no desenho das migrations e testar.
+Relacionamentos: N:1 Monitor e 1:1 CheckJob quando há resultado. Índices: único job_id; `(monitor_id, scheduled_at DESC, id DESC)` para histórico e métricas; `completed_at` para retenção. Sem tabela Metric inicial e sem índice JSONB automático. A FK composta de resultado/job preserva a identidade de job, monitor, versão e slot; finalização também revalida essa identidade na transação.
 
 ### Incident — `incidents`
 
@@ -188,6 +202,7 @@ Não haverá IncidentUpdate ou incidentes manuais no MVP. Duração observada po
 ```mermaid
 erDiagram
     USER ||--o{ SESSION : possui
+    USER ||--o{ LEGAL_ACCEPTANCE : registra
     USER ||--o{ PROJECT : possui
     PROJECT ||--o{ MONITOR : agrupa
     MONITOR ||--o{ CHECK_JOB : agenda
@@ -207,6 +222,14 @@ erDiagram
         uuid user_id FK
         string token_hash UK
         datetime expires_at
+    }
+    LEGAL_ACCEPTANCE {
+        uuid id PK
+        uuid user_id FK
+        string terms_version
+        string privacy_version
+        datetime accepted_at
+        string action
     }
     PROJECT {
         uuid id PK
@@ -254,7 +277,7 @@ erDiagram
 - Arquivamento é lógico, sem cascade de histórico. Projetos/monitores arquivados deixam de ser públicos e deixam as consultas normais. Não criar restauração/hard delete nesta versão.
 - Limpar checks concluídos com mais de 30 dias antes de limpar seus jobs; incidentes mantêm evidências nullable. Job ainda referenciado por resultado não é apagado primeiro.
 - Incidentes encerrados expiram 90 dias após `ended_at`; abertos e snapshots não expiram. Sessions inválidas expiram após 7 dias.
-- Deletar em pequenos lotes, monitorar locks/bloat e garantir índices para manutenção. Não prever partições/migrations agora; avaliar ao medir milhões de linhas e duração da limpeza.
+- Deletar em pequenos lotes, monitorar locks/bloat e garantir índices para manutenção. A migration `0002_incident_evidence_indexes` acrescenta índices parciais às duas FKs de evidência do incidente. Particionamento permanece uma evolução a avaliar com milhões de linhas e duração da limpeza.
 - Remoção de conta e exigências específicas de retenção/privacidade precisam de política antes de um serviço público comercial; não são endpoints já definidos.
 
 ## Dados derivados

@@ -1,6 +1,6 @@
-# Arquitetura proposta
+# Arquitetura
 
-Planejamento inicial, 2026-10-04. Nenhum componente foi criado. Regras de saúde e métricas: [REQUIREMENTS](REQUIREMENTS.md). Fundamentação e alternativas: [DECISIONS](DECISIONS.md).
+Arquitetura implementada nas fontes locais, reconciliada com o estado de desenvolvimento em 2026-10-10. Regras de saúde e métricas: [REQUIREMENTS](REQUIREMENTS.md). Fundamentação e alternativas: [DECISIONS](DECISIONS.md). Provas de integração e suas limitações estão em [OPERATIONS](OPERATIONS.md) e [DEVELOPMENT_LOG](DEVELOPMENT_LOG.md); código implementado não equivale a validação do ambiente produtivo atual.
 
 ## Estilo e componentes
 
@@ -16,9 +16,9 @@ Um monólito modular Python, com três tipos de processo: API, scheduler/publica
 | Taskiq + RedisStreamBroker | Transporte e distribuição de tarefas entre workers, com confirmação manual |
 | Worker asyncio + HTTPX | Validar destino, executar tentativas limitadas e finalizar o ciclo de forma idempotente |
 | Redis Pub/Sub | Sinal efêmero de mudança após commit para instâncias da API |
-| Redis cache | Métricas/snapshots públicos derivados e limitados por TTL; não guarda estado autoritativo |
+| Redis cache (evolução planejada) | Métricas/snapshots derivados; consultas atuais usam PostgreSQL, sem esse cache |
 
-Scheduler e publicador são loops do mesmo processo inicial. Não executar esses loops no startup de cada réplica FastAPI. Manutenção de retenção poderá rodar nesse processo com frequência e lote próprios, sem bloquear o agendamento.
+Scheduler e publicador são loops do mesmo processo. Não executar esses loops no startup de cada réplica FastAPI. A retenção possui execução dedicada e limitada; não é tarefa automática do startup da API. O perfil gratuito usa também um executor batch separado, descrito abaixo.
 
 ```mermaid
 flowchart TB
@@ -33,26 +33,29 @@ flowchart TB
     W -. após commit .-> P[Redis Pub/Sub]
     P -. invalidação .-> A
     A -. SSE .-> U
-    A <-->|cache de derivados| C[Redis cache]
+    A -. evolução planejada .-> C[Cache de derivados]
 ```
 
-## Estrutura futura do repositório
+## Estrutura do repositório
 
-Esta árvore é uma proposta, não um scaffold a criar nesta etapa.
+As fronteiras de responsabilidade atuais são:
 
 ```text
 backend/
   app/
     api/             # rotas, DTOs, autenticação de requests e SSE
-    domain/          # regras de checks, saúde, incidentes e métricas
-    services/        # casos de uso e fronteiras transacionais
-    db/              # modelos, sessões e consultas
-    monitoring/      # scheduler, publicador, tarefas e transporte HTTP seguro
-    infrastructure/  # Redis, configuração e logging
+    domain/          # validação e regras de domínio
+    services/        # casos de uso, consultas, sinais e transações
+    db/              # modelos, sessões e retenção
+    monitoring/      # scheduler, publicador, tarefas, batch e transporte seguro
+    config.py        # configuração validada por ambiente
+    security.py      # credenciais e sessões
+    observability.py # atividade estruturada e sanitizada
   tests/
-  migrations/        # apenas quando a implementação começar
-frontend/
-  src/               # páginas e módulos de produto
+  migrations/        # Alembic, head 0003_legal_acceptances
+frontend/src/        # páginas e módulos de produto
+scripts/             # operação e ensaios de integração
+infra/               # perfis cloud e controles de egress
 docs/
 ```
 
@@ -144,22 +147,22 @@ Métricas iniciais são consultas PostgreSQL indexadas por monitor/tempo, com ja
 
 CheckJob faz também o papel de outbox de execução, evitando uma tabela genérica de eventos. Não há outbox para SSE no MVP: eventos visuais não são críticos porque snapshots são reconciliados. Alertas futuros exigirão entrega durável própria.
 
-## Redis e cache
+## Redis e evolução do cache
 
-Uma instância Redis inicial, com namespaces separados para fila, pub/sub, rate limiting e cache. Persistência AOF e política `noeviction` serão planejadas no setup de infraestrutura. Cache com TTL máximo de 15 s e orçamento de memória; `noeviction` pode rejeitar novas escritas, portanto falha de cache deve ser ignorável e erro de enfileiramento recuperável pelo PostgreSQL.
+O perfil local usa Redis para fila e Pub/Sub; o Compose configura AOF e `noeviction`. O perfil gratuito desabilita Redis. Cache de métricas/snapshots ainda não está implementado: leituras de observações consultam PostgreSQL. Uma futura camada de cache deve limitar TTL a 15 s e ter orçamento de memória; `noeviction` pode rejeitar escritas, por isso falha de cache deve ser ignorável e erro de enfileiramento recuperável pelo PostgreSQL.
 
 Fila não usa Pub/Sub. Pub/Sub não substitui histórico nem entrega durável. Escalar/cachear não exige Redis Cluster ou Sentinel no MVP; se caches ameaçarem a fila, separar instâncias é a primeira evolução.
 
-Cachear apenas métricas/snapshots derivados. Chave inclui proprietário/projeto, janela, filtros e `Project.revision`, consultada no banco; mudanças relevantes incrementam revisão. Freshness é recalculada na leitura, mesmo quando o agregado está em cache. Estado atual do monitor e autorização não dependem de cache. Eventos invalidam UI; TTL/revisão impedem depender exclusivamente de invalidação efêmera.
+No desenho futuro, cachear apenas métricas/snapshots derivados. A chave deve incluir proprietário/projeto, janela, filtros e `Project.revision`, consultada no banco; mudanças relevantes já incrementam revisão. Freshness deve ser recalculada na leitura, mesmo quando o agregado estiver em cache. Estado atual do monitor e autorização não dependem de cache. Eventos invalidam UI; TTL/revisão devem impedir depender exclusivamente de invalidação efêmera.
 
 ## Comunicação em tempo real
 
-SSE atende ao fluxo servidor → navegador; todas as mutações continuam REST. Uma conexão privada por aba recebe eventos do usuário, com no máximo 3 conexões simultâneas por conta inicialmente.
+SSE atende ao fluxo servidor → navegador; todas as mutações continuam REST. Uma conexão privada por aba recebe eventos do usuário, com no máximo 3 conexões simultâneas por conta por processo API. O limite não é global entre réplicas.
 
 - Usar cookie de sessão no mesmo origin; não colocar tokens na URL.
 - Evento `snapshot.required` no início/reconexão e a cada 30 s; frontend assina primeiro e então busca estado para reduzir a janela de corrida.
 - Eventos `monitor.updated`, `incident.opened`, `incident.closed` e `project.updated` levam IDs/revisão, não resultados inteiros.
-- Heartbeat a cada 15 s; verificar validade/revogação da sessão no máximo a cada 60 s e encerrar ao expirar. Logout fecha a conexão na UI.
+- Heartbeat a cada 15 s; verificar validade/revogação da sessão antes do primeiro sinal e a cada 30 s, encerrando ao invalidar. Revalidações periódicas do stream não renovam `last_seen_at`; abertura/reconexão usa a autenticação comum e pode registrar atividade. Logout fecha a conexão na UI.
 - Sem replay durável nem garantia de ordem completa; refetch aceita a revisão mais nova. Polling REST a cada 30 s durante desconexão.
 - Queues locais limitadas por conexão; consumidor lento recebe solicitação de snapshot ou é desconectado, sem memória ilimitada.
 - Reverse proxy precisa desativar buffering SSE, permitir conexões longas e preferir HTTP/2. Público usa polling de 30 s no MVP.
@@ -174,7 +177,7 @@ SSRF é risco estrutural, não validação opcional de formulário. Antes de qua
 4. Desativar redirects e proxies herdados do ambiente, verificar TLS, limitar headers e não baixar body. Cancelar/fechar resposta após headers finais.
 5. Aplicar controles de egress aos workers: negar rede interna, rede de controle, PostgreSQL/Redis como destinos HTTP e metadados, permitindo separadamente conexões necessárias de infraestrutura.
 
-A escolha entre transporte HTTPX com resolução fixada e proxy de saída que aplique a política está pendente. Não assumir que HTTPX padrão oferece todas essas garantias. A prova técnica precisa verificar TLS/SNI, IPv6 e rebinding antes de qualquer chamada a URL arbitrária em produção. Testes podem usar servidor interno explicitamente autorizado apenas em ambiente isolado.
+`backend/app/monitoring/transport.py` implementa `SafeTransport` sobre httpcore com resolução fixada: valida todos os endereços A/AAAA por conexão, conecta ao IP autorizado e confere o peer, preservando hostname para Host/SNI e validação TLS com certifi. Keepalive e retries do transporte são desativados; retries pertencem ao executor. Cada tentativa HTTPX usa `trust_env=false`, redirects desativados e leitura até headers finais. O firewall do worker complementa essa política. Testes determinísticos e sockets TLS IPv4/IPv6 possuem provas históricas em OPERATIONS; o ambiente alvo continua exigindo validação própria antes de habilitar execução externa.
 
 Logs não guardam URL completa/query, body, cookie, senha ou erro remoto bruto. Jobs contêm configuração no banco e apenas IDs no Redis. Cadastro/login, criação de monitores, métricas caras e leituras públicas recebem rate limiting com resposta 429. Política de abertura do cadastro precisa ser resolvida antes do deploy público.
 
@@ -183,6 +186,12 @@ Logs não guardam URL completa/query, body, cookie, senha ou erro remoto bruto. 
 Sessão opaca aleatória em cookie `__Host-vigil_session`, HttpOnly, Secure, SameSite=Lax e Path=/ em produção; PostgreSQL guarda hash do token e estado revogável. Sessão expira após 24 h de inatividade ou 7 dias absolutos. Senha usa Argon2id por biblioteca especializada. Não usar JWT/localStorage sem necessidade.
 
 Frontend e API sob um origin no deploy; Vite deverá usar proxy de desenvolvimento. Mutações exigem Origin autorizado; cadastro/login exigem JSON e header `X-Vigil-Request: browser`; demais mutações também exigem token CSRF sincronizado da sessão. SameSite não substitui essas verificações. SSE e DTOs públicos possuem autorização/exposição próprias.
+
+## Perfil gratuito e executor batch
+
+O perfil em [FREE_CLOUD](FREE_CLOUD.md) serve frontend/API no Render, persiste em schema Neon privado e executa rodadas pelo GitHub Actions, disparadas também por cron Cloudflare. `backend/app/monitoring/batch.py` compartilha jobs, claims, finalização e transporte seguro com o pipeline, sem broker/Redis/Taskiq. Defaults: prazo de rodada 90 s, cinco execuções simultâneas e até cem jobs. O runner aplica proteção de egress e gates explícitos; a API permanece sem executar checks.
+
+O mínimo cloud é 900 s e a agenda é best-effort, sem SLA de quinze minutos. A admissão respeita intervalo e orçamento; uma espera acumulada de até 30 s permite o primeiro ciclo futuro próximo somente quando não há trabalho aberto. Slots omitidos não viram medições retroativas. Sem Redis, resultados do runner chegam à UI por reconciliação REST/polling; sinais locais continuam úteis para mutações da própria API.
 
 ## Operação, falhas e escala
 
@@ -197,7 +206,9 @@ Frontend e API sob um origin no deploy; Vite deverá usar proxy de desenvolvimen
 | Frontend perde SSE | Snapshot/polling recuperam visualização |
 | Volume excede capacidade | Backpressure, cotas, expiração de jobs e alerta de atraso; não acumular checks históricos indefinidamente |
 
-Observabilidade mínima: logs JSON com `request_id/job_id/monitor_id`, duração, código sanitizado e componente; contadores de ciclos, retries, skips, expirados e deduplicação; histograma de atraso/latência; gauges de jobs elegíveis, pending do grupo, leases e idade do último tick. Labels métricos não contêm URL ou monitor_id de alta cardinalidade; esses IDs ficam nos logs.
+A atividade implementada em `backend/app/observability.py` registra eventos JSON sanitizados com IDs e durações. O diagnóstico `app.monitoring.status` consulta jobs/fila sem mutação; não é endpoint público. Histogramas históricos, exporter e alertas permanecem evoluções, sem promessa de que logs isolados cumpram todo RNF010. Labels métricos futuros não devem conter URL ou monitor_id de alta cardinalidade; esses IDs ficam nos logs.
+
+O scheduler/publicador contínuo grava heartbeat por par stream/group, com clock Redis, atualização Lua atômica e TTL de 120 s. Última tentativa e último sucesso são separados; erro não apaga sucesso. A escrita tem prazo de 1 s e falhas permitem o próximo tick. O diagnóstico consulta cada fonte com prazo de 3 s, lê sem renovar TTL e informa stale após 5 s. Esses estados não provam saúde de cada worker/processo nem se aplicam à cadência do executor cron gratuito. Probes da API não dependem dessa chave.
 
 API oferece `/health/live` e `/health/ready`; saúde do pipeline é observada separadamente por heartbeats, sem amarrar liveness a cada dependência. Backup/restore PostgreSQL e recuperação Redis serão testados antes do deploy.
 
